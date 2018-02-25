@@ -36,9 +36,9 @@
 
 
 #------------------------------------------------------------------------------#
-# Dotfiles repository
+# Dotfiles repository (https://github.com/weibeld/dotfiles)
 #------------------------------------------------------------------------------#
-alias git-dotfiles='git --git-dir=$HOME/.git-dotfiles --work-tree=$HOME'
+alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 
 
 #------------------------------------------------------------------------------#
