@@ -512,8 +512,9 @@ s ~/.bash_prompt
 # Mac and Linux specific functions, aliases, and settings
 #------------------------------------------------------------------------------#
 if is-mac; then
-  s ~/.bashrc_mac
-  s ~/.bashrc_mac s ~/.bashrc_linux
+  s ~/.bash_mac
+elif is-linux; then
+  s ~/.bash_linux
 fi
 
 
