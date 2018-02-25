@@ -1,22 +1,32 @@
 # Set up a responsive prompt that includes the exit code of the last command.
 #
-# It's possible to interactively change the prompt pattern and prompt colour
-# with the set-promp-pattern and set-prompt-color functions, respectively.
+# It's possible to easily customise the prompt with the set-promp-pattern and
+# set-prompt-color functions, respectively.
 #
 # For example:
 #
 # set-prompt-color red
-# set-prompt-pattern "\e[1;34m\u@\h:\e[1;32m\w\e[1;33m$ "
+# set-prompt-pattern "\[\e[1;34m\]\u@\h:\[\e[1;32m\]\w\[\e[1;33m\]$ "
 #
 # Configures a prompt of the form "1|user@host:/working/dir$ ", where:
+#
 # - The optional exit code of the last command "1|" is red
 # - "user@host:" is blue
 # - "/working/dir" is green
 # - The final "$ " is yellow
 #
-# Note that set-prompt-color sets the colour of the prompt starting from the
-# optional exit code of the last command, until either another colour definition
-# in the prompt pattern, or until the end of the prompt.
+# The set-prompt-color function sets the PROMPT_COLOR variable, and this is the
+# colour with which the prompt starts.
+# 
+# The set-prompt-pattern function sets the PROMPT_PATTERN variable. You can
+# include other colour definitions in this prompt pattern, as you like. However,
+# at least the exit code at the beginning of the prompt will have the colour
+# defined in PROMPT_COLOR.
+#
+# In any case, at the end of the prompt, the colour is reset to the default
+# terminal text colour, so you don't need to take care of this in PROMPT_PATTERN.
+#
+# Note: you must wrap all colour codes in \[ and \].
 #------------------------------------------------------------------------------#
 
 
@@ -34,17 +44,7 @@ __set-prompt() {
   is-unset "$PROMPT_PATTERN" && export PROMPT_PATTERN=$PS1
   local p=$PROMPT_PATTERN
   [[ "$exit_code" -ne 0 ]] && local p="$exit_code|$p"
-  PS1="$PROMPT_COLOR$p\e[0m"
-
-  # Original function update_terminal_cws in /etc/bashrc: update current
-  # working directory in Apple Terminal.
-  if is-mac; then 
-    if [[ "$TERM_PROGRAM" != "Apple_Terminal" || -n "$INSIDE_EMACS" ]]; then return; fi
-    local SEARCH=' '
-    local REPLACE='%20'
-    local PWD_URL="file://$HOSTNAME${PWD//$SEARCH/$REPLACE}"
-    printf '\e]7;%s\a' "$PWD_URL"
-  fi
+  PS1="$PROMPT_COLOR$p\[\e[0m\]"
 }
 
 
@@ -76,7 +76,7 @@ set-prompt-color() {
     *)      echo "Invalid color name: $1. Use red, green, yellow, blue, purple, cyan, or white."
             return 1 ;;
   esac
-  export PROMPT_COLOR="\e[1;${color_code}m"
+  export PROMPT_COLOR="\[\e[1;${color_code}m\]"
 }
 
 
