@@ -508,5 +508,3 @@ s ~/.bashrc_trash
 # Ensure exit code of the command sourcing this ~/.bashrc is 0
 #------------------------------------------------------------------------------#
 return 0
-
-# Huhu
