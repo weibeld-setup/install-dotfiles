@@ -1,0 +1,28 @@
+[user]
+	name = Daniel Weibel
+	email = danielmweibel@gmail.com
+[core]
+	excludesfile = $HOME/.gitignore_global
+	editor = vim
+	autocrlf = input
+[alias]
+[push]
+	default = simple
+[credential]
+	helper = osxkeychain
+[alias]
+  a = add
+	c = commit
+	st = status
+	co = checkout
+	br = branch
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool]
+	keepBackup = false
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
