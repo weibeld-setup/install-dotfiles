@@ -137,33 +137,32 @@ s() { [[ -f "$1" ]] && . "$1"; }
 # Files
 #------------------------------------------------------------------------------#
 
-# Make file executable
+# Add/remove executable flag to/from a file
 x() { chmod +x "$1"; }
+X() { chmod -x "$1"; }
 
 # Change to directory and list content
-cdl() { cd "$1" && ls; }
+c() { cd "$1" && ls; }
 
 # Create new directory and cd to it
 mkcd() { mkdir "$1" && cd "$1"; }
 
-# Move file ($1) to directory ($2) by creating directory if not exists.
+# Move file by creating any intemediate dirs of the target, if they don't exist
 mvp() { mkdir -p "$2" && mv "$1" "$2"; }
 
-# Recursively count the number of files in the specified directory.
-cf () { lf "$1" | wc -l; }
-
 # Recursively list all the files in the specified directory.
-lf() {
-  local dir=${1:-.}
-  find "${dir%/}" -type f
-}
+listf() { local d=${1:-.}; find "${d%/}" -type f; }
+
+# Recursively count the number of files in the specified directory.
+countf () { listf "$1" | wc -l; }
+
+# List all the dotfiles or dot-directories in the specified directory.
+dotf() { local d=${1:-.}; __dotx "${d%/}" f; }
+dotd() { local d=${1:-.}; __dotx "${d%/}" d; }
+__dotx() { find "$1" -name '.*' -maxdepth 1 -type "$2" | xargs -Ix basename x; }
 
 # Change the extension of a filename
-chext() {
-  local file=$1
-  local new_ext=$2
-  echo "${file%.*}$new_ext"
-}
+chext() { echo "${1%.*}.$2"; }
 
 
 #------------------------------------------------------------------------------#
@@ -236,21 +235,8 @@ n() {
 # Terminal/Shell
 #------------------------------------------------------------------------------#
 
-# Print all elements of an array
-# USAGE: printarr "${arr[@]}" (quotes required if array elements contain spaces)
-printarr() {
-  local p=$(($(trunc $(log10 $(($#-1)))) + 1))
-  local i=0
-  for elt in "$@"; do
-    echo "$(pad $i $p): $elt"
-    i=$(($i+1))
-  done
-}
-
-# Display $PATH one entry per line
-path() {
-  echo "$PATH" | tr : '\n'
-}
+# Display $PATH with each entry on its own line
+path() { echo "$PATH" | tr : '\n'; }
 
 # Print colours of this 256 colour terminal.
 # Usage:
@@ -264,17 +250,12 @@ colors() {
   done
 }
 
-
 # Dump the hexadecimal code of the provided string (output depends on the char
 # encoding used by the terminal).
-enc() {
-  echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-
-}
+enc() { echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-; }
 
 # Print the character encoding used by the terminal
-enc-type() {
-  echo $LC_CTYPE
-}
+enc-type() { echo $LC_CTYPE; }
 
 # Delete the processes supplied on stdin: one process per line, first white-
 # space delimited token must be process ID. Intended to read output from pgrep.
