@@ -139,7 +139,7 @@ function! g:ToggleColorColumn()
 endfunction
 
 " Define formatting of invisible characters
-set listchars=tab:>-,trail:.,eol:¬
+"set listchars=tab:>-,trail:.,eol:¬
 
 
 " Key binding for toggling color column
