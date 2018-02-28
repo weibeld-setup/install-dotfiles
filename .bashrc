@@ -80,6 +80,7 @@ alias hkp='git add -A && git commit --allow-empty -m "Commit" && git push heroku
 alias jki="bundle exec jekyll serve --incremental"
 alias jk="bundle exec jekyll serve"
 alias dk=docker
+alias dkc=docker-compose
 
 
 #------------------------------------------------------------------------------#
