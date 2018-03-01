@@ -81,6 +81,7 @@ alias jki="bundle exec jekyll serve --incremental"
 alias jk="bundle exec jekyll serve"
 alias dk=docker
 alias dkc=docker-compose
+alias dkm=docker-machine
 
 
 #------------------------------------------------------------------------------#
