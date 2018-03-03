@@ -79,9 +79,6 @@ alias gphm='git push heroku master'
 alias hkp='git add -A && git commit --allow-empty -m "Commit" && git push heroku master'
 alias jki="bundle exec jekyll serve --incremental"
 alias jk="bundle exec jekyll serve"
-alias dk=docker
-alias dkc=docker-compose
-alias dkm=docker-machine
 
 
 #------------------------------------------------------------------------------#
@@ -484,6 +481,25 @@ git-cat() {
   done < /dev/stdin
 }
 
+
+#------------------------------------------------------------------------------#
+# Docker
+#------------------------------------------------------------------------------#
+
+alias dk=docker
+alias dkc=docker-compose
+alias dkm=docker-machine
+
+# Remove Docker containers and/or images
+dkra() { dkrc; dkri; }
+dkri() {
+  local i=$(docker images -q)
+  is-set "$i" && docker rmi -f $i || echo "No images"
+}
+dkrc() {
+  local c=$(docker ps -aq)
+  is-set "$c" && docker rm $c || echo "No containers"
+}
 
 #------------------------------------------------------------------------------#
 # Configure prompt
