@@ -64,3 +64,9 @@ checkdep() {
     fi
   done
 }
+
+# Install Docker (tested on Ubuntu)
+install-docker() {
+  sudo apt-get update
+  sudo apt-get -y install docker.io
+}
