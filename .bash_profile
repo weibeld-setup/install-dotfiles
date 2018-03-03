@@ -66,6 +66,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   # PATH
   PATH="$PATH:~/bin"
   PATH="$PATH:/usr/local/Cellar/rabbitmq/3.7.3/sbin"
+  PATH="$PATH:~/google-cloud-sdk/bin"
 
 #------------------------------------------------------------------------------#
 # If running on Linux system
