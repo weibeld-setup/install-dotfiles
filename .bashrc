@@ -164,6 +164,11 @@ __dotx() { find "$1" -name '.*' -maxdepth 1 -type "$2" | xargs -Ix basename x; }
 # Change the extension of a filename
 chext() { echo "${1%.*}.$2"; }
 
+# List files and folders of 1 GB or larger in the specified directory
+dhg() {
+  du -h "$1" | grep "G[[:blank:]]"
+}
+
 
 #------------------------------------------------------------------------------#
 # Numbers
