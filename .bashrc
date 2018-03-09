@@ -492,8 +492,10 @@ git-cat() {
 #------------------------------------------------------------------------------#
 
 alias dk=docker
-alias dkc=docker-compose
+#alias dkc=docker-compose
 alias dkm=docker-machine
+alias dki='docker images'
+alias dkc='docker ps -a'
 
 # Remove Docker containers and/or images
 dkra() { dkrc; dkri; }
