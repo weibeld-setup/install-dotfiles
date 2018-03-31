@@ -531,7 +531,7 @@ dkrc() {
 #------------------------------------------------------------------------------#
 # AWS CLI
 #------------------------------------------------------------------------------#
-if $(which -s aws) && [[ -f /usr/local/bin/aws_completer ]]; then
+if $(which aws >/dev/null) && [[ -f /usr/local/bin/aws_completer ]]; then
   complete -C '/usr/local/bin/aws_completer' aws
 fi
 
