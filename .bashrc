@@ -169,6 +169,11 @@ dhg() {
   du -h "$1" | grep "G[[:blank:]]"
 }
 
+# Show local ports that are currently in use
+ports() {
+  lsof -i -P -n | grep LISTEN
+}
+
 
 #------------------------------------------------------------------------------#
 # Numbers
@@ -486,6 +491,14 @@ git-cat() {
   done < /dev/stdin
 }
 
+# Make commit at a specific date. Date format is "YYYY-MM-DD HH:MM:SS".
+git-commit-date() {
+  local GIT_COMMITER_DATE=$1
+  local GIT_AUTHOR_DATE=$1
+  shift
+  git commit "$@"
+}
+
 
 #------------------------------------------------------------------------------#
 # Docker
@@ -497,16 +510,31 @@ alias dkm=docker-machine
 alias dki='docker images'
 alias dkc='docker ps -a'
 
-# Remove Docker containers and/or images
+# Force-remove all containers and images
 dkra() { dkrc; dkri; }
+# Force-remove all images
 dkri() {
   local i=$(docker images -q)
   is-set "$i" && docker rmi -f $i || echo "No images"
 }
+# Remove all images with a <none> name or tag
+dkci() {
+  local i=$(docker images | grep '<none>' | awk '{print $3}')
+  is-set "$i" && docker rmi $i || echo "No unnamed/untagged images"
+}
+# Remove all containers
 dkrc() {
   local c=$(docker ps -aq)
   is-set "$c" && docker rm $c || echo "No containers"
 }
+
+#------------------------------------------------------------------------------#
+# AWS CLI
+#------------------------------------------------------------------------------#
+if $(which -s aws) && [[ -f /usr/local/bin/aws_completer ]]; then
+  complete -C '/usr/local/bin/aws_completer' aws
+fi
+
 
 #------------------------------------------------------------------------------#
 # Configure prompt
