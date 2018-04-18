@@ -70,3 +70,12 @@ install-docker() {
   sudo apt-get update
   sudo apt-get -y install docker.io
 }
+
+# Install Certbot (on Ubuntu)
+install-certbot() {
+  sudo apt-get update
+  sudo apt-get -y install software-properties-common
+  sudo add-apt-repository ppa:certbot/certbot
+  sudo apt-get update
+  sudo apt-get -y install certbot 
+}

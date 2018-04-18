@@ -505,14 +505,11 @@ git-commit-date() {
 #------------------------------------------------------------------------------#
 
 alias dk=docker
-#alias dkc=docker-compose
 alias dkm=docker-machine
 alias dki='docker images'
 alias dkc='docker ps -a'
 
-# Force-remove all containers and images
-dkra() { dkrc; dkri; }
-# Force-remove all images
+# Remove all images
 dkri() {
   local i=$(docker images -q)
   is-set "$i" && docker rmi -f $i || echo "No images"
@@ -527,6 +524,30 @@ dkrc() {
   local c=$(docker ps -aq)
   is-set "$c" && docker rm $c || echo "No containers"
 }
+# Remove all containers and images
+dkra() {
+  dkrc; dkri;
+}
+# Stop all running containers
+dksc() {
+  local c=$(docker ps -q)
+  is-set "$c" && docker stop $c || echo "No running containers"
+}
+
+#------------------------------------------------------------------------------#
+# Jenkins
+#------------------------------------------------------------------------------#
+jenkins() {
+  docker run \
+    --rm \
+    -u root \
+    -p 8080:8080 \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v jenkins-data:/var/jenkins_home \
+    "$1" \
+    jenkinsci/blueocean
+}
+
 
 #------------------------------------------------------------------------------#
 # AWS CLI
