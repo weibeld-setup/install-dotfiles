@@ -132,6 +132,14 @@ insert() {
 # Source file if exists.
 s() { [[ -f "$1" ]] && . "$1"; }
 
+# Creat a random alphanumeric string (only lower-case) of the specified length.
+random() {
+  length=${1:-16}
+  [[ "$length" =~ ^[1-9][0-9]*$ ]] ||
+    { echo "Argument must be positive integer"; return 1; }
+  cat /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c "$length"
+}
+
 
 #------------------------------------------------------------------------------#
 # Files
@@ -450,6 +458,7 @@ alias gce='git commit --allow-empty'
 alias gcee='git commit --allow-empty -m "Empty commit"'
 alias gp='git push'
 alias gf="git flow"
+alias grso="git remote set-url origin"
 
 # List all the Git objects in the Git repo in $1 with their type. If $2 is set,
 # then they type is not printed, only the ID.
@@ -534,6 +543,25 @@ dksc() {
   is-set "$c" && docker stop $c || echo "No running containers"
 }
 
+
+#------------------------------------------------------------------------------#
+# Gradle
+#------------------------------------------------------------------------------#
+
+# Create a Java project folder structure with Gradle. Pass packages as arguments.
+java-init() {
+  gradle init --type java-library
+  for p in "$@"; do
+    path="${p//.//}"
+    mkdir -p "src/main/java/$path"
+    cat <(echo -e "package $p;\n") src/main/java/Library.java >"src/main/java/$path/Library.java"
+    mkdir -p "src/test/java/$path"
+    cat <(echo -e "package $p;\n") src/test/java/LibraryTest.java >"src/test/java/$path/LibraryTest.java"
+  done
+  rm src/main/java/*.java
+  rm src/test/java/*.java
+}
+
 #------------------------------------------------------------------------------#
 # Jenkins
 #------------------------------------------------------------------------------#
@@ -548,6 +576,10 @@ jenkins() {
     jenkinsci/blueocean
 }
 
+#------------------------------------------------------------------------------#
+# GCP CLI
+#------------------------------------------------------------------------------#
+alias gcl=gcloud
 
 #------------------------------------------------------------------------------#
 # AWS CLI
@@ -556,6 +588,71 @@ if $(which aws >/dev/null) && [[ -f /usr/local/bin/aws_completer ]]; then
   complete -C '/usr/local/bin/aws_completer' aws
 fi
 
+# Usage examples of following functions:
+#
+#   ec2-instances
+#   ec2-instances --profile weibeld
+#   ec2-instances --profile weibeld --region us-west-1
+
+# List available region names
+ec2-regions() {
+  aws ec2 describe-regions \
+    --output text \
+    --query 'Regions[*].[RegionName]' \
+    "$@"
+}
+
+# List instances in configured region. Region can be configured either:
+#   * AWS_DEFAULT_REGION env var
+#   * --region option
+#   * Default region in ~/.aws/config
+#   * Region set in ~/.aws/config for profile, if specifying profile
+ec2-instances() {
+  aws ec2 describe-instances \
+    --output text \
+    --query 'Reservations[*].Instances[*].[InstanceId, InstanceType, Placement.AvailabilityZone, State.Name, Tags[0].Value, PublicDnsName]' \
+    "$@"
+}
+
+# Loop through all available regions and list instances in each of them
+ec2-instances-all-regions() {
+  for region in $(ec2-regions "$@"); do
+    echo "$region:"
+    AWS_DEFAULT_REGION=$region ec2-instances "$@"
+  done
+}
+
+# Create a security group named 'ssh' allowing incoming SSH traffic
+ec2-create-ssh-security-group() {
+  local name=ssh
+  aws ec2 create-security-group \
+    --group-name "$name" \
+    --description "Allow incoming SSH traffic from anywhere" \
+    "$@"
+  aws ec2 authorize-security-group-ingress \
+  --group-name "$name" \
+  --protocol tcp \
+  --port 22 \
+  --cidr 0.0.0.0/0 \
+  "$@"
+}
+
+# Launch a basic instance:
+#   - Ubuntu 16.04
+#   - t2.micro
+#   - Allowing inbound SSH traffic
+#   - Docker installed
+# Prerequisites:
+#   - Security group 'ssh' must exist
+ec2-launch-instance() {
+  aws ec2 run-instances \
+  --image-id ami-de8fb135 \
+  --instance-type t2.micro \
+  --security-groups ssh \
+  --user-data "#!/bin/bash 
+apt-get update; apt-get install -y docker.io; usermod -aG docker ubuntu" \
+  "$@"
+}
 
 #------------------------------------------------------------------------------#
 # Configure prompt
