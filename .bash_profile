@@ -53,6 +53,10 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   # Java
   export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_65.jdk/Contents/Home
   export JUNIT_HOME=$JAVA_HOME/lib
+
+  # Kubernetes
+  export KUBECONFIG=$KUBECONFIG:~/.kube/config
+  export KUBECONFIG=$KUBECONFIG:~/.kube/config-sent2vec-cluster
   export CLASSPATH=.:$JUNIT_HOME/junit-4.10.jar:..
 
   # Misc
@@ -65,8 +69,12 @@ if [[ "$OSTYPE" =~ darwin ]]; then
 
   # PATH
   PATH="$PATH:~/bin"
-  PATH="$PATH:/usr/local/Cellar/rabbitmq/3.7.3/sbin"
+  PATH="$PATH:/usr/local/Cellar/rabbitmq/3.7.7_1/sbin"
   PATH="$PATH:~/google-cloud-sdk/bin"
+  PATH="$PATH:/usr/local/opt/gnupg@1.4/libexec/gpgbin"
+  PATH="$PATH:~/platform-tools"
+  PATH="$PATH:$HOME/.go/bin"
+  PATH="$PATH:/usr/local/mongodb"
 
 #------------------------------------------------------------------------------#
 # If running on Linux system
