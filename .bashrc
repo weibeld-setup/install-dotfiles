@@ -572,20 +572,23 @@ dksc() {
 # Kubernetes
 #------------------------------------------------------------------------------#
 
-alias kc=kubectl
-
-# Display the current kubeconfig context
-alias kcc='kubectl config current-context'
+alias k=kubectl
 
 # List all available kubeconfig contexts
-kco() {
-  kubectl config get-contexts --no-headers=true | sed 's/^\*//' | awk '{print $1}'
-}
+alias kc='kubectl config get-contexts -o name'
+# Display the current kubeconfig context
+alias kcc='kubectl config current-context'
+# Set the current kubeconfig context
+alias kcs='kubectl config use-context $(kubectl config get-contexts -o name | fzf)'
+# Rename a context (usage: kcr <new-name>)
+alias kcr='kubectl config rename-context $(kubectl config get-contexts -o name | fzf)'
 
-# Change the current kubeconfig context
-kch() {
-  kubectl config use-context "$1"
-}
+# List all namespaces
+alias kn='kubectl get namespaces -o custom-columns=:.metadata.name --no-headers'
+# Display the default namespace for the current context
+alias knc='kubectl config get-contexts --no-headers | grep $(kubectl config current-context) | tr -s " " | cut -d " " -f 5'
+# Set the default namespace for the current context
+alias kns='kubectl config set-context --current --namespace $(kubectl get namespaces -o custom-columns=:.metadata.name --no-headers | fzf)'
 
 # Delete a context, cluster, and user from the default kubeconfig file. It is
 # asumed that context, cluster, and user that belong together identical names.
@@ -600,8 +603,19 @@ kc-delete() {
 # https://github.com/ahmetb/kubectl-aliases
 [ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases
 
+
 # Display the container images of each pod in a given namespace
 kpoi() {
+  kubectl get pods -n "${1:-default}" -o custom-columns='POD:.metadata.name,IMAGES:.spec.containers[*].image'
+}
+
+# Display the container images of each pod across all namespaces
+kpoiall() {
+  kubectl get pods --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,POD:.metadata.name,IMAGES:.spec.containers[*].image'
+}
+
+# Display the container images of each pod in a given namespace
+_kpoi() {
   local ns=${1:-default}
   local PODS=($(kubectl get pods -n "$ns" -o jsonpath='{.items[*].metadata.name}'))
   local p; for p in "${PODS[@]}"; do
@@ -614,7 +628,7 @@ kpoi() {
 }
 
 # Display the container images of each pod across all namespaces
-kpoiall() {
+_kpoiall() {
   local RECORDS=($(kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.name}:{.metadata.namespace} {end}'))
   local r; for r in "${RECORDS[@]}"; do
     local pod=${r%:*} ns=${r#*:}
@@ -628,22 +642,12 @@ kpoiall() {
 
 # Display the node of each pod in a given namespace
 kpon() {
-  local ns=${1:-default}
-  local PODS=($(kubectl get pods -n "$ns" -o jsonpath='{.items[*].metadata.name}'))
-  local p; for p in "${PODS[@]}"; do
-    echo "- $p"
-    echo "    - $(kubectl get pod -n "$ns" "$p" -o jsonpath='{.spec.nodeName}')"
-  done
+  kubectl get pods -n "${1:-default}" -o custom-columns=POD:.metadata.name,NODE:.spec.nodeName
 }
 
 # Display the node of each pod across all namespaces
 kponall() {
-  local RECORDS=($(kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.name}:{.metadata.namespace} {end}'))
-  local r; for r in "${RECORDS[@]}"; do
-    local pod=${r%:*} ns=${r#*:}
-    echo "- $pod ($ns)"
-    echo "    - $(kubectl get pod "$pod" -n "$ns" -o jsonpath='{.spec.nodeName}')"
-  done
+  kubectl get pods --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,POD:.metadata.name,NODE:.spec.nodeName
 }
 
 #------------------------------------------------------------------------------#
