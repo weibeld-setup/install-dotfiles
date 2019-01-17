@@ -51,6 +51,7 @@ shopt -s nullglob
 #------------------------------------------------------------------------------#
 # System command shortcuts
 #------------------------------------------------------------------------------#
+alias vr='vim ~/.vimrc'
 alias br='vim ~/.bashrc'
 alias bp='vim ~/.bash_profile'
 alias sbr='. ~/.bashrc'
@@ -132,7 +133,7 @@ insert() {
 # Source file if exists.
 s() { [[ -f "$1" ]] && . "$1"; }
 
-# Creat a random alphanumeric string (only lower-case) of the specified length.
+# Create random alphanumeric string (only lower-case) of the specified length.
 random() {
   length=${1:-16}
   [[ "$length" =~ ^[1-9][0-9]*$ ]] ||
@@ -182,6 +183,30 @@ ports() {
   lsof -i -P -n | grep LISTEN
 }
 
+# Delete all lines matching the given pattern from a file
+rm-lines() {
+  local pattern=$1
+  local file=$2
+  sed -i '' "/$pattern/d" "$file"
+}
+
+# Sort the output of the du command according to size
+dus() {
+  path=${1:-.}
+  du "$path" | sort -k 1 -n -r
+}
+
+# Show files and folders of 1 GB or larger
+dug() {
+  path=${1:-.}
+  du -h "$path" | grep G$'\t'
+}
+
+# Show files and folders between 1 MB and 1 GB and sort in descending order
+dum() {
+  path=${1:-.}
+  du -h "$path" | grep M$'\t' | sort -k 1 -n -r
+}
 
 #------------------------------------------------------------------------------#
 # Numbers
@@ -543,6 +568,83 @@ dksc() {
   is-set "$c" && docker stop $c || echo "No running containers"
 }
 
+#------------------------------------------------------------------------------#
+# Kubernetes
+#------------------------------------------------------------------------------#
+
+alias kc=kubectl
+
+# Display the current kubeconfig context
+alias kcc='kubectl config current-context'
+
+# List all available kubeconfig contexts
+kco() {
+  kubectl config get-contexts --no-headers=true | sed 's/^\*//' | awk '{print $1}'
+}
+
+# Change the current kubeconfig context
+kch() {
+  kubectl config use-context "$1"
+}
+
+# Delete a context, cluster, and user from the default kubeconfig file. It is
+# asumed that context, cluster, and user that belong together identical names.
+# If "error: open ~/.kube/config.lock: file exists", unset KUBECONFIG variable.
+kc-delete() {
+  local name=$1
+  kubectl config delete-context "$name" &&
+  kubectl config delete-cluster "$name" &&
+  kubectl config unset users."$name"
+}
+
+# https://github.com/ahmetb/kubectl-aliases
+[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases
+
+# Display the container images of each pod in a given namespace
+kpoi() {
+  local ns=${1:-default}
+  local PODS=($(kubectl get pods -n "$ns" -o jsonpath='{.items[*].metadata.name}'))
+  local p; for p in "${PODS[@]}"; do
+    echo "- $p"
+    local IMAGES=($(kubectl get pod "$p" -n "$ns" -o jsonpath='{.spec.containers[*].image}'))
+    local i; for i in "${IMAGES[@]}"; do
+      echo "    - $i"
+    done
+  done
+}
+
+# Display the container images of each pod across all namespaces
+kpoiall() {
+  local RECORDS=($(kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.name}:{.metadata.namespace} {end}'))
+  local r; for r in "${RECORDS[@]}"; do
+    local pod=${r%:*} ns=${r#*:}
+    echo "- $pod ($ns)"
+    local IMAGES=($(kubectl get pod "$pod" -n "$ns" -o jsonpath='{.spec.containers[*].image}'))
+    local i; for i in "${IMAGES[@]}"; do
+      echo "    - $i"
+    done
+  done
+}
+
+# Display the node of each pod in a given namespace
+kpon() {
+  local ns=${1:-default}
+  local PODS=($(kubectl get pods -n "$ns" -o jsonpath='{.items[*].metadata.name}'))
+  local p; for p in "${PODS[@]}"; do
+    echo "- $p"
+    echo "    - $(kubectl get pod -n "$ns" "$p" -o jsonpath='{.spec.nodeName}')"
+  done
+}
+
+# Display the node of each pod across all namespaces
+kponall() {
+  local RECORDS=($(kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.name}:{.metadata.namespace} {end}'))
+  local r; for r in "${RECORDS[@]}"; do
+    local pod=${r%:*} ns=${r#*:}
+    echo "- $pod ($ns)"
+    echo "    - $(kubectl get pod "$pod" -n "$ns" -o jsonpath='{.spec.nodeName}')"
+  done
+}
 
 #------------------------------------------------------------------------------#
 # Gradle
@@ -584,9 +686,48 @@ alias gcl=gcloud
 #------------------------------------------------------------------------------#
 # AWS CLI
 #------------------------------------------------------------------------------#
-if $(which aws >/dev/null) && [[ -f /usr/local/bin/aws_completer ]]; then
-  complete -C '/usr/local/bin/aws_completer' aws
-fi
+#if $(which aws >/dev/null) && [[ -f /usr/local/bin/aws_completer ]]; then
+#  complete -C '/usr/local/bin/aws_completer' aws
+#fi
+
+alias cfn="aws cloudformation"
+
+# List all CloudFormation export values in the default region
+cfn-exports() {
+  # With JMESPath
+  #aws cloudformation list-exports --output json --query 'Exports[*].Name'
+  # With jq
+  aws cloudformation list-exports --output json | jq -r '.Exports|.[]|.Name'
+}
+
+# Validate a template
+cfn-validate() {
+  aws cloudformation validate-template --template-body "$(cat  $1)"
+}
+
+# SAM package
+smp() {
+  sam package --template-file template.yml --output-template-file package.yml --s3-bucket quantumsense-sam
+}
+
+# SAM deploy
+smd() {
+  local stack=$1
+  if [[ -z "$stack" ]]; then
+    echo "Usage: smd STACK_NAME"
+    return 1
+  fi
+  sam deploy --template-file package.yml --capabilities CAPABILITY_IAM --stack-name "$stack"
+}
+# SAM package and deploy
+sm() {
+  local stack=$1
+  if [[ -z "$stack" ]]; then
+    echo "Usage: sm STACK_NAME"
+    return 1
+  fi
+  smp && smd "$stack"
+}
 
 # Usage examples of following functions:
 #
@@ -669,6 +810,12 @@ elif is-linux; then
   s ~/.bash_linux
 fi
 
+#------------------------------------------------------------------------------#
+# bash-completion (Homebrew)
+#------------------------------------------------------------------------------#
+if [ -f /usr/local/share/bash-completion/bash_completion ]; then
+  . /usr/local/share/bash-completion/bash_completion
+fi
 
 #------------------------------------------------------------------------------#
 # Temporary functions and settings (not included in dotfiles repo)

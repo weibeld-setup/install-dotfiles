@@ -28,6 +28,12 @@ set hlsearch
 " Highlicht first matches of search while typing pattern
 set incsearch
 
+" Save file automatically when using :make
+set autowrite
+
+" Remamp macro key from q to m
+nnoremap m q
+nnoremap q <Nop>
 
 " Open file explorer in a horizontal split window
 nnoremap S :Sex<CR>
@@ -315,4 +321,19 @@ command! A e assets
 " Do Not Change The Working Directory When Opening A File
 set noautochdir
 
-nnoremap <leader>t :s/\<\(\w\)\(\S*\)/\u\1\L\2/g<CR>
+" nnoremap <leader>t :s/\<\(\w\)\(\S*\)/\u\1\L\2/g<CR>
+
+" vim-go plugin
+autocmd FileType go nmap gb <Plug>(go-build)
+autocmd FileType go nmap gr <Plug>(go-run)
+autocmd FileType go nmap gi <Plug>(go-info)
+autocmd FileType go nmap gc <Plug>(go-doc)
+autocmd FileType go nmap gC <Plug>(go-doc-browser)
+"autocmd FileType go nmap :gi :GoImport<Space>
+autocmd BufWritePost *.go :GoBuild 
+
+" Disable 'K' for open docs (https://github.com/fatih/vim-go/issues/140)
+let g:go_doc_keywordprg_enabled = 0
+
+" Fix filetype for Bash files
+autocmd BufNewFile,BufRead .bashrc :set filetype=sh

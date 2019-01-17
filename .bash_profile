@@ -55,8 +55,6 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export JUNIT_HOME=$JAVA_HOME/lib
 
   # Kubernetes
-  export KUBECONFIG=$KUBECONFIG:~/.kube/config
-  export KUBECONFIG=$KUBECONFIG:~/.kube/config-sent2vec-cluster
   export CLASSPATH=.:$JUNIT_HOME/junit-4.10.jar:..
 
   # Misc
@@ -64,8 +62,12 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export fonts_user=~/Library/Fonts
   export fonts_local=/Library/Fonts
   export fonts_system=/System/Library/Fonts
-  export GOPATH=~/.go
   export PYTHONSTARTUP=~/.python
+
+  # Go
+  export GOPATH=~/Desktop/go
+  PATH="$PATH:$GOPATH/bin"
+  export go=$GOPATH
 
   # PATH
   PATH="$PATH:~/bin"
@@ -73,8 +75,8 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   PATH="$PATH:~/google-cloud-sdk/bin"
   PATH="$PATH:/usr/local/opt/gnupg@1.4/libexec/gpgbin"
   PATH="$PATH:~/platform-tools"
-  PATH="$PATH:$HOME/.go/bin"
   PATH="$PATH:/usr/local/mongodb"
+
 
 #------------------------------------------------------------------------------#
 # If running on Linux system
