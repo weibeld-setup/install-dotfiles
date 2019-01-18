@@ -572,23 +572,33 @@ dksc() {
 # Kubernetes
 #------------------------------------------------------------------------------#
 
+alias _current-context='kubectl config current-context'
+alias _list-contexts='kubectl config get-contexts -o name'
+alias _current-ns='kubectl config get-contexts | grep "$(_current-context)" | tr -s " " | cut -d " " -f 5 | sed s/^\$/default/'
+alias _list-ns='kubectl get namespaces -o custom-columns=:.metadata.name --no-headers'
+
+_mark() {
+  awk -v v="$1" '{if ($0~v) {p="*"} else {p=" "} print p, $0}'
+}
+alias _unmark='sed s/^\*//'
+
 alias k=kubectl
 
-# List all available kubeconfig contexts
-alias kc='kubectl config get-contexts -o name'
 # Display the current kubeconfig context
-alias kcc='kubectl config current-context'
+alias kc='_current-context'
+# List all available kubeconfig contexts
+alias kcl='_list-contexts | _mark $(_current-context)'
 # Set the current kubeconfig context
-alias kcs='kubectl config use-context $(kubectl config get-contexts -o name | fzf)'
+alias kcs='kubectl config use-context $(_list-contexts | _mark $(_current-context) | fzf | _unmark)'
 # Rename a context (usage: kcr <new-name>)
-alias kcr='kubectl config rename-context $(kubectl config get-contexts -o name | fzf)'
+alias kcr='kubectl config rename-context $(_list-contexts | fzf)'
 
-# List all namespaces
-alias kn='kubectl get namespaces -o custom-columns=:.metadata.name --no-headers'
 # Display the default namespace for the current context
-alias knc='kubectl config get-contexts --no-headers | grep $(kubectl config current-context) | tr -s " " | cut -d " " -f 5'
+alias kn='_current-ns'
+# List all namespaces
+alias knl='_list-ns | _mark $(_current-ns)'
 # Set the default namespace for the current context
-alias kns='kubectl config set-context --current --namespace $(kubectl get namespaces -o custom-columns=:.metadata.name --no-headers | fzf)'
+alias kns='kubectl config set-context --current --namespace $(_list-ns | _mark $(_current-ns)| fzf | _unmark)'
 
 # Delete a context, cluster, and user from the default kubeconfig file. It is
 # asumed that context, cluster, and user that belong together identical names.
@@ -603,6 +613,8 @@ kc-delete() {
 # https://github.com/ahmetb/kubectl-aliases
 [ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases
 
+# https://github.com/kubermatic/fubectl
+[ -f ~/.fubectl ] && source ~/.fubectl
 
 # Display the container images of each pod in a given namespace
 kpoi() {
