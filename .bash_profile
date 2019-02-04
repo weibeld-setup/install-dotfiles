@@ -71,6 +71,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
 
   # PATH
   PATH="$PATH:~/bin"
+  PATH="$PATH:/usr/local/sbin"
   PATH="$PATH:/usr/local/Cellar/rabbitmq/3.7.7_1/sbin"
   PATH="$PATH:~/google-cloud-sdk/bin"
   PATH="$PATH:/usr/local/opt/gnupg@1.4/libexec/gpgbin"
@@ -89,3 +90,4 @@ fi
 # Source ~/.bashrc
 #------------------------------------------------------------------------------#
 . ~/.bashrc
+export PATH="/usr/local/sbin:$PATH"
