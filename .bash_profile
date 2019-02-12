@@ -1,3 +1,7 @@
+# Add location to end of PATH if it doesn't yet exist
+addpath() { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$PATH:$1";  }
+export -f addpath
+
 if [[ "$OSTYPE" =~ darwin ]]; then
 
   # ls colors (folders=blue, files=white, executables=green, links=cyan)
@@ -26,9 +30,16 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export PYTHONSTARTUP=~/.python
 
   # PATH
-  PATH="$PATH:~/bin"
-  PATH="$PATH:/usr/local/sbin"
-  PATH="$PATH:$GOPATH/bin"
+  addpath "$HOME/bin"
+  addpath "/usr/local/sbin"
+  addpath "$GOPATH/bin"
+  addpath "$HOME/.krew/bin"
+
+  # Google Cloud SDK (including gcloud)
+  if [ -f '/Users/dw/google-cloud-sdk/path.bash.inc' ]; then . '/Users/dw/google-cloud-sdk/path.bash.inc'; fi
+  if [ -f '/Users/dw/google-cloud-sdk/completion.bash.inc' ]; then . '/Users/dw/google-cloud-sdk/completion.bash.inc'; fi
+
 fi
 
 . ~/.bashrc
+

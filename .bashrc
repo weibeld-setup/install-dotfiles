@@ -35,13 +35,32 @@ shopt -s extglob
 shopt -s nullglob
 
 #------------------------------------------------------------------------------#
+# Configure Readline
+# https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
+#------------------------------------------------------------------------------#
+bind 'set skip-completed-text on'
+
+# Enable/disable vi line-editing mode (default is emacs)
+vi-mode-on() {
+  bind 'set editing-mode vi'  # Equivalen to set -o vi
+  bind 'set show-mode-in-prompt on'
+  bind 'set vi-ins-mode-string \1\033[1;32m@|\033[m\2'
+  bind 'set vi-cmd-mode-string \1\033[1;42;37m@\033[;1;32m|\033[m\2'
+  bind '"\C-k": vi-movement-mode'
+}
+vi-mode-off() {
+  bind 'set editing-mode emacs'  # Equivalen to set +o vi
+  bind 'set show-mode-in-prompt off'
+}
+
+#------------------------------------------------------------------------------#
 # Prompt
 #------------------------------------------------------------------------------#
 
 PROMPT_COMMAND=__set-prompt
 __set-prompt() {
   local EXIT_CODE=$?
-  PS1='\[\e[1;32m\]\v:\w$ \[\e[0m\]'
+  PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
   [[ "$EXIT_CODE" -ne 0 ]] && PS1="\e[1;31m$EXIT_CODE|$PS1"
 }
 
@@ -51,6 +70,7 @@ __set-prompt() {
 
 if [[ "$OSTYPE" =~ darwin ]]; then
   source /usr/local/etc/profile.d/bash_completion.sh
+  # Source completion scripts of Homebrew formulas
   for f in /usr/local/etc/bash_completion.d/*; do
     source "$f"
   done
@@ -136,6 +156,16 @@ random() {
   cat /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c "$length"
 }
 
+# Format text to terminal width with word wrapping. Similar to fmt, which is
+# not used because it doesn't preserve single newlines (only paragraphs).
+format() {
+  # awk: add nroff commands to beginning of input: .pl: page length, .ll: line
+  #   length, .na: disable justification, .hy 0: disable hyphenation.
+  # sed: revert conversion of dashes to U+2010 (UTF-8 0xE28090) by nroff
+  #   (requires GNU sed)
+  # Source: https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
+  awk -v c=$(tput cols) 'BEGIN {printf ".pl 1\n.ll %d\n.na\n.hy 0\n", c} {print}' | nroff | sed 's/\xE2\x80\x90/-/g'
+}
 
 #------------------------------------------------------------------------------#
 # System management
@@ -190,6 +220,13 @@ hist() {
   eval $(history | fzf -n 2.. -e --no-sort --tac | sed 's/^ *[0-9][0-9]* *//')
 }
 
+# Change into the directory of the file pointed to by a symlink
+cdl() {
+  local t=$(readlink "$1")
+  cd $([[ -f "$t" ]] && echo $(dirname "$t") || echo "$t")
+}
+complete -f cdl
+
 # Create new directory and cd to it
 mkcd() { mkdir "$1" && cd "$1"; }
 
@@ -228,18 +265,6 @@ enc() { echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-; }
 
 # Print the character encoding used by the terminal
 enc-type() { echo $LC_CTYPE; }
-
-# Delete the processes supplied on stdin: one process per line, first white-
-# space delimited token must be process ID. Intended to read output from pgrep.
-mykill() {
-  while read l; do
-    pid=$(echo "$l" | awk '{print $1}')
-    kill -9 "$pid"
-    echo "Killed $pid"
-  done
-}
-
-alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
 
 
 #------------------------------------------------------------------------------#
@@ -284,27 +309,28 @@ ____x2x() {
   done
 }
 
-# Print a number in hex, dec, oct bin. Input format: 0xA, 10, 012, 0b1010
+# Print a number in binary, octal, decimal, and hexadecmial formats. The number
+# can be provided as binary (0b...), octal (0...), decimal, or hexadecimal (0x...)
 n() {
-  local PAT_HEX='^0x([0-9a-fA-F]+)$'
   local PAT_BIN='^0b([01]+)$'
   local PAT_OCT='^0([0-7]+)$'
   local PAT_DEC='^([1-9][0-9]*)$'
+  local PAT_HEX='^0x([0-9a-fA-F]+)$'
   local PAT_0='^(0)$'
   local n
-  # Convert to decimal
-  if   [[ $1 =~ $PAT_HEX ]]; then n=$(hex2dec ${BASH_REMATCH[1]})
-  elif [[ $1 =~ $PAT_BIN ]]; then n=$(bin2dec ${BASH_REMATCH[1]})
-  elif [[ $1 =~ $PAT_OCT ]]; then n=$(oct2dec ${BASH_REMATCH[1]})
+  # Convert number to decimal as an intermediary format
+  if   [[ $1 =~ $PAT_HEX ]]; then n=$(h2d ${BASH_REMATCH[1]})
+  elif [[ $1 =~ $PAT_BIN ]]; then n=$(b2d ${BASH_REMATCH[1]})
+  elif [[ $1 =~ $PAT_OCT ]]; then n=$(o2d ${BASH_REMATCH[1]})
   elif [[ $1 =~ $PAT_DEC || $1 =~ $PAT_0 ]]; then n=${BASH_REMATCH[1]}
   else
     echo "Invalid number: $1" && return 1
   fi
   # Convert from decimal to other systems
-  echo "Hexadecimal: $(dec2hex $n)"
+  echo "Binary: $(d2b $n)"
+  echo "Octal: $(d2o $n)"
   echo "Decimal: $n"
-  echo "Octal: $(dec2oct $n)"
-  echo "Binary: $(dec2bin $n)"
+  echo "Hexadecimal: $(d2h $n)"
 }
 
 #------------------------------------------------------------------------------#
@@ -503,6 +529,18 @@ kc-delete() {
 }
 
 
+# View help messages and resource documentation in terminal pager
+kubectl() {
+  if [[ "$*" =~ -h$|--help$ ]]; then
+    command kubectl "$@" | format | less
+  elif [[ "$1" = explain ]]; then
+    command kubectl "$@" | less
+  else
+    command kubectl "$@"
+  fi
+}
+
+
 # https://github.com/kubermatic/fubectl
 #[ -f ~/.fubectl ] && source ~/.fubectl
 
@@ -520,6 +558,9 @@ alias kpnn='kubectl get pods -o custom-columns=POD:.metadata.name,NODE:.spec.nod
 # Display the node of each pod across all namespaces
 alias kpna='kubectl get pods --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,POD:.metadata.name,NODE:.spec.nodeName'
 
+alias ke='kubectl explain'
+complete -F _complete_alias ke
+
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
   source ~/.kubectl_aliases
@@ -533,6 +574,9 @@ fi
 # Mac and Linux specific functions
 #------------------------------------------------------------------------------#
 if is-mac; then
+
+  # Recursively delete all .DS_Store files in the current directory
+  alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
 
   # Make Finder hiding hidden files, e.g. dotfiles (default)
   finder_hide() {
