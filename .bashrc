@@ -33,6 +33,7 @@
 
 shopt -s extglob
 shopt -s nullglob
+set -o pipefail
 
 #------------------------------------------------------------------------------#
 # Configure Readline
@@ -61,7 +62,7 @@ PROMPT_COMMAND=__set-prompt
 __set-prompt() {
   local EXIT_CODE=$?
   PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
-  [[ "$EXIT_CODE" -ne 0 ]] && PS1="\e[1;31m$EXIT_CODE|$PS1"
+  [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
 }
 
 #------------------------------------------------------------------------------#
@@ -156,15 +157,17 @@ random() {
   cat /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c "$length"
 }
 
-# Format text to terminal width with word wrapping. Similar to fmt, which is
-# not used because it doesn't preserve single newlines (only paragraphs).
+# Read text from stdin and format it to width of terminal with word wrapping.
+# This function is similar to the 'fmt' command, but it preserves all newlines.
 format() {
-  # awk: add nroff commands to beginning of input: .pl: page length, .ll: line
-  #   length, .na: disable justification, .hy 0: disable hyphenation.
-  # sed: revert conversion of dashes to U+2010 (UTF-8 0xE28090) by nroff
-  #   (requires GNU sed)
-  # Source: https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
-  awk -v c=$(tput cols) 'BEGIN {printf ".pl 1\n.ll %d\n.na\n.hy 0\n", c} {print}' | nroff | sed 's/\xE2\x80\x90/-/g'
+  awk -v c=$(tput cols) 'BEGIN{printf ".pl 1\n.ll %d\n.na\n.hy 0\n", c}{print}' |
+    nroff |
+    sed 's/\xE2\x80\x90/-/g'
+  # - awk adds nroff commands to beginning of input (.pl = page length,
+  #   .ll = line length, .na=disable justification, hy 0 = disable hyphenation)
+  # - nroff formats the text
+  # - sed reverts the conversion of - to U+2010 (UTF-8 0xE28090) done by nroff
+  # https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
 }
 
 #------------------------------------------------------------------------------#
@@ -442,6 +445,8 @@ alias gf="git flow"
 #------------------------------------------------------------------------------#
 
 alias dk=docker
+complete -F _complete_alias dk
+
 alias dki='docker images'
 alias dkc='docker ps -a'
 
@@ -508,58 +513,64 @@ sm() {
 # Kubernetes
 #------------------------------------------------------------------------------#
 
-# Get current context, list contexts, change current context
-alias ksc='kubectl config current-context'
-alias klc='kubectl config get-contexts -o name | sed "s/^/  /;\|$(ksc)|s/ /*/"'
-alias kcc='kubectl config use-context "$(klc | fzf -e | sed "s/^..//")"'
-
-# Get namespace (ns) of current context, list ns, change ns of current context
-alias ksn='kubectl config get-contexts --no-headers "$(ksc)" | awk "{print \$5}" | sed "s/^$/default/"'
-alias kln='kubectl get -o name ns | sed "s|^.*/|  |;\|$(ksn)|s/ /*/"'
-alias kcn='kubectl config set-context --current --namespace "$(kln | fzf -e | sed "s/^..//")"'
-
-# Delete a context, cluster, and user from the default kubeconfig file. It is
-# asumed that context, cluster, and user that belong together identical names.
-# If "error: open ~/.kube/config.lock: file exists", unset KUBECONFIG variable.
-kc-delete() {
-  local name=$1
-  kubectl config delete-context "$name" &&
-  kubectl config delete-cluster "$name" &&
-  kubectl config unset users."$name"
-}
-
-
-# View help messages and resource documentation in terminal pager
+# Redirect output of commands with long output to terminal pager
 kubectl() {
   if [[ "$*" =~ -h$|--help$ ]]; then
     command kubectl "$@" | format | less
-  elif [[ "$1" = explain ]]; then
+  elif [[ "$1" = explain || "$1" = describe ]]; then
     command kubectl "$@" | less
   else
     command kubectl "$@"
   fi
 }
 
+# Get current context
+alias krc='kubectl config current-context'
+# List all contexts
+alias klc='kubectl config get-contexts -o name | sed "s/^/  /;\|^  $(krc)$|s/ /*/"'
+# Change current context
+alias kcc='kubectl config use-context "$(klc | fzf -e | sed "s/^..//")"'
 
-# https://github.com/kubermatic/fubectl
-#[ -f ~/.fubectl ] && source ~/.fubectl
+# Get current namespace
+alias krn='kubectl config get-contexts --no-headers "$(krc)" | awk "{print \$5}" | sed "s/^$/default/"'
+# List all namespaces
+alias kln='kubectl get -o name ns | sed "s|^.*/|  |;\|$(krn)|s/ /*/"'
+# Change current namespace
+alias kcn='kubectl config set-context --current --namespace "$(kln | fzf -e | sed "s/^..//")"'
 
-# Display the container images of each pod in the current namespace
-alias kpi='kubectl get pods -o custom-columns="POD:.metadata.name,IMAGES:.spec.containers[*].image"'
-# Display the container images of each pod in a specific namespace 
-alias kpin='kubectl get pods -o custom-columns="POD:.metadata.name,IMAGES:.spec.containers[*].image" -n $(_list-ns | _mark $(_current-ns) | fzf | _unmark)'
-# Display the container images of each pod across all namespaces
-alias kpia='kubectl get pods --all-namespaces -o custom-columns="NAMESPACE:.metadata.namespace,POD:.metadata.name,IMAGES:.spec.containers[*].image"'
-
-# Display the node of each pod in the current namespace
-alias kpn='kubectl get pods -o custom-columns=POD:.metadata.name,NODE:.spec.nodeName'
-# Display the node of each pod in a specific namespace
-alias kpnn='kubectl get pods -o custom-columns=POD:.metadata.name,NODE:.spec.nodeName -n $(_list-ns | _mark $(_current-ns) | fzf | _unmark)'
-# Display the node of each pod across all namespaces
-alias kpna='kubectl get pods --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,POD:.metadata.name,NODE:.spec.nodeName'
-
+# kubectl explain
 alias ke='kubectl explain'
 complete -F _complete_alias ke
+
+# List container images of each pod
+alias kli='kubectl get -o custom-columns="POD:.metadata.name,IMAGES:.spec.containers[*].image" pods'
+complete -F _complete_alias kli
+
+# Open kubeconfig file for editing
+alias kc='vim ~/.kube/config'
+
+# Delete similarly-named context, cluster, and user entries from kubeconfig file
+kcd() {
+  kubectl config unset contexts."$1"
+  kubectl config unset clusters."$1"
+  kubectl config unset users."$1"
+}
+
+# Show events for a resource specified by name
+kge() {
+  name=$1 && shift
+  kubectl get events \
+    --field-selector=involvedObject.name="$name" \
+    --sort-by=lastTimestamp \
+    -o custom-columns='KIND:involvedObject.kind,TIME:lastTimestamp,EMITTED BY:source.component,REASON:reason,MESSAGE:message' \
+    "$@"
+}
+
+# Display information about the authorisation mode of the current cluster
+kauthz() {
+  kubectl cluster-info dump | grep authorization-mode | sed 's/^ *"//;s/",$//' ||
+    kubectl api-versions | grep authorization
+}
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
@@ -569,6 +580,9 @@ if [[ -f ~/.kubectl_aliases ]]; then
     complete -F _complete_alias "$_a"
   done
 fi
+
+# https://github.com/kubermatic/fubectl
+#[ -f ~/.fubectl ] && source ~/.fubectl
 
 #------------------------------------------------------------------------------#
 # Mac and Linux specific functions

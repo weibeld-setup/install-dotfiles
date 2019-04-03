@@ -34,6 +34,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   addpath "/usr/local/sbin"
   addpath "$GOPATH/bin"
   addpath "$HOME/.krew/bin"
+  addpath "$HOME/.kubectl-plugins"
 
   # Google Cloud SDK (including gcloud)
   if [ -f '/Users/dw/google-cloud-sdk/path.bash.inc' ]; then . '/Users/dw/google-cloud-sdk/path.bash.inc'; fi
@@ -41,5 +42,4 @@ if [[ "$OSTYPE" =~ darwin ]]; then
 
 fi
 
-. ~/.bashrc
-
+source ~/.bashrc

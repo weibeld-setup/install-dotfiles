@@ -77,6 +77,10 @@ nnoremap K 10k
 nnoremap <C-j> 5j
 nnoremap <C-k> 5k
 
+" Navigate forward and backward on a line
+nnoremap W 5W
+nnoremap B 5B
+
 " Remap 'join lines', which is J by default
 nnoremap Z :join<CR>
 
