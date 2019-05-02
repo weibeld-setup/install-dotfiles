@@ -81,7 +81,7 @@ fi
 # complete-alias (https://github.com/cykerway/complete-alias)
 #------------------------------------------------------------------------------#
 
-source ~/.complete_alias.sh
+source ~/.complete_alias
 
 #------------------------------------------------------------------------------#
 # Tmux (referenced from ~/.tmux.conf)
