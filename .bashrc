@@ -447,8 +447,8 @@ alias gf="git flow"
 alias dk=docker
 complete -F _complete_alias dk
 
-alias dki='docker images'
-alias dkc='docker ps -a'
+alias dki='docker image ls'
+alias dkc='docker container ps -a'
 
 # Remove ALL images
 dkri() {
@@ -534,9 +534,12 @@ alias kcc='kubectl config use-context "$(klc | fzf -e | sed "s/^..//")"'
 # Get current namespace
 alias krn='kubectl config get-contexts --no-headers "$(krc)" | awk "{print \$5}" | sed "s/^$/default/"'
 # List all namespaces
-alias kln='kubectl get -o name ns | sed "s|^.*/|  |;\|$(krn)|s/ /*/"'
+alias kln='kubectl get -o name ns | sed "s|^.*/|  |;\|^  $(krn)$|s/ /*/"'
 # Change current namespace
 alias kcn='kubectl config set-context --current --namespace "$(kln | fzf -e | sed "s/^..//")"'
+
+# Run a busybox container in the cluster 
+alias kbb='kubectl run busybox --image=busybox:1.28 --rm -it --command --restart=Never --'
 
 # kubectl explain
 alias ke='kubectl explain'
@@ -545,6 +548,9 @@ complete -F _complete_alias ke
 # List container images of each pod
 alias kli='kubectl get -o custom-columns="POD:.metadata.name,IMAGES:.spec.containers[*].image" pods'
 complete -F _complete_alias kli
+
+# Show information about a specific API resource
+alias kr='kubectl api-resources | grep '
 
 # Open kubeconfig file for editing
 alias kc='vim ~/.kube/config'
@@ -570,6 +576,20 @@ kge() {
 kauthz() {
   kubectl cluster-info dump | grep authorization-mode | sed 's/^ *"//;s/",$//' ||
     kubectl api-versions | grep authorization
+}
+
+# List all (Cluster)RoleBindings with their role and subjects
+kbindings() {
+  local spec=NAME:metadata.name,ROLE:roleRef.name,SUBJECTS:subjects[*].name
+  local preamble=KIND:kind,NAMESPACE:metadata.namespace
+  [[ "$1" = -l ]] && spec=$preamble,$spec
+  kubectl get rolebindings,clusterrolebindings --all-namespaces -o custom-columns="$spec"
+}
+
+kbindings2() {
+  kubectl get rolebindings,clusterrolebindings \
+    --all-namespaces \
+    -o custom-columns='KIND:kind,NAMESPACE:metadata.namespace,NAME:metadata.name,SERVICE ACCOUNTS:subjects[?(@.kind=="ServiceAccount")].name'
 }
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
