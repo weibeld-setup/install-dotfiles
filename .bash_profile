@@ -4,9 +4,11 @@ export -f addpath
 
 if [[ "$OSTYPE" =~ darwin ]]; then
 
-  # ls colors (folders=blue, files=white, executables=green, links=cyan)
+  # Default colors (https://gist.github.com/thomd/7667642#lscolors)
+  #export LSCOLORS=exgxHxHxcxHxHxcxcxexex
+  # Bold colors (may be more readable on some screens)
+  export LSCOLORS=ExGxHxHxcxHxHxcxcxExEx
   export CLICOLOR=1
-  export LSCOLORS=exgxHxHxcxHxHxcxcxexex
 
   # System
   export LANG=en_US.UTF-8
