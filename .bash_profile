@@ -20,10 +20,6 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_65.jdk/Contents/Home
   export JUNIT_HOME=$JAVA_HOME/lib
 
-  # Go
-  export GOPATH=~/Desktop/go
-  export go=$GOPATH
-
   # Misc
   export tex_home=/usr/local/texlive
   export fonts_user=~/Library/Fonts
@@ -34,10 +30,11 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   # PATH
   addpath "$HOME/bin"
   addpath "/usr/local/sbin"
-  addpath "$GOPATH/bin"
   addpath "$HOME/.krew/bin"
   addpath "$HOME/.kubectl-plugins"
   addpath "$HOME/.cargo/bin"
+  addpath "$HOME/google-cloud-sdk/bin"
+  addpath "$HOME/go/bin"
 
   # Google Cloud SDK (including gcloud)
   if [ -f '/Users/dw/google-cloud-sdk/path.bash.inc' ]; then . '/Users/dw/google-cloud-sdk/path.bash.inc'; fi
@@ -46,5 +43,3 @@ if [[ "$OSTYPE" =~ darwin ]]; then
 fi
 
 source ~/.bashrc
-
-export PATH="$HOME/.cargo/bin:$PATH"
