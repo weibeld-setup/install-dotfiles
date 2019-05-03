@@ -341,3 +341,4 @@ let g:go_doc_keywordprg_enabled = 0
 
 " Fix filetype for Bash files
 autocmd BufNewFile,BufRead .bashrc :set filetype=sh
+
