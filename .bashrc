@@ -183,6 +183,7 @@ alias la="ls -a"
 alias ll="ls -al"
 alias wl='wc -l'
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+complete -F _complete_alias dotfiles
 alias ssh='TERM=xterm-256color ssh'
 alias pgrep='pgrep -fl'
 alias x='chmod +x'
