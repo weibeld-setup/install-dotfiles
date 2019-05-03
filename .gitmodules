@@ -10,3 +10,6 @@
 [submodule ".vim/bundle/vim-pandoc-syntax"]
 	path = .vim/bundle/vim-pandoc-syntax
 	url = https://github.com/vim-pandoc/vim-pandoc-syntax
+[submodule "/Users/dw/.vim/bundle/vim-go"]
+	path = /Users/dw/.vim/bundle/vim-go
+	url = https://github.com/fatih/vim-go
