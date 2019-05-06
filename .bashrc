@@ -660,6 +660,12 @@ if is-mac; then
   }
 
 elif is-linux; then
+
+  alias ls='ls --color=auto'
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
+
   # Customise keyboard layout with setxkbmap:
   #   - Add Swiss German keyboard layout
   #   - Swap Caps-Lock and Ctrl keys
