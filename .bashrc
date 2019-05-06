@@ -36,70 +36,6 @@ shopt -s nullglob
 set -o pipefail
 
 #------------------------------------------------------------------------------#
-# Configure Readline
-# https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
-#------------------------------------------------------------------------------#
-bind 'set skip-completed-text on'
-
-# Enable/disable vi line-editing mode (default is emacs)
-vi-mode-on() {
-  bind 'set editing-mode vi'  # Equivalen to set -o vi
-  bind 'set show-mode-in-prompt on'
-  bind 'set vi-ins-mode-string \1\033[1;32m@|\033[m\2'
-  bind 'set vi-cmd-mode-string \1\033[1;42;37m@\033[;1;32m|\033[m\2'
-  bind '"\C-k": vi-movement-mode'
-}
-vi-mode-off() {
-  bind 'set editing-mode emacs'  # Equivalen to set +o vi
-  bind 'set show-mode-in-prompt off'
-}
-
-#------------------------------------------------------------------------------#
-# Prompt
-#------------------------------------------------------------------------------#
-
-PROMPT_COMMAND=__set-prompt
-__set-prompt() {
-  local EXIT_CODE=$?
-  PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
-  [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
-}
-
-#------------------------------------------------------------------------------#
-# bash-completion (installed with Homebrew)
-#------------------------------------------------------------------------------#
-
-if [[ "$OSTYPE" =~ darwin ]]; then
-  source /usr/local/etc/profile.d/bash_completion.sh
-  # Source completion scripts of Homebrew formulas
-  for f in /usr/local/etc/bash_completion.d/*; do
-    source "$f"
-  done
-fi
-
-#------------------------------------------------------------------------------#
-# complete-alias (https://github.com/cykerway/complete-alias)
-#------------------------------------------------------------------------------#
-
-source ~/.complete_alias
-
-#------------------------------------------------------------------------------#
-# Tmux (referenced from ~/.tmux.conf)
-#------------------------------------------------------------------------------#
-
-# Create tmux pane in current working directory
-tmux-split-window-same-dir() {
-  tmux split-window $1
-  tmux send-keys "cd $PWD; clear" Enter
-}
-
-# Create tmux window in current working directory
-tmux-new-window-same-dir() {
-  tmux new-window
-  tmux send-keys "cd $PWD; clear" Enter
-}
-
-#------------------------------------------------------------------------------#
 # Base functions (used by other functions in this file)
 #------------------------------------------------------------------------------#
 
@@ -169,6 +105,75 @@ format() {
   # - sed reverts the conversion of - to U+2010 (UTF-8 0xE28090) done by nroff
   # https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
 }
+
+#------------------------------------------------------------------------------#
+# Configure Readline
+# https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
+#------------------------------------------------------------------------------#
+bind 'set skip-completed-text on'
+
+# Enable/disable vi line-editing mode (default is emacs)
+vi-mode-on() {
+  bind 'set editing-mode vi'  # Equivalen to set -o vi
+  bind 'set show-mode-in-prompt on'
+  bind 'set vi-ins-mode-string \1\033[1;32m@|\033[m\2'
+  bind 'set vi-cmd-mode-string \1\033[1;42;37m@\033[;1;32m|\033[m\2'
+  bind '"\C-k": vi-movement-mode'
+}
+vi-mode-off() {
+  bind 'set editing-mode emacs'  # Equivalen to set +o vi
+  bind 'set show-mode-in-prompt off'
+}
+
+#------------------------------------------------------------------------------#
+# Prompt
+#------------------------------------------------------------------------------#
+
+PROMPT_COMMAND=__set-prompt
+__set-prompt() {
+  local EXIT_CODE=$?
+  if is-mac; then
+    PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
+  else
+    PS1='\[\e[1;33m\]\u@\h$ \[\e[0m\]'
+  fi
+  [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
+}
+
+#------------------------------------------------------------------------------#
+# bash-completion (installed with Homebrew)
+#------------------------------------------------------------------------------#
+
+if is-mac ; then
+  source /usr/local/etc/profile.d/bash_completion.sh
+  # Source completion scripts of Homebrew formulas
+  for f in /usr/local/etc/bash_completion.d/*; do
+    source "$f"
+  done
+fi
+
+#------------------------------------------------------------------------------#
+# complete-alias (https://github.com/cykerway/complete-alias)
+#------------------------------------------------------------------------------#
+
+source ~/.complete_alias
+
+#------------------------------------------------------------------------------#
+# Tmux (referenced from ~/.tmux.conf)
+#------------------------------------------------------------------------------#
+
+# Create tmux pane in current working directory
+tmux-split-window-same-dir() {
+  tmux split-window $1
+  tmux send-keys "cd $PWD; clear" Enter
+}
+
+# Create tmux window in current working directory
+tmux-new-window-same-dir() {
+  tmux new-window
+  tmux send-keys "cd $PWD; clear" Enter
+}
+
 
 #------------------------------------------------------------------------------#
 # System management
