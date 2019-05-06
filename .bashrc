@@ -135,7 +135,7 @@ __set-prompt() {
   if is-mac; then
     PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
   else
-    PS1='\[\e[1;33m\]\u@\h$ \[\e[0m\]'
+    PS1='\[\e[1;33m\]\u@\h:\w$ \[\e[0m\]'
   fi
   [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
 }
