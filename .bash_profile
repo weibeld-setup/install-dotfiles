@@ -36,10 +36,6 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   addpath "$HOME/google-cloud-sdk/bin"
   addpath "$HOME/go/bin"
 
-  # Google Cloud SDK (including gcloud)
-  if [ -f '/Users/dw/google-cloud-sdk/path.bash.inc' ]; then . '/Users/dw/google-cloud-sdk/path.bash.inc'; fi
-  if [ -f '/Users/dw/google-cloud-sdk/completion.bash.inc' ]; then . '/Users/dw/google-cloud-sdk/completion.bash.inc'; fi
-
 fi
 
 source ~/.bashrc

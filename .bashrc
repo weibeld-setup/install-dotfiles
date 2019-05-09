@@ -611,6 +611,13 @@ fi
 #[ -f ~/.fubectl ] && source ~/.fubectl
 
 #------------------------------------------------------------------------------#
+# Terraform
+#------------------------------------------------------------------------------#
+
+alias tf=terraform
+complete -F _complete_alias tf
+
+#------------------------------------------------------------------------------#
 # Mac and Linux specific functions
 #------------------------------------------------------------------------------#
 if is-mac; then
@@ -738,6 +745,10 @@ fi
 #------------------------------------------------------------------------------#
 
 alias asciicast2gif='docker run --rm -v "$PWD":/data asciinema/asciicast2gif'
+# Authenticate with SSH key
+alias ssh-nine='ssh -i ~/.ssh/nine weibeld@weibeld.nine.ch'
+# Authenticate with LDAP password and OTP from Google Authenticator
+alias ssh-nine-login-server='ssh weibeld@login.nine.ch'
 
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
