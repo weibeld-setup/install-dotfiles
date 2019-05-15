@@ -231,6 +231,9 @@ filetype plugin on
 " Enable syntax highlighting
 syntax on
 
+" Enable Bash variant of sh syntax highlighting mode (sh.vim)
+let g:is_bash=1
+
 " Event handlers
 if has("autocmd")
   " Source the .vimrc file automatically when it is saved
