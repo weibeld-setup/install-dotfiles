@@ -31,6 +31,9 @@ set incsearch
 " Save file automatically when using :make
 set autowrite
 
+" Use underscore as word delimiter
+set iskeyword=_
+
 " Remamp macro key from q to m
 nnoremap m q
 nnoremap q <Nop>

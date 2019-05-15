@@ -5,5 +5,4 @@ autocmd FileType javascript setlocal tabstop=2 shiftwidth=2
 au BufNewFile,BufRead .bash* set ft=sh
 au BufNewFile,BufRead *.groovy,Jenkinsfile set ft=groovy tabstop=4 shiftwidth=4
 au BufNewFile,BufRead .bash* setf sh
-au BufNewFile,BufRead *.tpl set ft=go
 " au BufNewFile,BufRead *.tpl set ft=mustache
