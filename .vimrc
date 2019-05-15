@@ -331,8 +331,8 @@ set noautochdir
 autocmd FileType go nmap gb <Plug>(go-build)
 autocmd FileType go nmap gr <Plug>(go-run)
 autocmd FileType go nmap gi <Plug>(go-info)
-autocmd FileType go nmap gc <Plug>(go-doc)
-autocmd FileType go nmap gC <Plug>(go-doc-browser)
+autocmd FileType go nmap gd <Plug>(go-doc)
+autocmd FileType go nmap gdd <Plug>(go-doc-browser)
 "autocmd FileType go nmap :gi :GoImport<Space>
 autocmd BufWritePost *.go :GoBuild 
 
