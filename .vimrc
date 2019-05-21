@@ -32,7 +32,10 @@ set incsearch
 set autowrite
 
 " Use underscore as word delimiter
-set iskeyword=_
+"set iskeyword=_
+"set iskeyword=.
+"set iskeyword=<
+"set iskeyword=>
 
 " Remamp macro key from q to m
 nnoremap m q
@@ -251,10 +254,6 @@ let g:pandoc#modules#disabled = [ "spell", "folding" ]
 " Disable "conceal" for the vim-pandoc-syntax plugin
 let g:pandoc#syntax#conceal#use = 0
 
-" StatusLine: status line colors of active and inactive windows
-" (see :help cterm-colors, for iTerm use numbers under NR-8, '*' means '+8')
-hi StatusLine ctermfg=black ctermbg=darkgreen cterm=bold
-hi StatusLineNC ctermfg=white ctermbg=darkgray cterm=none
 
 " WildMenu: color of the selected item in the wildemnu (filename completion bar). The
 " color of the bar itself is equals to StatusLine.
@@ -354,3 +353,19 @@ let g:terraform_fold_sections=1
 let g:terraform_remap_spacebar=1
 let g:terraform_commentstring='//%s'
 let g:terraform_fmt_on_save=1
+
+"=============================================================================="
+" Status line
+"=============================================================================="
+
+" Always display status line (not only in split windows)
+set laststatus=2
+
+" Left-justified: [+] (modified), file path, [RO] (read-only), [Help] (help)
+" Right-justified: line, column, total lines, percent lines in file
+set statusline=%m\ %F\ %r\ %h\ %=%l/%c\ %L\ (%p%%)
+
+" Status line colors of active and inactive windows (see :help cterm-colors,
+" for iTerm use numbers under NR-8, '*' means '+8')
+hi StatusLine ctermfg=white ctermbg=darkgray cterm=bold
+hi StatusLineNC ctermfg=black ctermbg=darkgray cterm=bold
