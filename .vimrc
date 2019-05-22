@@ -41,11 +41,15 @@ set autowrite
 nnoremap m q
 nnoremap q <Nop>
 
-" Open file explorer in a horizontal split window
-nnoremap S :Sex<CR>
-
-"Open file explorer in current window
-nnoremap E :Explore<CR>
+" Toggle netrw file explorer. See browsing commands on 'h: netrw-quickhelp'
+" -: change root of tree to parent of current root
+" gn: change root of tree to directory on current line
+let g:netrw_banner=0
+let g:netrw_winsize=25
+let g:netrw_liststyle=3
+let g:netrw_localrmdir='rm -r'
+let g:netrw_maxfilenamelen=64
+nnoremap E :Lexplore<CR>
 
 " Submode for resizing windows. Requires plugin https://github.com/kana/vim-submode
 " Enlarge width of current window
@@ -363,7 +367,7 @@ set laststatus=2
 
 " Left-justified: [+] (modified), file path, [RO] (read-only), [Help] (help)
 " Right-justified: line, column, total lines, percent lines in file
-set statusline=%m\ %F\ %r\ %h\ %=%l/%c\ %L\ (%p%%)
+set statusline=[%{getcwd()}]\ %F\ %m\ %r\ %h%=%l/%c\ %L\ (%p%%)%<
 
 " Status line colors of active and inactive windows (see :help cterm-colors,
 " for iTerm use numbers under NR-8, '*' means '+8')
