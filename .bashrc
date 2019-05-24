@@ -515,6 +515,36 @@ sm() {
   smp && smd "$1"
 }
 
+# Get a secret from AWS Secrets Manager
+aws-get-secret() {
+  local NAME_OR_ARN=$1
+  aws secretsmanager get-secret-value --secret-id "$NAME_OR_ARN" --query SecretString --output text 
+}
+
+# Create a secret in AWS Secrets Manager
+aws-create-secret() {
+  local NAME=$1
+  local VALUE=$2
+  local DESCRIPTION=$3  # Optional
+  aws secretsmanager create-secret --name "$NAME" --secret-string "$VALUE" --description "$DESCRIPTION" --output json
+}
+
+# List all secrets in AWS Secrets Manager
+aws-list-secrets() {
+  RAW=$1
+  if [[ "$RAW" = -r ]]; then
+    aws secretsmanager list-secrets --query 'SecretList[*].{Name: Name, ARN: ARN, Description: Description}' --output json
+  else
+    aws secretsmanager list-secrets --query 'SecretList[*].[Name, Description]' --output table
+  fi
+}
+
+# Delete a secret from AWS Secrets Manager
+aws-delete-secret() {
+  local NAME_OR_ARN=$1
+  aws secretsmanager delete-secret --secret-id "$NAME_OR_ARN" --output json
+}
+
 #------------------------------------------------------------------------------#
 # Kubernetes
 #------------------------------------------------------------------------------#
@@ -749,6 +779,15 @@ alias asciicast2gif='docker run --rm -v "$PWD":/data asciinema/asciicast2gif'
 alias ssh-nine='ssh -i ~/.ssh/nine weibeld@weibeld.nine.ch'
 # Authenticate with LDAP password and OTP from Google Authenticator
 alias ssh-nine-login-server='ssh weibeld@login.nine.ch'
+
+pw() {
+  if ! which -s aws; then
+    echo "You must install the AWS CLI to use this command"
+    return 1
+  fi
+  LENGTH=${1:-32}
+  aws secretsmanager get-random-password --exclude-punctuation --password-length "$LENGTH" --query RandomPassword --output text
+}
 
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
