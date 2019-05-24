@@ -367,8 +367,7 @@ set laststatus=2
 
 " Left-justified: [+] (modified), file path, [RO] (read-only), [Help] (help)
 " Right-justified: line, column, total lines, percent lines in file
-set statusline=[%{getcwd()}]\ %F\ %m\ %r\ %h%=%l/%c\ %L\ (%p%%)%<
-
+set statusline=[%{getcwd()}]\ %F\ %m\ %r\ %h%=%l/%c\ %L\ (%p%%)
 " Status line colors of active and inactive windows (see :help cterm-colors,
 " for iTerm use numbers under NR-8, '*' means '+8')
 hi StatusLine ctermfg=white ctermbg=darkgray cterm=bold

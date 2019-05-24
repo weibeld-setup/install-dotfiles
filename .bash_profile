@@ -34,7 +34,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   addpath "$HOME/.kubectl-plugins"
   addpath "$HOME/.cargo/bin"
   addpath "$HOME/google-cloud-sdk/bin"
-  addpath "$HOME/go/bin"
+  addpath "$(go env GOPATH)/bin"
 
 fi
 
