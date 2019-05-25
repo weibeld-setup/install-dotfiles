@@ -42,14 +42,20 @@ nnoremap m q
 nnoremap q <Nop>
 
 " Toggle netrw file explorer. See browsing commands on 'h: netrw-quickhelp'
-" -: change root of tree to parent of current root
-" gn: change root of tree to directory on current line
+" <CR> = open file, R = rename file, D = delete file, - = root up, gn = root
+" down (to directory under cursor)
 let g:netrw_banner=0
-let g:netrw_winsize=25
+let g:netrw_winsize=20
 let g:netrw_liststyle=3
 let g:netrw_localrmdir='rm -r'
 let g:netrw_maxfilenamelen=64
-nnoremap E :Lexplore<CR>
+nnoremap E :call MyLexplore()<CR>
+function! MyLexplore()
+  " Make sure files are opened in the last active window (default is window 2).
+  " You can also set this ad-hoc with ':NetrwC <n>' or '<n>C'.
+  let g:netrw_chgwin = winnr() + 1
+  :Lexplore
+endfunction
 
 " Submode for resizing windows. Requires plugin https://github.com/kana/vim-submode
 " Enlarge width of current window
