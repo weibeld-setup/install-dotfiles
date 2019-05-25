@@ -1,0 +1,64 @@
+*wherefrom.txt*	Where is Something From?			Aug 16, 2005
+
+Author:  Charles E. Campbell  <NdrOchip@ScampbellPfamily.AbizM>
+	  (remove NOSPAM from Campbell's email first)
+Copyright: (c) 2004-2005 by Charles E. Campbell	*wherefrom-copyright*
+             Copyright (C) 2004-2005 Charles E. Campbell {{{1
+             Permission is hereby granted to use and distribute this code,
+             with or without modifications, provided that this copyright
+             notice is copied with it. Like anything else that's free,
+             WhereFrom.vim is provided *as is* and comes with no warranty
+             of any kind, either expressed or implied. By using this
+             plugin, you agree that in no event will the copyright
+             holder be liable for any damages resulting from the use
+             of this software.
+
+==============================================================================
+1. Contents		*wherefrom* *WF* *WhereFrom* *wherefrom-contents*
+
+	1. Contents...................................: |wherefrom-contents|
+	2. WhereFrom Manual...........................: |wherefrom-manual|
+	3. WhereFrom History..........................: |wherefrom-history|
+
+==============================================================================
+
+2. WhereFrom Manual			*wherefrom-man* *wherefrom-manual*
+
+	WhereFrom[!] functionname(s)      WF[!] functionname(s)
+	WhereFrom[!] map(s)               WF[!] map(s)
+	WhereFrom[!] setting(s)           WF[!] setting(s)
+	WhereFrom[!] command(s)           WF[!] command(s)
+	
+	The WhereFrom and WF commands search the runtimepath (see
+	|'runtimepath'|) to determine where the setting, function, map, or
+	command was defined.  With the "!", WhereFrom will continue looking
+	for more than one instance.
+	
+	WF-style commands are available only if the command has not been
+	previously defined, and are provided as a shorthand.
+
+	A search is undertaken only for functions, commands, and maps, and
+	then only if the function, command, or map is known to the currently
+	running vim.  Determining where settings are set is done using vim's
+	built-in method.
+
+	These commands don't search all *.vim files that you may have; it only
+	examines those that lie on your runtimepath in the common directories
+	plugin, ftplugin, colors, compilier, indent, syntax, and the after/
+	variants.  In addition, it also searches the AsNeeded directory
+	(see http://vim.sourceforge.net/scripts/script.php?script_id=915)
+
+==============================================================================
+
+3. WhereFrom History					*wherefrom-history*
+
+	3  : Aug 16, 2005 : WhereFrom now takes advantage of vim 7.0 for
+	                    determining where maps were last set
+	2  : Feb 11, 2005 : GetLatestVimsScripts auto-update line included
+	     Feb 22, 2005 : Now gives a message if unable to find a command
+	     Apr 20, 2005 : includes $HOME/.vimrc on list of to-be-searched
+	                    files
+	1  : Jan 27, 2005 : Initial release
+
+==============================================================================
+vim:tw=78:ts=8:ft=help
