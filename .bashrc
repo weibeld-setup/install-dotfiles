@@ -183,6 +183,7 @@ alias br='vim ~/.bashrc'
 alias bp='vim ~/.bash_profile'
 alias sbr='. ~/.bashrc'
 alias sbp='. ~/.bash_profile'
+alias vr='vim ~/.vimrc'
 alias rmf='rm -rf'
 alias la="ls -a"
 alias ll="ls -al"
