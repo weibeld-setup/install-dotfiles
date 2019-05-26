@@ -7,9 +7,6 @@
 
 execute pathogen#infect()
 
-" No backwards compatibility with vi (only pure Vim commands, which is better)
-set nocompatible
-
 " Extend surround plugin with LaTeX command (usage example: ysiwc textbf)
 let g:surround_{char2nr('c')} = "\\\1command\1{\r}"
 
