@@ -22,3 +22,6 @@
 [submodule ".vim/bundle/vim-terraform"]
 	path = .vim/bundle/vim-terraform
 	url = https://github.com/hashivim/vim-terraform
+[submodule ".vim/bundle/vim-buftabline"]
+	path = .vim/bundle/vim-buftabline
+	url = https://github.com/ap/vim-buftabline
