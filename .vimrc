@@ -1,4 +1,4 @@
-" ~/.vimrc
+"~/.vimrc
 "
 " Note: split lines with \ at the beginning of the new line.
 "
@@ -6,7 +6,6 @@
 "------------------------------------------------------------------------------"
 
 execute pathogen#infect()
-
 " Extend surround plugin with LaTeX command (usage example: ysiwc textbf)
 let g:surround_{char2nr('c')} = "\\\1command\1{\r}"
 
@@ -16,33 +15,140 @@ let loaded_matchparen=1
 " Use line numbers
 set number
 
-" Display line number and column number in status bar
-set ruler
-
-" Highlight search matches
-set hlsearch
-
 " Highlicht first matches of search while typing pattern
 set incsearch
+
+" Highlight search matches (but prevent highlighting matches from last search
+" when this file is sourced).
+set hlsearch
+nohlsearch
 
 " Save file automatically when using :make
 set autowrite
 
-" Use underscore as word delimiter
-"set iskeyword=_
-"set iskeyword=.
-"set iskeyword=<
-"set iskeyword=>
+" Navigate in steps of multiple lines/columns
+nnoremap <C-h> 5h
+nnoremap <C-l> 5l
+nnoremap <C-j> 5j
+nnoremap <C-k> 5k
+
+vnoremap <C-h> 5h
+vnoremap <C-l> 5l
+vnoremap <C-j> 5j
+vnoremap <C-k> 5k
+
+nnoremap H 20h
+nnoremap L 20l
+nnoremap J 10j
+nnoremap K 10k
+
+nnoremap H 20h
+vnoremap L 20l
+vnoremap J 10j
+vnoremap K 10k
+
+"=============================================================================="
+" Leader key and mappings
+"=============================================================================="
+
+let mapleader = "\<Space>"
+
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+nnoremap <leader>r :source $MYVIMRC<CR>
+nnoremap <leader>e :e 
+
+" Toggle display of line numbers
+nnoremap <leader>i :set number!<CR>
+
+" Search/substitute word under cursor (Ctrl-R Ctrl-W inserts word under cursor
+" in command-line mode, see :h c_CTRL-R_CTRL-W)
+nnoremap <leader>s /<C-r><C-w><CR>
+nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
+
+" Clear highlighted search matches
+nnoremap <leader>, :nohlsearch<CR>
+
+" Toggle invisible characters
+nnoremap <leader>. :set list!<CR>
+
+" Move line up and down in normal mode
+"nnoremap <leader>k :m-2<CR>==
+"nnoremap <leader>j :m+<CR>==
+
+" Move selected lines up and down in visual mode
+"xnoremap <leader>k :m-2<CR>gv=gv
+"xnoremap <leader>j :m'>+<CR>gv=gv
+
+" Toggle colour column
+nnoremap <leader>c :call g:ToggleColorColumn()<CR>
+function! g:ToggleColorColumn()
+  if &colorcolumn == ''
+    setlocal colorcolumn=81
+  else
+    setlocal colorcolumn&
+  endif
+endfunction
+set colorcolumn=81
+
+" Toggle spell checking
+nnoremap <leader>x :set spell!<CR>
+
+" Change current line to title case
+nnoremap <leader>t :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>
+
+"=============================================================================="
+" Buffers and split windows
+"=============================================================================="
+
+nnoremap <C-n> :bnext<CR>
+nnoremap <C-p> :bprevious<CR>
+nnoremap <C-d> :bd<CR>
+nnoremap <leader>bo :BufOnly<CR>
+"nnoremap <C-b> :enew<CR>
+"nnoremap <leader><leader> <C-^>
+
+set splitbelow
+set splitright
+
+nnoremap <silent> <leader>h :call WinMove('h')<CR>
+nnoremap <silent> <leader>j :call WinMove('j')<CR>
+nnoremap <silent> <leader>k :call WinMove('k')<CR>
+nnoremap <silent> <leader>l :call WinMove('l')<CR>
+nnoremap          <leader>o <C-w>q
+nnoremap          <Tab> <C-w>w
+
+" Move to adjacent window on the  left/bottom/top/right, or create new one if
+" at edge. New window starts with current buffer to prevent empty buffers.
+function! WinMove(key)
+  let t:curwin = winnr()
+  exec "wincmd ".a:key
+  " If still in same window (i.e. we're at the edge), create a new window
+  if (t:curwin == winnr())
+    if (a:key == "h")
+      wincmd v
+      wincmd h
+    elseif (a:key == "j")
+      wincmd s
+    elseif (a:key == "k")
+      wincmd s
+      wincmd k
+    elseif (a:key == "l")
+      wincmd v
+    endif
+  endif    
+endfunction
+
 
 " Remamp macro key from q to m
-nnoremap m q
-nnoremap q <Nop>
+"nnoremap m q
+"nnoremap q <Nop>
 
 " Toggle netrw file explorer. See browsing commands on 'h: netrw-quickhelp'
 " <CR> = open file, R = rename file, D = delete file, - = root up, gn = root
 " down (to directory under cursor)
 let g:netrw_banner=0
-let g:netrw_winsize=20
+let g:netrw_winsize=30
 let g:netrw_liststyle=3
 let g:netrw_localrmdir='rm -r'
 let g:netrw_maxfilenamelen=64
@@ -70,35 +176,13 @@ call submode#map('resize-window', 'n', '', 'J', '5<C-w>-')
 let g:submode_timeout = 0
 let g:submode_keep_leaving_key = 1
 
-" Toggle spell checking
-nnoremap <leader>s :set spell!<CR>
-
-" Change current line to title case
-nnoremap <leader>t :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>
 
 " Set spelling language(s)
 set spelllang=en
 
-vnoremap J 10j
-vnoremap K 10k
-vnoremap <C-j> 5j
-vnoremap <C-k> 5k
-
-" Navigate up and down in steps of multiple lines
-nnoremap J 10j
-nnoremap K 10k
-nnoremap <C-j> 5j
-nnoremap <C-k> 5k
-
-" Navigate forward and backward on a line
-nnoremap W 5W
-nnoremap B 5B
-
 " Remap 'join lines', which is J by default
 nnoremap Z :join<CR>
 
-" Reload ~/.vimrc
-nnoremap <leader>r :so $MYVIMRC<CR>
 
 " Do not move cursor one position back when exiting insert mode
 " autocmd InsertEnter * let CursorColumnI = col('.')
@@ -119,62 +203,18 @@ nnoremap O o<CR>
 " Use Back to delete the character to the left of the cursor
 nnoremap <BS> i<BS><Esc>l
 
-" Underline a line by ---
-nnoremap <leader>u yypVr-
-
-" Underline a line by ===
-nnoremap <leader>d yypVr=
-
-" Comment out line with //
-nnoremap <leader>// I//<Esc>
-
-" Comment out line with #
-nnoremap <leader># I#<Esc>
-
-" Comment out line with %
-nnoremap <leader>% I%<Esc>
-
-" Delete first character of line (e.g. comment character)
-nnoremap <leader>) 0x<Esc>
-
-" Delete first two characters of line (e.g. //)
-nnoremap <leader>" 0xx<Esc>
-
-" Clear highlighted search matches
-nnoremap <leader>, :nohlsearch<CR>
-
-" Toggle invisible characters
-nnoremap <leader>. :set list!<CR>
 
 " Use specific color scheme if it exists (default, if it doesn't exist)
 silent! colorscheme slate
 
-" Activate colorcolumn
-set colorcolumn=81
-
-" Function for toggling colorcolumn
-function! g:ToggleColorColumn()
-  if &colorcolumn == ''
-    setlocal colorcolumn=81
-  else
-    setlocal colorcolumn&
-  endif
-endfunction
 
 " Define formatting of invisible characters
 "set listchars=tab:>-,trail:.,eol:¬
 
 
-" Key binding for toggling color column
-nnoremap <leader>c :call g:ToggleColorColumn()<CR>
-
-" Toggle highlighting of current line and column of cursor
-nnoremap <leader>l :set cursorline!<CR>
 set cursorline
 hi CursorLine cterm=NONE ctermbg=DarkGray  " For some reason does not work
 
-" Toggle display of line numbers
-nnoremap <leader>n :set number!<CR>
 
 " Minimum number of lines below or above the cursor when scrolling
 set scrolloff=5
@@ -266,19 +306,6 @@ let g:pandoc#syntax#conceal#use = 0
 " color of the bar itself is equals to StatusLine.
 hi WildMenu ctermbg=white ctermfg=black cterm=bold
 
-" Windows: creating new windows like in tmux, and cycle between windows
-set splitright
-set splitbelow
-nnoremap <C-W><Bar> :vnew<CR>
-nnoremap <C-W>-     :new<CR>
-nnoremap <Tab> <C-W>w
-
-" Tabs: creating, moving between, and closing tabs like in tmux
-nnoremap <C-w>C :tabnew<CR>
-nnoremap <C-w>n gt
-nnoremap <C-w>p gT
-nnoremap <C-w>Q :tabclose<CR>
-
 " TabLine: TabLineSel = selected, TabLine = unselected, TabLineFill = rest
 hi TabLineSel ctermbg=darkgreen ctermfg=white cterm=bold
 hi TabLine ctermbg=darkgray ctermfg=white cterm=none
@@ -288,51 +315,50 @@ hi TabLineSelNumber ctermbg=darkgreen ctermfg=yellow cterm=bold
 hi TabLineNumber ctermbg=darkgray ctermfg=yellow cterm=bold
 
 " Set custom tab line
-set tabline=%!MyTabLine()
-
-" Return string representing custom tab line (same principle as status line)
-function! MyTabLine()
-  let s = ''
-  "Add substring consisting of ' <tab number> <tab label> ' for each tab
-  for i in range(1, tabpagenr('$'))
-    if i == tabpagenr()
-      let numberHi = '%#TabLineSelNumber#'
-      let labelHi = '%#TabLineSel#'
-    else
-      let numberHi = '%#TabLineNumber#'
-      let labelHi = '%#TabLine#'
-    endif
-    let s .= numberHi . ' ' . i . ' ' . labelHi . '%{MyTabLabel(' . i . ')} '
-  endfor
-  " After all tabs, change color to TabLineFill and reset tab counter
-  return s . '%#TabLineFill#%T'
-endfunction
-
-" Return label for a specific tab number. The label consists of the filename
-" of the file in the current window in this tab.
-function! MyTabLabel(n)
-  " Get currently open buffers in this tab
-  let buflist = tabpagebuflist(a:n)
-  " Get buffer of current window in this tab
-  let bufcurrent = buflist[tabpagewinnr(a:n) - 1]
-  " Get filename of buffer
-  let fname = fnamemodify(bufname(bufcurrent), ":t")
-  if (fname == "")
-    return '[No Name]'
-  else
-    return fname
-endfunction
-
+"set tabline=%!MyTabLine()
+"
+"" Return string representing custom tab line (same principle as status line)
+"function! MyTabLine()
+"  let s = ''
+"  "Add substring consisting of ' <tab number> <tab label> ' for each tab
+"  for i in range(1, tabpagenr('$'))
+"    if i == tabpagenr()
+"      let numberHi = '%#TabLineSelNumber#'
+"      let labelHi = '%#TabLineSel#'
+"    else
+"      let numberHi = '%#TabLineNumber#'
+"      let labelHi = '%#TabLine#'
+"    endif
+"    let s .= numberHi . ' ' . i . ' ' . labelHi . '%{MyTabLabel(' . i . ')} '
+"  endfor
+"  " After all tabs, change color to TabLineFill and reset tab counter
+"  return s . '%#TabLineFill#%T'
+"endfunction
+"
+"" Return label for a specific tab number. The label consists of the filename
+"" of the file in the current window in this tab.
+"function! MyTabLabel(n)
+"  " Get currently open buffers in this tab
+"  let buflist = tabpagebuflist(a:n)
+"  " Get buffer of current window in this tab
+"  let bufcurrent = buflist[tabpagewinnr(a:n) - 1]
+"  " Get filename of buffer
+"  let fname = fnamemodify(bufname(bufcurrent), ":t")
+"  if (fname == "")
+"    return '[No Name]'
+"  else
+"    return fname
+"endfunction
 
 " Custom commands
 
 " Jekyll
-command! L e _layouts
-command! I e _includes
-command! S e _sass
-command! P e _pages
-command! C e _config.yml
-command! A e assets
+"command! L e _layouts
+"command! I e _includes
+"command! S e _sass
+"command! P e _pages
+"command! C e _config.yml
+"command! A e assets
 
 " Do Not Change The Working Directory When Opening A File
 set noautochdir
@@ -375,3 +401,6 @@ set statusline=[%{getcwd()}]\ %F\ %m\ %r\ %h%=%l/%c\ %L\ (%p%%)
 " for iTerm use numbers under NR-8, '*' means '+8')
 hi StatusLine ctermfg=white ctermbg=darkgray cterm=bold
 hi StatusLineNC ctermfg=black ctermbg=darkgray cterm=bold
+
+set runtimepath+=~/Desktop/hello-plugin/
+
