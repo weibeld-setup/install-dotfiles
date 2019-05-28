@@ -26,6 +26,9 @@ nohlsearch
 " Save file automatically when using :make
 set autowrite
 
+" Disable code folding
+set nofoldenable
+
 " Navigate in steps of multiple lines/columns
 nnoremap <C-h> 5h
 nnoremap <C-l> 5l
@@ -54,12 +57,16 @@ vnoremap K 10k
 let mapleader = "\<Space>"
 
 nnoremap <leader>w :w<CR>
-nnoremap <leader>q :q<CR>
+nnoremap <leader>q :x<CR>
+"nnoremap <leader>q :q<CR>
+nnoremap <leader>Q :qa<CR>
 nnoremap <leader>r :source $MYVIMRC<CR>
+nnoremap <leader>v :e $MYVIMRC<CR>
 nnoremap <leader>e :e 
+nnoremap <leader>t :terminal<CR>
 
 " Toggle display of line numbers
-nnoremap <leader>i :set number!<CR>
+nnoremap <leader>n :set number!<CR>
 
 " Search/substitute word under cursor (Ctrl-R Ctrl-W inserts word under cursor
 " in command-line mode, see :h c_CTRL-R_CTRL-W)
@@ -91,22 +98,23 @@ function! g:ToggleColorColumn()
 endfunction
 set colorcolumn=81
 
-" Toggle spell checking
-nnoremap <leader>x :set spell!<CR>
-
 " Change current line to title case
-nnoremap <leader>t :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>
+nnoremap <leader>T :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>
 
 "=============================================================================="
-" Buffers and split windows
+" Buffers
 "=============================================================================="
 
 nnoremap <C-n> :bnext<CR>
 nnoremap <C-p> :bprevious<CR>
 nnoremap <C-d> :bd<CR>
 nnoremap <leader>bo :BufOnly<CR>
+nnoremap <leader><Tab> <C-^> 
 "nnoremap <C-b> :enew<CR>
-"nnoremap <leader><leader> <C-^>
+
+"=============================================================================="
+" Split windows
+"=============================================================================="
 
 set splitbelow
 set splitright
@@ -115,8 +123,8 @@ nnoremap <silent> <leader>h :call WinMove('h')<CR>
 nnoremap <silent> <leader>j :call WinMove('j')<CR>
 nnoremap <silent> <leader>k :call WinMove('k')<CR>
 nnoremap <silent> <leader>l :call WinMove('l')<CR>
-nnoremap          <leader>o <C-w>q
-nnoremap          <Tab> <C-w>w
+nnoremap          <leader>d <C-w>q
+nnoremap          <Tab>     <C-w>w
 
 " Move to adjacent window on the  left/bottom/top/right, or create new one if
 " at edge. New window starts with current buffer to prevent empty buffers.
@@ -139,14 +147,26 @@ function! WinMove(key)
   endif    
 endfunction
 
+" Resize split windows, requires https://github.com/kana/vim-submode
+" Increase width and height of current window
+call submode#enter_with('resize-window', 'n', '', '<leader>H', '5<C-w>>')
+call submode#map('resize-window', 'n', '', 'H', '5<C-w>>')
+call submode#enter_with('resize-window', 'n', '', '<leader>J', '5<C-w>+')
+call submode#map('resize-window', 'n', '', 'J', '5<C-w>+')
+" Decrease width and height of current window
+call submode#enter_with('resize-window', 'n', '', '<leader>L', '5<C-w><')
+call submode#map('resize-window', 'n', '', 'L', '5<C-w><')
+call submode#enter_with('resize-window', 'n', '', '<leader>K', '5<C-w>-')
+call submode#map('resize-window', 'n', '', 'K', '5<C-w>-')
+let g:submode_timeout = 0
+let g:submode_keep_leaving_key = 1
 
-" Remamp macro key from q to m
-"nnoremap m q
-"nnoremap q <Nop>
+"=============================================================================="
+" Netrw
+"=============================================================================="
 
-" Toggle netrw file explorer. See browsing commands on 'h: netrw-quickhelp'
-" <CR> = open file, R = rename file, D = delete file, - = root up, gn = root
-" down (to directory under cursor)
+" See browsing commands on 'h: netrw-quickhelp': <CR> = open, R = rename,
+" D = delete file, - = root up, gn = root down (to directory under cursor)
 let g:netrw_banner=0
 let g:netrw_winsize=30
 let g:netrw_liststyle=3
@@ -160,29 +180,8 @@ function! MyLexplore()
   :Lexplore
 endfunction
 
-" Submode for resizing windows. Requires plugin https://github.com/kana/vim-submode
-" Enlarge width of current window
-call submode#enter_with('resize-window', 'n', '', '<C-w>L', '5<C-w>>')
-call submode#map('resize-window', 'n', '', 'L', '5<C-w>>')
-" Reduce width of current window
-call submode#enter_with('resize-window', 'n', '', '<C-w>H', '5<C-w><')
-call submode#map('resize-window', 'n', '', 'H', '5<C-w><')
-" Enlarge height of current window
-call submode#enter_with('resize-window', 'n', '', '<C-w>K', '5<C-w>+')
-call submode#map('resize-window', 'n', '', 'K', '5<C-w>+')
-" Reduce height of current window
-call submode#enter_with('resize-window', 'n', '', '<C-w>J', '5<C-w>-')
-call submode#map('resize-window', 'n', '', 'J', '5<C-w>-')
-let g:submode_timeout = 0
-let g:submode_keep_leaving_key = 1
-
-
 " Set spelling language(s)
 set spelllang=en
-
-" Remap 'join lines', which is J by default
-nnoremap Z :join<CR>
-
 
 " Do not move cursor one position back when exiting insert mode
 " autocmd InsertEnter * let CursorColumnI = col('.')
@@ -292,8 +291,6 @@ if has("autocmd")
   "autocmd filetype tex if v:version >= 703 set colorcolumn= endif
 endif
 
-" Open the .vimrc file in a separate tab for editing
-nnoremap <leader>v :tabedit $MYVIMRC<CR>
 
 " Disable certain modules of the vim-pandoc plugin
 let g:pandoc#modules#disabled = [ "spell", "folding" ]
@@ -306,59 +303,9 @@ let g:pandoc#syntax#conceal#use = 0
 " color of the bar itself is equals to StatusLine.
 hi WildMenu ctermbg=white ctermfg=black cterm=bold
 
-" TabLine: TabLineSel = selected, TabLine = unselected, TabLineFill = rest
-hi TabLineSel ctermbg=darkgreen ctermfg=white cterm=bold
-hi TabLine ctermbg=darkgray ctermfg=white cterm=none
+hi TabLine    ctermbg=black ctermfg=darkgray cterm=none
+hi TabLineSel ctermbg=darkgray ctermfg=white cterm=bold
 hi TabLineFill ctermfg=black
-" Color of tab number (preceding tab label)
-hi TabLineSelNumber ctermbg=darkgreen ctermfg=yellow cterm=bold
-hi TabLineNumber ctermbg=darkgray ctermfg=yellow cterm=bold
-
-" Set custom tab line
-"set tabline=%!MyTabLine()
-"
-"" Return string representing custom tab line (same principle as status line)
-"function! MyTabLine()
-"  let s = ''
-"  "Add substring consisting of ' <tab number> <tab label> ' for each tab
-"  for i in range(1, tabpagenr('$'))
-"    if i == tabpagenr()
-"      let numberHi = '%#TabLineSelNumber#'
-"      let labelHi = '%#TabLineSel#'
-"    else
-"      let numberHi = '%#TabLineNumber#'
-"      let labelHi = '%#TabLine#'
-"    endif
-"    let s .= numberHi . ' ' . i . ' ' . labelHi . '%{MyTabLabel(' . i . ')} '
-"  endfor
-"  " After all tabs, change color to TabLineFill and reset tab counter
-"  return s . '%#TabLineFill#%T'
-"endfunction
-"
-"" Return label for a specific tab number. The label consists of the filename
-"" of the file in the current window in this tab.
-"function! MyTabLabel(n)
-"  " Get currently open buffers in this tab
-"  let buflist = tabpagebuflist(a:n)
-"  " Get buffer of current window in this tab
-"  let bufcurrent = buflist[tabpagewinnr(a:n) - 1]
-"  " Get filename of buffer
-"  let fname = fnamemodify(bufname(bufcurrent), ":t")
-"  if (fname == "")
-"    return '[No Name]'
-"  else
-"    return fname
-"endfunction
-
-" Custom commands
-
-" Jekyll
-"command! L e _layouts
-"command! I e _includes
-"command! S e _sass
-"command! P e _pages
-"command! C e _config.yml
-"command! A e assets
 
 " Do Not Change The Working Directory When Opening A File
 set noautochdir
@@ -382,8 +329,8 @@ autocmd BufNewFile,BufRead .bashrc :set filetype=sh
 
 " vim-terraform plugin
 let g:terraform_align=1
-let g:terraform_fold_sections=1
-let g:terraform_remap_spacebar=1
+"let g:terraform_fold_sections=1
+"let g:terraform_remap_spacebar=1
 let g:terraform_commentstring='//%s'
 let g:terraform_fmt_on_save=1
 
