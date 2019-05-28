@@ -179,6 +179,7 @@ tmux-new-window-same-dir() {
 # System management
 #------------------------------------------------------------------------------#
 
+alias cdd='cd ..'
 alias br='vim ~/.bashrc'
 alias bp='vim ~/.bash_profile'
 alias sbr='. ~/.bashrc'
@@ -451,9 +452,19 @@ alias gf="git flow"
 # Docker
 #------------------------------------------------------------------------------#
 
+# Automatically set '--rm' flag when 'docker [container] run' is run
+docker() {
+  local args=("$@")
+  if [[ "$1" = run ]]; then
+    args=(run --rm "${args[@]:1}")
+  elif [[ "$1" = container && "$2" = run ]]; then
+    args=(container run --rm "${args[@]:2}")
+  fi
+  command docker "${args[@]}"
+}
+
 alias dk=docker
 complete -F _complete_alias dk
-
 alias dki='docker image ls'
 alias dkc='docker container ps -a'
 
