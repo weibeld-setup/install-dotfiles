@@ -26,6 +26,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export fonts_local=/Library/Fonts
   export fonts_system=/System/Library/Fonts
   export PYTHONSTARTUP=~/.python
+  export d=~/Desktop
 
   # PATH
   addpath "$HOME/bin"
