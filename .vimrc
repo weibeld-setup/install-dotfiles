@@ -68,9 +68,16 @@ nnoremap <leader>t :terminal<CR>
 " Toggle display of line numbers
 nnoremap <leader>n :set number!<CR>
 
-" Search/substitute word under cursor (Ctrl-R Ctrl-W inserts word under cursor
-" in command-line mode, see :h c_CTRL-R_CTRL-W)
-nnoremap <leader>s /<C-r><C-w><CR>
+" Search/substitute word under cursor 
+
+"nnoremap <leader>s /<C-r><C-w><CR>
+
+" Highlight occurrences of word under cursor and show number of matches. (Ctrl-R
+" Ctrl-W inserts word under cursor in command-line mode, see :h c_CTRL-R_CTRL-W)
+nnoremap <leader>s :%s/<C-r><C-w>//gn<CR><C-o>
+
+" Substitute all occurrences of word under cursor (unfortunately jumps to the
+" next occurrenc of cursor word when 'incsearch' is on).
 nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
 
 " Clear highlighted search matches
@@ -88,7 +95,7 @@ nnoremap <leader>. :set list!<CR>
 "xnoremap <leader>j :m'>+<CR>gv=gv
 
 " Toggle colour column
-nnoremap <leader>c :call g:ToggleColorColumn()<CR>
+"nnoremap <leader>c :call g:ToggleColorColumn()<CR>
 function! g:ToggleColorColumn()
   if &colorcolumn == ''
     setlocal colorcolumn=81
@@ -188,16 +195,13 @@ set spelllang=en
 " autocmd CursorMovedI * let CursorColumnI = col('.')
 " autocmd InsertLeave * if col('.') != CursorColumnI | call cursor(0, col('.')+1) | endif
 
+autocmd VimEnter * set expandtab
+
 " Use Enter to insert an empty line below
 nnoremap <CR> o<Esc>
 
 " O (big-O) to open a line two lines below
 nnoremap O o<CR>
-
-" Change the cursor to a block in normal mode and bar in insert mode
-" (problem: changes cursor of terminal which remains after quitting vim)
-" let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-" let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
 
 " Use Back to delete the character to the left of the cursor
 nnoremap <BS> i<BS><Esc>l
@@ -212,7 +216,7 @@ silent! colorscheme slate
 
 
 set cursorline
-hi CursorLine cterm=NONE ctermbg=DarkGray  " For some reason does not work
+" hi CursorLine cterm=NONE ctermbg=DarkGray  " For some reason does not work
 
 
 " Minimum number of lines below or above the cursor when scrolling
@@ -315,7 +319,7 @@ set noautochdir
 " vim-go plugin
 autocmd FileType go nmap gb <Plug>(go-build)
 autocmd FileType go nmap gr <Plug>(go-run)
-autocmd FileType go nmap gi <Plug>(go-info)
+autocmd FileType go nmap gi <Plug>(go-install)
 autocmd FileType go nmap gd <Plug>(go-doc)
 autocmd FileType go nmap gdd <Plug>(go-doc-browser)
 "autocmd FileType go nmap :gi :GoImport<Space>
