@@ -4,12 +4,6 @@
 [submodule ".vim/bundle/vim-surround"]
 	path = .vim/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround
-[submodule ".vim/bundle/vim-pandoc"]
-	path = .vim/bundle/vim-pandoc
-	url = https://github.com/vim-pandoc/vim-pandoc
-[submodule ".vim/bundle/vim-pandoc-syntax"]
-	path = .vim/bundle/vim-pandoc-syntax
-	url = https://github.com/vim-pandoc/vim-pandoc-syntax
 [submodule "/Users/dw/.vim/bundle/vim-go"]
 	path = .vim/bundle/vim-go
 	url = https://github.com/fatih/vim-go
