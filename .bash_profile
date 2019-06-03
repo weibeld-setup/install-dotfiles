@@ -6,8 +6,8 @@ if [[ "$OSTYPE" =~ darwin ]]; then
 
   # Default colors (https://gist.github.com/thomd/7667642#lscolors)
   #export LSCOLORS=exgxHxHxcxHxHxcxcxexex
-  # Bold colors (may be more readable on some screens)
-  export LSCOLORS=ExGxHxHxcxHxHxcxcxExEx
+  # Directories cyan, symlinks blue (may be more readable on some screens)
+  export LSCOLORS=GxExHxHxcxHxHxcxcxGxGx
   export CLICOLOR=1
 
   # System
