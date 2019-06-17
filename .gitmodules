@@ -19,3 +19,9 @@
 [submodule ".vim/bundle/vim-buftabline"]
 	path = .vim/bundle/vim-buftabline
 	url = https://github.com/ap/vim-buftabline
+[submodule "vim-table-mode"]
+	path = vim-table-mode
+	url = https://github.com/dhruvasagar/vim-table-mode
+[submodule ".vim/bundle/vim-table-mode"]
+	path = .vim/bundle/vim-table-mode
+	url = https://github.com/dhruvasagar/vim-table-mode

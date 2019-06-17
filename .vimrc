@@ -50,6 +50,10 @@ vnoremap L 20l
 vnoremap J 10j
 vnoremap K 10k
 
+" Scroll single line up and down (use Ctrl-F and Ctrl-B to scroll by half pages)
+nnoremap <C-u> <C-y>
+nnoremap <C-d> <C-e>
+
 "=============================================================================="
 " Leader key and mappings
 "=============================================================================="
@@ -114,9 +118,12 @@ nnoremap <leader>T :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>
 
 nnoremap <C-n> :bnext<CR>
 nnoremap <C-p> :bprevious<CR>
-nnoremap <C-d> :bd<CR>
+"nnoremap <C-w> <C-^>
+nnoremap <leader>b :buffer 
+nnoremap <leader>d :bd<CR>
 nnoremap <leader>bo :BufOnly<CR>
-nnoremap <leader><Tab> <C-^> 
+nnoremap <leader>B :buffers<CR>
+"nnoremap <leader><Tab> <C-^> 
 "nnoremap <C-b> :enew<CR>
 
 "=============================================================================="
@@ -130,7 +137,7 @@ nnoremap <silent> <leader>h :call WinMove('h')<CR>
 nnoremap <silent> <leader>j :call WinMove('j')<CR>
 nnoremap <silent> <leader>k :call WinMove('k')<CR>
 nnoremap <silent> <leader>l :call WinMove('l')<CR>
-nnoremap          <leader>d <C-w>q
+"nnoremap          <leader>d <C-w>q
 nnoremap          <Tab>     <C-w>w
 
 " Move to adjacent window on the  left/bottom/top/right, or create new one if
@@ -175,11 +182,11 @@ let g:submode_keep_leaving_key = 1
 " See browsing commands on 'h: netrw-quickhelp': <CR> = open, R = rename,
 " D = delete file, - = root up, gn = root down (to directory under cursor)
 let g:netrw_banner=0
-let g:netrw_winsize=30
+let g:netrw_winsize=20
 let g:netrw_liststyle=3
 let g:netrw_localrmdir='rm -r'
 let g:netrw_maxfilenamelen=64
-nnoremap E :call MyLexplore()<CR>
+nnoremap <leader>E :call MyLexplore()<CR>
 function! MyLexplore()
   " Make sure files are opened in the last active window (default is window 2).
   " You can also set this ad-hoc with ':NetrwC <n>' or '<n>C'.
@@ -355,3 +362,5 @@ hi StatusLineNC ctermfg=black ctermbg=darkgray cterm=bold
 
 set runtimepath+=~/Desktop/hello-plugin/
 
+" For vim-table-mode plugin
+let g:table_mode_corner='|'
