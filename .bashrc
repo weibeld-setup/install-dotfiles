@@ -189,7 +189,7 @@ alias rmf='rm -rf'
 alias la="ls -a"
 alias ll="ls -al"
 alias wl='wc -l'
-alias f='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 complete -F _complete_alias f
 alias ssh='TERM=xterm-256color ssh'
 alias pgrep='pgrep -fl'
@@ -199,7 +199,7 @@ alias X='chmod -x'
 # File sizes
 alias dh='du -h'
 alias ds='du | sort -k 1 -n -r'
-alias dhg='du -h | grep G$"\t"'
+alias large-files='sudo du -h | grep G$"\t"'
 alias dhm='du -h | grep M$"\t" | sort -k 1 -n -r'
 
 # Print or remove completion specification of a command
@@ -207,6 +207,8 @@ alias comp='complete -p'
 alias compr='complete -r'
 complete -c comp compr
 
+# Set default options
+alias curl='curl -s'
 
 # Show local ports that are currently in use
 ports() {
@@ -217,13 +219,13 @@ ports() {
 help() { builtin help -m "$1" | less; }
 complete -b help 
 
-# Show the source file of a shell function
-func() {
+# Show the source file and line where a function is defined
+funcfile() {
   shopt -s extdebug
   declare -F "$1"
   shopt -u extdebug
 }
-complete -A function func
+complete -A function funcfile
 
 # Interactively select a command from the history and execute it
 hist() {
@@ -498,6 +500,23 @@ dksc() {
 # AWS CLI
 #------------------------------------------------------------------------------#
 
+# Get availability zones of a region
+aws-az() {
+  local region=$1
+  aws ec2 describe-availability-zones --region "$region" --query 'AvailabilityZones[*].ZoneName' --output text | tr '\t' '\n'
+}
+
+# Get AWS regions (for some reason doesn't return all regions)
+aws-regions() {
+  aws ec2 describe-regions --query 'Regions[*].RegionName' --output text | tr '\t' '\n'
+}
+
+# List EC2 instances in a given region with their private and public DNS names
+aws-ec2() {
+  local region=${1:-$(aws configure get region)}
+  aws ec2 describe-instances --region "$region" --query 'Reservations[*].Instances[*].[InstanceId,PrivateDnsName,PublicDnsName]' --output text
+}
+
 alias cfn="aws cloudformation"
 
 # List all CloudFormation export values in the default region
@@ -561,12 +580,17 @@ aws-delete-secret() {
 # Kubernetes
 #------------------------------------------------------------------------------#
 
-# Redirect output of commands with long output to terminal pager
+# Display outputs of certain commands in terminal pager (less)
 kubectl() {
-  if [[ "$*" =~ -h$|--help$ ]]; then
-    command kubectl "$@" | format | less
-  elif [[ "$1" = explain || "$1" = describe ]]; then
+  if
+    [[ "$1" = explain || "$1" = describe ]] ||
+    [[ "$*" =~ -o\ yaml|--output[=\ ]yaml ]]
+  then
     command kubectl "$@" | less
+  elif
+    [[ "$*" =~ -h$|--help$ ]]
+  then
+    command kubectl "$@" | format | less
   else
     command kubectl "$@"
   fi
@@ -589,13 +613,12 @@ alias kcn='kubectl config set-context --current --namespace "$(kln | fzf -e | se
 # Run a busybox container in the cluster 
 alias kbb='kubectl run busybox --image=busybox:1.28 --rm -it --command --restart=Never --'
 
+alias kga='kubectl get all'
+
 # kubectl explain
 alias ke='kubectl explain'
 complete -F _complete_alias ke
 
-# List container images of each pod
-alias kli='kubectl get -o custom-columns="POD:.metadata.name,IMAGES:.spec.containers[*].image" pods'
-complete -F _complete_alias kli
 
 # Show information about a specific API resource
 alias kr='kubectl api-resources | grep '
@@ -604,7 +627,7 @@ alias kr='kubectl api-resources | grep '
 alias kc='vim ~/.kube/config'
 
 # Delete similarly-named context, cluster, and user entries from kubeconfig file
-kcd() {
+kc-delete() {
   kubectl config unset contexts."$1"
   kubectl config unset clusters."$1"
   kubectl config unset users."$1"
@@ -618,6 +641,26 @@ kge() {
     --sort-by=lastTimestamp \
     -o custom-columns='KIND:involvedObject.kind,TIME:lastTimestamp,EMITTED BY:source.component,REASON:reason,MESSAGE:message' \
     "$@"
+}
+
+# List container images of each pod
+kim() {
+  kubectl get -o custom-columns='POD:.metadata.name,IMAGES:.spec.containers[*].image' pods
+}
+
+# Show the availability zone of each node
+kaz() {
+  kubectl get nodes -o custom-columns='NODE:metadata.name,ZONE:metadata.labels.failure-domain\.beta\.kubernetes\.io/zone'
+}
+
+# Show the node each pod is scheduled to
+kno() {
+  kubectl get pods -o custom-columns='POD:.metadata.name,NODE:.spec.nodeName' "$@"
+}
+
+# Show volume ID and availability zone of all awsElasticBlockStore volume
+kpv-aws() {
+  kubectl get pv -o custom-columns='PERSISTENT VOLUME:.metadata.name,VOLUME ID:.spec.awsElasticBlockStore.volumeID,AVAILABILITY ZONE:.metadata.labels.failure-domain\.beta\.kubernetes\.io/zone'
 }
 
 # Display information about the authorisation mode of the current cluster
