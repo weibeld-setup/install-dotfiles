@@ -54,6 +54,8 @@ vnoremap K 10k
 nnoremap <C-u> <C-y>
 nnoremap <C-d> <C-e>
 
+nnoremap m @
+
 "=============================================================================="
 " Leader key and mappings
 "=============================================================================="
@@ -67,7 +69,7 @@ nnoremap <leader>Q :qa<CR>
 nnoremap <leader>r :source $MYVIMRC<CR>
 nnoremap <leader>v :e $MYVIMRC<CR>
 nnoremap <leader>e :e 
-nnoremap <leader>t :terminal<CR>
+"nnoremap <leader>t :terminal<CR>
 
 " Toggle display of line numbers
 nnoremap <leader>n :set number!<CR>
@@ -111,6 +113,12 @@ set colorcolumn=81
 
 " Change current line to title case
 nnoremap <leader>T :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>
+
+" Map Ctrl-<dash> to em-dash (U+2014)
+inoremap  —
+
+" Right arrow
+inoremap <C-r> →
 
 "=============================================================================="
 " Buffers

@@ -131,10 +131,11 @@ vi-mode-off() {
 
 PROMPT_COMMAND=__set-prompt
 __set-prompt() {
+  #PS1="$ " && return
   local EXIT_CODE=$?
   if is-mac; then
     PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
-  else
+ else
     PS1='\[\e[1;33m\]\u@\h:\w$ \[\e[0m\]'
   fi
   [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
@@ -179,7 +180,6 @@ tmux-new-window-same-dir() {
 # System management
 #------------------------------------------------------------------------------#
 
-alias cdd='cd ..'
 alias br='vim ~/.bashrc'
 alias bp='vim ~/.bash_profile'
 alias sbr='. ~/.bashrc'
@@ -188,18 +188,20 @@ alias vr='vim ~/.vimrc'
 alias rmf='rm -rf'
 alias la="ls -a"
 alias ll="ls -al"
+alias ld="ls -d */"
 alias wl='wc -l'
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 complete -F _complete_alias f
 alias ssh='TERM=xterm-256color ssh'
+alias torsocks='TERM=xterm-256color torsocks'
 alias pgrep='pgrep -fl'
 alias x='chmod +x'
 alias X='chmod -x'
+alias which='which -a'
 
 # File sizes
 alias dh='du -h'
 alias ds='du | sort -k 1 -n -r'
-alias large-files='sudo du -h | grep G$"\t"'
 alias dhm='du -h | grep M$"\t" | sort -k 1 -n -r'
 
 # Print or remove completion specification of a command
@@ -210,14 +212,32 @@ complete -c comp compr
 # Set default options
 alias curl='curl -s'
 
+# Print large directories in the current directory. The threshold for printing
+# directories can be specified either as 'g' or 'm':
+#   - 'g': print directories larger than 1 GB
+#   - 'm': print directories larger than 1 MB
+large-dirs() {
+  threshold=${1:-g}
+  case "$threshold" in
+    g) pattern="G$(printf "\t")" ;;
+    m) pattern="M$(printf "\t")\|G$(printf "\t")" ;;
+  esac
+  sudo du -h | grep "$pattern"
+}
+
+# Get public IP address of local machine
+myip() {
+  curl -s checkip.amazonaws.com
+}
+
 # Show local ports that are currently in use
 ports() {
   lsof -i -P -n | grep LISTEN
 }
 
 # Show the help page of a shell builtin like man page
-help() { builtin help -m "$1" | less; }
-complete -b help 
+#help() { builtin help -m "$1" | less; }
+#complete -b help 
 
 # Show the source file and line where a function is defined
 funcfile() {
@@ -446,8 +466,10 @@ alias gr='git remote -v'
 alias gs='git status -u'
 alias ga='git add -A'
 alias gc='git commit'
+alias gce='git commit --allow-empty'
 alias gp='git push'
-alias gf="git flow"
+alias gb="git branch"
+alias gd="git diff"
 
 
 #------------------------------------------------------------------------------#
@@ -468,7 +490,7 @@ docker() {
 alias dk=docker
 complete -F _complete_alias dk
 alias dki='docker image ls'
-alias dkc='docker container ps -a'
+#alias dkc='docker container ps -a'
 
 # Remove ALL images
 dkri() {
@@ -494,11 +516,25 @@ dksc() {
   is-set "$c" && docker stop $c || echo "No running containers"
 }
 
-
+# Run a container in the host namespaces (allows to enter Docker Desktop VM)
+docker-vm() {
+  # The --pid=host flag starts the container in the same PID namespace as the
+  # Docker Desktop VM. The nsenter -t 1 command then enters the specified name-
+  # spaces of the process with PID 1 (root process on the Docker Desktop VM).
+  # The entered namespaces are: mount (-m), UTS (-u), network (-n), IPC (-i).
+  # (use the -a flag to enter all namespaces). All Linux namespaces: mount,
+  # UTS, network, IPC, PID, cgroup, user.
+  docker run -it --pid=host --privileged weibeld/ubuntu-networking nsenter -t 1 -m -u -n -i bash
+}
 
 #------------------------------------------------------------------------------#
 # AWS CLI
 #------------------------------------------------------------------------------#
+
+alias ae='aws ec2'
+complete -F _complete_alias ae
+
+
 
 # Get availability zones of a region
 aws-az() {
@@ -576,6 +612,15 @@ aws-delete-secret() {
   aws secretsmanager delete-secret --secret-id "$NAME_OR_ARN" --output json
 }
 
+# Search AMIs given a sequence of keywords that are matched against the name of
+# the AMI. The order of the keywords is important. Thus, the keyword sequence
+# ["foo" "bar"] will match "text-foo-text-bar-text", but ["bar" "foo"] will not.
+aws-search-ami() {
+  query=*
+  for a in "$@"; do query=$query$a*; done
+  aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text
+}
+
 #------------------------------------------------------------------------------#
 # Kubernetes
 #------------------------------------------------------------------------------#
@@ -622,6 +667,11 @@ complete -F _complete_alias ke
 
 # Show information about a specific API resource
 alias kr='kubectl api-resources | grep '
+
+# Set, unset, and print the KUBECONFIG environment variable
+skc() { export KUBECONFIG=$1; }
+dkc() { unset KUBECONFIG; }
+pkc() { echo "$KUBECONFIG"; }
 
 # Open kubeconfig file for editing
 alias kc='vim ~/.kube/config'
@@ -683,6 +733,22 @@ kbindings2() {
     -o custom-columns='KIND:kind,NAMESPACE:metadata.namespace,NAME:metadata.name,SERVICE ACCOUNTS:subjects[?(@.kind=="ServiceAccount")].name'
 }
 
+# Run a one-off Pod with a shell in the cluster
+kru() {
+  local sa=${1:-default}
+  kubectl run --serviceaccount="$sa" --image=weibeld/alpine-curl --generator=run-pod/v1 -ti --rm alpine
+}
+
+# Create temporary ServiceAccount in default namespace with cluster-admin rights
+ksa() {
+  if [[ "$1" = -d ]]; then
+    kubectl delete -n default sa/tmp-admin clusterrolebinding/tmp-admin
+  else
+    kubectl create sa -n default tmp-admin
+    kubectl create clusterrolebinding --clusterrole=cluster-admin --serviceaccount=default:tmp-admin tmp-admin 
+  fi
+}
+
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
   source ~/.kubectl_aliases
@@ -696,14 +762,44 @@ fi
 #[ -f ~/.fubectl ] && source ~/.fubectl
 
 #------------------------------------------------------------------------------#
+# Google Cloud Platform (GCP)
+#------------------------------------------------------------------------------#
+
+# SSH into a GCP compute instance.
+gssh() {
+  # Prevents "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!"
+  ssh-keygen -R "${1##*@}"
+  ssh -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no "$@"
+}
+
+alias gcil='gcloud compute instances list'
+
+#------------------------------------------------------------------------------#
+# Prometheus
+#------------------------------------------------------------------------------#
+
+# Display only the distinct metric names from a page of Prometheus metrics
+prom-distinct() {
+  sed '/^#/d;s/[{ ].*$//' | uniq
+}
+
+#------------------------------------------------------------------------------#
 # Terraform
 #------------------------------------------------------------------------------#
 
+# Terraform autocompletion (installed with terraform --install-autocomplete)
+complete -C /usr/local/bin/terraform terraform
+
 alias tf=terraform
-complete -F _complete_alias tf
+#complete -F _complete_alias t
+
+alias tfa='terraform apply'
+alias tfd='terraform destroy'
+alias tfay='terraform apply --auto-approve'
+alias tfdy='terraform destroy --auto-approve'
 
 #------------------------------------------------------------------------------#
-# Mac and Linux specific functions
+# macOS and Linux specific functions
 #------------------------------------------------------------------------------#
 if is-mac; then
 
@@ -754,6 +850,11 @@ if is-mac; then
     if is_set "$2"; then date -r "$1" "$2"
     else                 date -r "$1"
     fi
+  }
+
+  # Copy the content of the supplied file to the clipboard
+  clip() {
+    cat "$1" | pbcopy
   }
 
 elif is-linux; then
@@ -844,8 +945,14 @@ pw() {
   aws secretsmanager get-random-password --exclude-punctuation --password-length "$LENGTH" --query RandomPassword --output text
 }
 
+anker() { ssh wk41@anker.inf.unibe.ch; }
+#boyle() { torsocks ssh charles@63alsiqho43t37nfoavp3bctz55bjf4bmcicdt2qtmet6cmufx2juzqd.onion -p 30022; }
+boyle() { ssh charles@130.92.63.21; }
+
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
 #------------------------------------------------------------------------------#
 
+
 return 0
+

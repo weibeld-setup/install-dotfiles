@@ -1,6 +1,8 @@
-# Add location to end of PATH if it doesn't yet exist
-addpath() { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$PATH:$1";  }
-export -f addpath
+# Append/prepend an entry to the PATH if it doesn't exist yet
+path_append()  { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$PATH:$1"; }
+path_prepend() { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$1:$PATH"; }
+export -f path_append
+export -f path_prepend
 
 if [[ "$OSTYPE" =~ darwin ]]; then
 
@@ -17,7 +19,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export TERM=xterm-256color-italic # Enable italic text in Apple terminal
 
   # Java
-  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_65.jdk/Contents/Home
+  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home
   export JUNIT_HOME=$JAVA_HOME/lib
 
   # Misc
@@ -29,13 +31,15 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export d=~/Desktop
 
   # PATH
-  addpath "$HOME/bin"
-  addpath "/usr/local/sbin"
-  addpath "$HOME/.krew/bin"
-  addpath "$HOME/.kubectl-plugins"
-  addpath "$HOME/.cargo/bin"
-  addpath "$HOME/google-cloud-sdk/bin"
-  addpath "$(go env GOPATH)/bin"
+  path_append "$HOME/bin"
+  path_append "/usr/local/sbin"
+  path_append "$HOME/.krew/bin"
+  path_append "$HOME/.kubectl-plugins"
+  path_append "$HOME/.cargo/bin"
+  path_append "$HOME/google-cloud-sdk/bin"
+  path_append "$(go env GOPATH)/bin"
+  path_prepend /usr/local/opt/ruby/bin
+  path_prepend /usr/local/lib/ruby/gems/2.6.0/bin
 
 fi
 
