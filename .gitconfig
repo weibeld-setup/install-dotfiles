@@ -1,6 +1,6 @@
 [user]
 	name = Daniel Weibel
-	email = daniel.weibel@swisscom.com
+	email = danielmweibel@gmail.com
 [core]
 	excludesfile = ~/.gitignore_global
 	editor = vim
