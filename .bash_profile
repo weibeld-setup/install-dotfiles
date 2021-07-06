@@ -17,10 +17,15 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export LC_ALL=en_US.UTF-8
   export EDITOR=vim
   export TERM=xterm-256color # Works across multiple macOS systems and terminals
+  # Increase history size (default 500)
+  export HISTSIZE=5000
+  export HISTFILESIZE=5000
 
   # Java
-  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home
+  #export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.0.3.jdk/Contents/Home
+  export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
   export JUNIT_HOME=$JAVA_HOME/lib
+  export GROOVY_HOME=/usr/local/opt/groovy/libexec
 
   # Misc
   export tex_home=/usr/local/texlive
@@ -37,9 +42,12 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   path_append "$HOME/.kubectl-plugins"
   path_append "$HOME/.cargo/bin"
   path_append "$HOME/google-cloud-sdk/bin"
+  path_append "$HOME/platform-tools"
   path_append "$(go env GOPATH)/bin"
   path_prepend /usr/local/opt/ruby/bin
   path_prepend /usr/local/lib/ruby/gems/2.6.0/bin
+  # Added by serverless binary installer
+  export PATH="$HOME/.serverless/bin:$PATH"
 
 fi
 

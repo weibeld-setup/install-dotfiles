@@ -35,6 +35,10 @@ shopt -s extglob
 shopt -s nullglob
 set -o pipefail
 
+# Append to the history file ($HISTFILE) rather than overwriting it (for
+# collecting history of all shells in the history file, see PROMPT_COMMAND)
+shopt -s histappend
+
 #------------------------------------------------------------------------------#
 # Base functions (used by other functions in this file)
 #------------------------------------------------------------------------------#
@@ -129,7 +133,7 @@ vi-mode-off() {
 # Prompt
 #------------------------------------------------------------------------------#
 
-PROMPT_COMMAND=__set-prompt
+PROMPT_COMMAND='__set-prompt; __dump_history'
 __set-prompt() {
   #PS1="$ " && return
   local EXIT_CODE=$?
@@ -139,6 +143,14 @@ __set-prompt() {
     PS1='\[\e[1;33m\]\u@\h:\w$ \[\e[0m\]'
   fi
   [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
+}
+
+# Append the last command to the $HISTFILE history file (for aggregating the
+# history of all active shells)
+# TODO: emulate HISTCONTROL=ignoredups by omitting writing a command to the
+# history file if it's equal to the lastly written command.
+__dump_history() {
+  history -a
 }
 
 #------------------------------------------------------------------------------#
@@ -212,6 +224,9 @@ complete -c comp compr
 # Set default options
 alias curl='curl -s'
 
+# Coloured diff output (required GNU diff)
+alias diff='diff --color'
+
 # Print large directories in the current directory. The threshold for printing
 # directories can be specified either as 'g' or 'm':
 #   - 'g': print directories larger than 1 GB
@@ -247,11 +262,21 @@ funcfile() {
 }
 complete -A function funcfile
 
-# Interactively select a command from the history and execute it
+# Search through the central history file (see PROMPT_COMMAND) and either
+# print or directly execute the selected command
+# TODO: add option for just pasting the selected command to the prompt without
+# executing it
 hist() {
   ensure fzf || return 1
-  eval $(history | fzf -n 2.. -e --no-sort --tac | sed 's/^ *[0-9][0-9]* *//')
+  # Directly execute the command
+  if [[ "$1" = -x ]]; then
+    eval $(cat "$HISTFILE" | fzf -e --tac)
+  # Print the command to stdout
+  else
+    cat "$HISTFILE" | fzf -e --tac
+  fi
 }
+
 
 # Change into the directory of the file pointed to by a symlink
 cdl() {
@@ -298,7 +323,6 @@ enc() { echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-; }
 
 # Print the character encoding used by the terminal
 enc-type() { echo $LC_CTYPE; }
-
 
 #------------------------------------------------------------------------------#
 # Numbers
@@ -364,6 +388,13 @@ n() {
   echo "Octal: $(d2o $n)"
   echo "Decimal: $n"
   echo "Hexadecimal: $(d2h $n)"
+}
+
+# Generate a random hexadecimal string of a given length
+hex(){
+  digits=$1
+  cat /dev/urandom | head -c $((("$digits"/2)+1)) | hexdump -e '"%x"' | head -c "$digits"
+  echo
 }
 
 #------------------------------------------------------------------------------#
@@ -467,7 +498,9 @@ alias gs='git status -u'
 alias ga='git add -A'
 alias gc='git commit'
 alias gce='git commit --allow-empty'
+alias gca='git commit --amend'
 alias gp='git push'
+alias gpf='git push -f'
 alias gb="git branch"
 alias gd="git diff"
 
@@ -530,11 +563,6 @@ docker-vm() {
 #------------------------------------------------------------------------------#
 # AWS CLI
 #------------------------------------------------------------------------------#
-
-alias ae='aws ec2'
-complete -F _complete_alias ae
-
-
 
 # Get availability zones of a region
 aws-az() {
@@ -621,6 +649,8 @@ aws-search-ami() {
   aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text
 }
 
+complete -C /usr/local/bin/aws_completer aws
+
 #------------------------------------------------------------------------------#
 # Kubernetes
 #------------------------------------------------------------------------------#
@@ -695,7 +725,12 @@ kge() {
 
 # List container images of each pod
 kim() {
-  kubectl get -o custom-columns='POD:.metadata.name,IMAGES:.spec.containers[*].image' pods
+  kubectl get -o custom-columns='POD:.metadata.name,IMAGES:.spec.containers[*].image' pods "$@"
+}
+
+# List names of Pods in current namespace
+kgpn() {
+  kubectl get pods --no-headers -o custom-columns=:.metadata.name
 }
 
 # Show the availability zone of each node
@@ -739,6 +774,11 @@ kru() {
   kubectl run --serviceaccount="$sa" --image=weibeld/alpine-curl --generator=run-pod/v1 -ti --rm alpine
 }
 
+# Deploy a jump Pod to the current namespace of the cluster
+kjump() {
+  kubectl apply -f https://bit.ly/jump-pod
+}
+
 # Create temporary ServiceAccount in default namespace with cluster-admin rights
 ksa() {
   if [[ "$1" = -d ]]; then
@@ -747,6 +787,28 @@ ksa() {
     kubectl create sa -n default tmp-admin
     kubectl create clusterrolebinding --clusterrole=cluster-admin --serviceaccount=default:tmp-admin tmp-admin 
   fi
+}
+
+# Test permissions of a ServiceAccount
+kauthsa() {
+  serviceaccount=$1
+  namespace=$2
+  shift 2
+  kubectl auth can-i --as system:serviceaccount:$namespace:$serviceaccount "$@"
+}
+
+# Create port-forwarding to a Service
+kpf() {
+  service=$1
+  port=$2
+  shift 2
+  kubectl port-forward svc/"$service" "$port" "$@"
+}
+
+# Read and Base64-decode a token from a Secret
+ktok() {
+  secret=$1
+  echo $(kubectl get secret "$secret" -o jsonpath='{.data.token}' | base64 -d)
 }
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
@@ -758,8 +820,11 @@ if [[ -f ~/.kubectl_aliases ]]; then
   done
 fi
 
+
 # https://github.com/kubermatic/fubectl
 #[ -f ~/.fubectl ] && source ~/.fubectl
+
+alias k9s='k9s --readonly'
 
 #------------------------------------------------------------------------------#
 # Google Cloud Platform (GCP)
@@ -781,6 +846,18 @@ alias gcil='gcloud compute instances list'
 # Display only the distinct metric names from a page of Prometheus metrics
 prom-distinct() {
   sed '/^#/d;s/[{ ].*$//' | uniq
+}
+
+# Reduce a Prometheus metrics response to metric names and help texts
+prometheus-clean() {
+  # Remove labels and values (keep only metric names)
+  sed '/^[^#]/s/[ {].*$//' |
+  # Delete duplicate metric names
+  uniq |
+  # Remove TYPE comments
+  sed '/^# TYPE/d' |
+  # Simplify HELP comments (strip HELP keyword and metric name)
+  sed '/^# HELP/s/HELP [^ ]* //'
 }
 
 #------------------------------------------------------------------------------#
@@ -855,6 +932,11 @@ if is-mac; then
   # Copy the content of the supplied file to the clipboard
   clip() {
     cat "$1" | pbcopy
+  }
+
+  # Alias for pbpaste
+  paste() {
+    pbpaste
   }
 
 elif is-linux; then
@@ -949,10 +1031,63 @@ anker() { ssh wk41@anker.inf.unibe.ch; }
 #boyle() { torsocks ssh charles@63alsiqho43t37nfoavp3bctz55bjf4bmcicdt2qtmet6cmufx2juzqd.onion -p 30022; }
 boyle() { ssh charles@130.92.63.21; }
 
+set_proxy() {
+  PROXY_PROTOCOL=http
+  PROXY_HOST=$1.corproot.net
+  PROXY_PORT=8080
+  PROXY=${PROXY_PROTOCOL}://${PROXY_HOST}:${PROXY_PORT}
+  NOPROXY='localhost, 127.0.0.0/8, .swisscom.com, .sharedtcs.net, .corproot.net, 192.168.0.0/16, 10.96.0.0/12'
+  export http_proxy=$PROXY
+  export HTTP_PROXY=$PROXY
+  export https_proxy=$PROXY
+  export HTTPS_PROXY=$PROXY
+  export ftp_proxy=$PROXY
+  export FTP_PROXY=$PROXY
+  export all_proxy=$PROXY
+  export ALL_PROXY=$PROXY
+  export PIP_PROXY=$PROXY
+  export no_proxy=$NOPROXY
+  export NO_PROXY=$NOPROXY
+  #export MAVEN_OPTS="-Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
+  unset PROXY_PROTOCOL PROXY_HOST PROXY_PORT PROXY NOPROXY
+}
+
+unset_proxy() {
+  unset http_proxy
+  unset HTTP_PROXY
+  unset https_proxy
+  unset HTTPS_PROXY
+  unset ftp_proxy
+  unset FTP_PROXY
+  unset all_proxy
+  unset ALL_PROXY
+  unset PIP_PROXY
+  unset no_proxy
+  unset NO_PROXY
+  unset MAVEN_OPTS
+}
+
+get_proxy() {
+  env | grep -i proxy | grep -vi no_proxy | sed 's/^/export /'
+}
+
+nc -z -w 3 aproxy.corproot.net 8080 >/dev/null 2>&1 && set_proxy aproxy || unset_proxy
+
+# Added by serverless binary installer
+export PATH="$HOME/.serverless/bin:$PATH"
+
+# tabtab source for packages
+# uninstall by removing these lines
+[ -f ~/.config/tabtab/__tabtab.bash ] && . ~/.config/tabtab/__tabtab.bash || true
+
+change_mac() {
+  local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g;s/.$//')
+  sudo ifconfig en0 ether "$mac"
+  echo "Changed MAC address of en0 device to $mac"
+}
+
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
 #------------------------------------------------------------------------------#
 
-
 return 0
-

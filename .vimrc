@@ -1,5 +1,4 @@
-"~/.vimrc
-"
+"~/.vimrc"
 " Note: split lines with \ at the beginning of the new line.
 "
 " Daniel Weibel <daniel.weibel@unifr.ch> May 2015
@@ -22,6 +21,9 @@ set incsearch
 " when this file is sourced).
 set hlsearch
 nohlsearch
+
+" Show number of search results and index of current result
+set shortmess-=S
 
 " Save file automatically when using :make
 set autowrite
@@ -104,15 +106,16 @@ nnoremap <leader>. :set list!<CR>
 "nnoremap <leader>c :call g:ToggleColorColumn()<CR>
 function! g:ToggleColorColumn()
   if &colorcolumn == ''
-    setlocal colorcolumn=81
+    setlocal colorcolumn=80,100
   else
     setlocal colorcolumn&
   endif
 endfunction
-set colorcolumn=81
+set colorcolumn=80,100
+
 
 " Change current line to title case
-nnoremap <leader>T :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>
+nnoremap <leader>T :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>          
 
 " Map Ctrl-<dash> to em-dash (U+2014)
 inoremap  —
@@ -368,7 +371,17 @@ set statusline=[%{getcwd()}]\ %F\ %m\ %r\ %h%=%l/%c\ %L\ (%p%%)
 hi StatusLine ctermfg=white ctermbg=darkgray cterm=bold
 hi StatusLineNC ctermfg=black ctermbg=darkgray cterm=bold
 
+"=============================================================================="
+" Misc
+"=============================================================================="
+
+" Search for all top-level JavaScript functions in a file
+nnoremap <leader>f /^export async function\\|^export function\\|^async function\\|^function<CR>
+
 set runtimepath+=~/Desktop/hello-plugin/
+
+autocmd BufNewFile,BufRead Jenkinsfile set syntax=groovy shiftwidth=4 tabstop=4
+autocmd BufNewFile,BufRead *.groovy set shiftwidth=4 tabstop=4
 
 " For vim-table-mode plugin
 let g:table_mode_corner='|'
