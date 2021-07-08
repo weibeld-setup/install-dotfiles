@@ -560,6 +560,24 @@ docker-vm() {
   docker run -it --pid=host --privileged weibeld/ubuntu-networking nsenter -t 1 -m -u -n -i bash
 }
 
+# List the most recent tags of an image on Docker Hub.
+# Usage:
+#   dktags name [number]
+# Args:
+#   name      Name of the image (e.g. 'ubuntu', 'weibeld/ubuntu-networking')
+#   [number]  Number of tags to list (default: 15)
+dktags() {
+  name=$1
+  number=${2:-15}
+  # Expand the names of official images (where the repository is omitted)
+  [[ ! "$name" =~ .*/.* ]] && name=library/"$name"
+  curl -L "https://registry.hub.docker.com/v2/repositories/$name/tags?page_size=$number" \
+    | jq -r '.results[] | [.name, .last_updated] | @tsv' \
+    | awk '{gsub("T", " ", $2); gsub("\\..*$", "", $2); print $1"\t"$2}' \
+    | sed 's/^\([a-zA-Z0-9._-]*\)/'$(echo -e '\e')'[33m\1'$(echo -e '\e')'[0m/' \
+    | column -t -s $'\t' 
+}
+
 #------------------------------------------------------------------------------#
 # AWS CLI
 #------------------------------------------------------------------------------#
@@ -1036,7 +1054,7 @@ set_proxy() {
   PROXY_HOST=$1.corproot.net
   PROXY_PORT=8080
   PROXY=${PROXY_PROTOCOL}://${PROXY_HOST}:${PROXY_PORT}
-  NOPROXY='localhost, 127.0.0.0/8, .swisscom.com, .sharedtcs.net, .corproot.net, 192.168.0.0/16, 10.96.0.0/12'
+  NOPROXY='localhost, 127.0.0.0/8, .swisscom.com, .sharedtcs.net, .corproot.net, 192.168.0.0/16, 10.96.0.0/12, .scs-sdweb.ch'
   export http_proxy=$PROXY
   export HTTP_PROXY=$PROXY
   export https_proxy=$PROXY
@@ -1068,7 +1086,7 @@ unset_proxy() {
 }
 
 get_proxy() {
-  env | grep -i proxy | grep -vi no_proxy | sed 's/^/export /'
+  env | grep -i proxy | sed 's/^/export /' | sort --ignore-case
 }
 
 nc -z -w 3 aproxy.corproot.net 8080 >/dev/null 2>&1 && set_proxy aproxy || unset_proxy
