@@ -28,9 +28,6 @@
 [submodule ".vim/bundle/vim-json"]
 	path = .vim/bundle/vim-json
 	url = https://github.com/elzr/vim-json
-[submodule ".vim/bundle/vim-jsonnet"]
-	path = .vim/bundle/vim-jsonnet
-	url = //github.com/google/vim-jsonnet
 [submodule ".vim/bundle/vim-caddyfile"]
 	path = .vim/bundle/vim-caddyfile
 	url = https://github.com/isobit/vim-caddyfile
