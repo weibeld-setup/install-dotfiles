@@ -1049,48 +1049,6 @@ anker() { ssh wk41@anker.inf.unibe.ch; }
 #boyle() { torsocks ssh charles@63alsiqho43t37nfoavp3bctz55bjf4bmcicdt2qtmet6cmufx2juzqd.onion -p 30022; }
 boyle() { ssh charles@130.92.63.21; }
 
-set_proxy() {
-  PROXY_PROTOCOL=http
-  PROXY_HOST=$1.corproot.net
-  PROXY_PORT=8080
-  PROXY=${PROXY_PROTOCOL}://${PROXY_HOST}:${PROXY_PORT}
-  NOPROXY='localhost, 127.0.0.0/8, .swisscom.com, .sharedtcs.net, .corproot.net, 192.168.0.0/16, 10.96.0.0/12, .scs-sdweb.ch'
-  export http_proxy=$PROXY
-  export HTTP_PROXY=$PROXY
-  export https_proxy=$PROXY
-  export HTTPS_PROXY=$PROXY
-  export ftp_proxy=$PROXY
-  export FTP_PROXY=$PROXY
-  export all_proxy=$PROXY
-  export ALL_PROXY=$PROXY
-  export PIP_PROXY=$PROXY
-  export no_proxy=$NOPROXY
-  export NO_PROXY=$NOPROXY
-  #export MAVEN_OPTS="-Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
-  unset PROXY_PROTOCOL PROXY_HOST PROXY_PORT PROXY NOPROXY
-}
-
-unset_proxy() {
-  unset http_proxy
-  unset HTTP_PROXY
-  unset https_proxy
-  unset HTTPS_PROXY
-  unset ftp_proxy
-  unset FTP_PROXY
-  unset all_proxy
-  unset ALL_PROXY
-  unset PIP_PROXY
-  unset no_proxy
-  unset NO_PROXY
-  unset MAVEN_OPTS
-}
-
-get_proxy() {
-  env | grep -i proxy | sed 's/^/export /' | sort --ignore-case
-}
-
-nc -z -w 3 aproxy.corproot.net 8080 >/dev/null 2>&1 && set_proxy aproxy || unset_proxy
-
 # Added by serverless binary installer
 export PATH="$HOME/.serverless/bin:$PATH"
 
@@ -1103,6 +1061,32 @@ change_mac() {
   sudo ifconfig en0 ether "$mac"
   echo "Changed MAC address of en0 device to $mac"
 }
+
+#------------------------------------------------------------------------------#
+# Swisscom
+#------------------------------------------------------------------------------#
+
+# Always make sure that only the lower-case versions of the proxy variables
+# are set (e.g. http_proxy and no_proxy, and not HTTP_PROXY and NO_PROXY).
+# See https://about.gitlab.com/blog/2021/01/27/we-need-to-talk-no-proxy/
+get_proxy() {
+  env | grep -i proxy | sort --ignore-case || return 0
+}
+
+set_proxy() {
+  local PROXY=http://$1.corproot.net:8080
+  export http_proxy=$PROXY
+  export https_proxy=$PROXY
+  export ftp_proxy=$PROXY
+  export no_proxy=localhost
+  get_proxy
+}
+
+unset_proxy() {
+  unset http_proxy https_proxy ftp_proxy no_proxy
+}
+
+# nc -z -w 3 aproxy.corproot.net 8080 >/dev/null 2>&1 && set_proxy aproxy || unset_proxy
 
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
