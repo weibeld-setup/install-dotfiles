@@ -31,3 +31,6 @@
 [submodule ".vim/bundle/vim-caddyfile"]
 	path = .vim/bundle/vim-caddyfile
 	url = https://github.com/isobit/vim-caddyfile
+[submodule ".vim/bundle/vim-helm"]
+	path = .vim/bundle/vim-helm
+	url = https://github.com/towolf/vim-helm
