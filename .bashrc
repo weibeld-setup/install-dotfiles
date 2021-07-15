@@ -829,6 +829,23 @@ ktok() {
   echo $(kubectl get secret "$secret" -o jsonpath='{.data.token}' | base64 -d)
 }
 
+# Pretty-print the labels of the specified resource or resources
+# Usage examples:
+#   klab svc
+#   klab svc myservice
+#   klab svc myservice -n mynamespace
+#   klab svc -n mynamespace -l mylabel=myvalue
+klab() {
+  kubectl get "$@" --no-headers -o custom-columns=":metadata.name,:metadata.labels" \
+    | sed 's/map\[//;s/\]//' \
+    | tr -s ' ' \
+    | tr ' ' '\n' \
+    | sed '/:/s/^/  /' \
+    | awk -F : '!/^ / {print "\033[1;31m"$0"\033[0m"} /^ / {print "\033[1;33m"$1":\033[0;33m"$2"\033[0m"}' \
+    | column -s : -t \
+    | sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
+}
+
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
   source ~/.kubectl_aliases
@@ -1078,14 +1095,14 @@ set_proxy() {
   export http_proxy=$PROXY
   export https_proxy=$PROXY
   export ftp_proxy=$PROXY
-  export no_proxy=localhost
-  get_proxy
+  export no_proxy=localhost,corproot.net
 }
 
 unset_proxy() {
   unset http_proxy https_proxy ftp_proxy no_proxy
 }
 
+set_proxy serverproxy
 # nc -z -w 3 aproxy.corproot.net 8080 >/dev/null 2>&1 && set_proxy aproxy || unset_proxy
 
 #------------------------------------------------------------------------------#
