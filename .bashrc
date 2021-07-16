@@ -741,11 +741,6 @@ kge() {
     "$@"
 }
 
-# List container images of each pod
-kim() {
-  kubectl get -o custom-columns='POD:.metadata.name,IMAGES:.spec.containers[*].image' pods "$@"
-}
-
 # List names of Pods in current namespace
 kgpn() {
   kubectl get pods --no-headers -o custom-columns=:.metadata.name
@@ -831,12 +826,17 @@ ktok() {
 
 # Pretty-print the labels of the specified resource or resources
 # Usage examples:
+#   // All Services (in the current namespace)
 #   klab svc
+#   // Specific Service (in the current namespace)
 #   klab svc myservice
-#   klab svc myservice -n mynamespace
+#   // Specific Service in a specific namespace
+#   klab svc myservice -n mynamespace     
+#   // Services with a specific label in a specific namespace
 #   klab svc -n mynamespace -l mylabel=myvalue
+# TODO: enable correct output when there is only a single (or no) label
 klab() {
-  kubectl get "$@" --no-headers -o custom-columns=":metadata.name,:metadata.labels" \
+  kubectl get "$@" --no-headers -o custom-columns=':metadata.name,:metadata.labels' \
     | sed 's/map\[//;s/\]//' \
     | tr -s ' ' \
     | tr ' ' '\n' \
@@ -845,6 +845,26 @@ klab() {
     | column -s : -t \
     | sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
 }
+
+# Pretty-print the container images of the specified Pod or Pods
+# Usage examples:
+#   // All Pods (in the current namespace)
+#   kim
+#   // Specific Pod (in the current namespace)
+#   kim mypod
+#   // Specific Pod in a specific namespace
+#   kim mypod -n my-namespace
+#   // Pods with a specific label in a specific namespace
+#   kim -n mynamespace -l mylabel=myvalue
+# TODO: include init containers in the output
+kim() {
+  kubectl get pods "$@" --no-headers -o custom-columns=':metadata.name,:spec.containers[*].image' \
+    | tr -s ' ' \
+    | sed 's/ /\'$'\n''  /' \
+    | sed '/^  /s/,/\'$'\n''  /' \
+    | awk '!/^ / {print "\033[1;31m"$0"\033[0m"} /^ / {print "\033[0;36m"$0"\033[0m"}'
+}
+
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
