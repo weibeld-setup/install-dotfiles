@@ -724,6 +724,28 @@ pkc() { echo "$KUBECONFIG"; }
 # Open kubeconfig file for editing
 alias kc='vim ~/.kube/config'
 
+# Get a specific field from a kubeconfig file
+# Usage examples:
+#   // Get server URL of cluster "mycluster"
+#   kcg clusters.mycluster.cluster.server
+#   // Get entire entry of user "myuser"
+#   kcg users.myuser
+#   // Get entries of all users
+#   kcg users
+#   // Use a different kubeconfig file (default: ~/.kube/config)
+#   kcg users.myuser my-kubeconfig
+kcg() {
+  local file=${2:-~/.kube/config}
+  if [[ "$1" =~ \. ]]; then
+    local list=$(cut -d . -f 1 <<<"$1")
+    local name=$(cut -d . -f 2 <<<"$1")
+    local field=$(cut -d . -f 3- <<<"$1")
+    yq eval ".$list[] | select(.name == \"$name\") | .$field" "$file"
+  else
+    yq eval ".$1" "$file"
+  fi
+}
+
 # Delete similarly-named context, cluster, and user entries from kubeconfig file
 kc-delete() {
   kubectl config unset contexts."$1"
