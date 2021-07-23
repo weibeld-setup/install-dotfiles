@@ -285,6 +285,14 @@ cdl() {
 }
 complete -f cdl
 
+# Change <n> levels up in the directory hierarchy
+cdu() {
+  local n=${1:-1}
+  for i in $(seq 1 "$n"); do
+    cd ..
+  done
+}
+
 # Create new directory and cd to it
 mkcd() { mkdir "$1" && cd "$1"; }
 
