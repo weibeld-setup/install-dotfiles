@@ -110,6 +110,62 @@ format() {
   # https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
 }
 
+# Print an ANSI colour escape sequence
+# Usage:
+#   c [<colour>]
+# Where <colour> is one of the following colours:
+#   - black
+#   - red
+#   - green
+#   - yellow
+#   - blue
+#   - magenta
+#   - cyan
+#   - white
+# Each colour may start with an upper-case letter, in which case the bold
+# version of the colour is used. Each colour may additionally end with a plus
+# sign (+), in which case the bright version of the colour is used. Without
+# arguments, the 'reset' escape sequence is printed. 
+#
+# Example usage:
+#   // Regular red
+#   c red
+#   // Bold red
+#   c Red
+#   // Bright regular red
+#   c red+
+#   // Bright bold red
+#   c Red+
+#   // Reset all previously set colours
+#   c
+#   // Print text in multiple colours
+#   echo "$(c Red)Red$(c) and $(c Green)Green$(c)"
+# References:
+#   - https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+c() {
+  local n m
+  if [[ "$#" -eq 0 ]]; then
+    printf '\e[0m'
+  else
+    # If arg starts with upper-case, use bold formatter, otherwise regular
+    [[ "$1" =~ ^[A-Z] ]] && n=1 || n=0
+    case "$1" in
+      [Bb]lack*) m=30 ;;
+      [Rr]ed*) m=31 ;;
+      [Gg]reen*) m=32 ;;
+      [Yy]ellow*) m=33 ;;
+      [Bb]lue*) m=34 ;;
+      [Mm]agenta*) m=35 ;;
+      [Cc]yan*) m=36 ;;
+      [Ww]hite*) m=37 ;;
+      *) echo "Invalid colour: $1" && return 1 ;;
+    esac
+    # If + appended to colour name, use the bright version of the colour
+    [[ "$1" =~ \+$ ]] && m=$(("$m"+60))
+    printf "\e[${n};${m}m"
+  fi
+} 
+
 #------------------------------------------------------------------------------#
 # Configure Readline
 # https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
