@@ -111,6 +111,7 @@ format() {
 }
 
 # Print an ANSI colour escape sequence
+#
 # Usage:
 #   c [<colour>]
 # Where <colour> is one of the following colours:
@@ -140,31 +141,111 @@ format() {
 #   c
 #   // Print text in multiple colours
 #   echo "$(c Red)Red$(c) and $(c Green)Green$(c)"
-# References:
-#   - https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+#
+# Reference: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+#c() {
+#  local n m
+#  if [[ "$#" -eq 0 ]]; then
+#    printf '\e[0m'
+#  else
+#    # If arg starts with upper-case, use bold formatter, otherwise regular
+#    [[ "$1" =~ ^[A-Z] ]] && n=1 || n=0
+#    case "$1" in
+#      [Bb]lack*) m=30 ;;
+#      [Rr]ed*) m=31 ;;
+#      [Gg]reen*) m=32 ;;
+#      [Yy]ellow*) m=33 ;;
+#      [Bb]lue*) m=34 ;;
+#      [Mm]agenta*) m=35 ;;
+#      [Cc]yan*) m=36 ;;
+#      [Ww]hite*) m=37 ;;
+#      *) echo "Invalid colour: $1" && return 1 ;;
+#    esac
+#    # If + appended to colour name, use the bright version of the colour
+#    [[ "$1" =~ \+$ ]] && m=$(("$m"+60))
+#    printf "\e[${n};${m}m"
+#  fi
+#} 
+
+
+# Print an ANSI Select Graphic Rendition (SGR) escape sequence (see [1])
+#
+# Usage:
+#   c [<arg>]...
+# Where <arg> is either a colour, or one or multiple modifiers.
+#
+# Colours:
+#   - black
+#   - red
+#   - green
+#   - yellow
+#   - blue
+#   - magenta
+#   - cyan
+#   - white
+# A plus sign may be appended to each colour (e.g. 'red+'), in which case the
+# bright version of the colour is used.
+#
+# Modifiers:
+#   - x: reset
+#   - b: bold
+#   - d: dim
+#   - i: italic
+#   - u: underline
+# The x modifier is special as it resets all the previously set attributes
+# (colours and modifiers). Multiple modifiers can be combined in a single arg.
+#
+# Example usage:
+#   c red        // Red 
+#   c red+       // Bright red 
+#   c red b      // Red, bold
+#   c red biu    // Red, bold, italic, and underlined
+#   c red b i u  // Equivalent to above command
+#   c            // Reset all previously set colours and modifiers
+#   c x          // Equivalent to above command
+#   c bu         // Bold and underlined (don't change colour)
+#
+# Application:
+#   echo "$(c red bi)red $(c x blue+ u)blue$(c) normal"
+#
+# [1] https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
 c() {
-  local n m
-  if [[ "$#" -eq 0 ]]; then
-    printf '\e[0m'
-  else
-    # If arg starts with upper-case, use bold formatter, otherwise regular
-    [[ "$1" =~ ^[A-Z] ]] && n=1 || n=0
-    case "$1" in
-      [Bb]lack*) m=30 ;;
-      [Rr]ed*) m=31 ;;
-      [Gg]reen*) m=32 ;;
-      [Yy]ellow*) m=33 ;;
-      [Bb]lue*) m=34 ;;
-      [Mm]agenta*) m=35 ;;
-      [Cc]yan*) m=36 ;;
-      [Ww]hite*) m=37 ;;
-      *) echo "Invalid colour: $1" && return 1 ;;
+  local p
+  for a in "$@"; do
+    # Parse colour
+    case "$a" in
+      black)    p+=(30); continue ;;
+      red)      p+=(31); continue ;;
+      green)    p+=(32); continue ;;
+      yellow)   p+=(33); continue ;;
+      blue)     p+=(34); continue ;;
+      magenta)  p+=(35); continue ;;
+      cyan)     p+=(36); continue ;;
+      white)    p+=(37); continue ;;
+      black+)   p+=(90); continue ;;
+      red+)     p+=(91); continue ;;
+      green+)   p+=(92); continue ;;
+      yellow+)  p+=(93); continue ;;
+      blue+)    p+=(94); continue ;;
+      magenta+) p+=(95); continue ;;
+      cyan+)    p+=(96); continue ;;
+      white+)   p+=(97); continue ;;
     esac
-    # If + appended to colour name, use the bright version of the colour
-    [[ "$1" =~ \+$ ]] && m=$(("$m"+60))
-    printf "\e[${n};${m}m"
-  fi
-} 
+    # Parse modifiers (x, b, i, u, d)
+    a=($(grep -o . <<<"$a"))
+    for i in "${a[@]}"; do
+      case "$i" in
+        x) p+=(0) ;;  # Reset
+        b) p+=(1) ;;  # Bold
+        d) p+=(2) ;;  # Dim
+        i) p+=(3) ;;  # Italic
+        u) p+=(4) ;;  # Underlined
+      esac
+    done
+  done
+  # Print escape sequence
+  printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
+}
 
 #------------------------------------------------------------------------------#
 # Configure Readline
@@ -652,9 +733,9 @@ dktags() {
 areg() {
   aws ec2 describe-regions --all-regions --output json \
     | jq -r '.Regions[] | [.RegionName, .OptInStatus] | @tsv' \
-    | sed "s/not-opted-in/$(c Red)disabled$(c)/" \
-    | sed "s/opt-in-not-required/$(c Green)enabled$(c)/" \
-    | sed "s/opted-in/$(c Green)enabled$(c)/" \
+    | sed "s/not-opted-in/$(c red b)disabled$(c)/" \
+    | sed "s/opt-in-not-required/$(c green b)enabled$(c)/" \
+    | sed "s/opted-in/$(c green b)enabled$(c)/" \
     | sort \
     | column -t
 }
@@ -673,7 +754,7 @@ aami() {
   local query=*
   for a in "$@"; do query=$query$a*; done
   aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text \
-  | awk '{print "'$(c yellow)'"$1" '$(c Yellow)'"$2"'$(c)'"}' \
+  | awk '{print "'$(c yellow)'"$1" '$(c yellow b)'"$2"'$(c)'"}' \
   | column -t
 }
 
@@ -688,10 +769,13 @@ ae() {
   local region=${1:-$(aws configure get region)}
   aws ec2 describe-instances --region "$region" --query 'Reservations[*].Instances[*].[InstanceId,InstanceType,PrivateIpAddress,PublicIpAddress,State.Name]' --output text \
     | sort -k 3 \
-    | awk '{printf "'$(c Yellow)'"$1; $1=""; print " '$(c yellow)'"$0"'$(c)'"}' \
-    | sed "s/running/$(c Green)running$(c)/" \
-    | sed "s/terminated/$(c Red)terminated$(c)/" \
-    | sed "s/stopped/$(c Red)stopped$(c)/" \
+    | awk '{printf "'$(c b)'"$1; $1=""; print " '$(c)'"$0"'$(c)'"}' \
+    | sed "s/\(running\)/$(c green b)\1$(c)/" \
+    | sed "s/\(stopped\)/$(c red b)\1$(c)/" \
+    | sed "s/\(terminated\)/$(c red b)\1$(c)/" \
+    | sed "s/\(pending\)/$(c yellow b)\1$(c)/" \
+    | sed "s/\(stopping\)/$(c yellow b)\1$(c)/" \
+    | sed "s/\(shutting-down\)/$(c yellow b)\1$(c)/" \
     | column -t
 }
 
