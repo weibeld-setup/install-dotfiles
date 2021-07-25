@@ -664,19 +664,35 @@ aaz() {
   aws ec2 describe-availability-zones --region "$1" --query 'AvailabilityZones[*].ZoneName' --output text | tr '\t' '\n'
 }
 
-# Search AMIs given a sequence of keywords that are matched against the name of
-# the AMI. The order of the keywords is important. Thus, the keyword sequence
-# ["foo" "bar"] will match "text-foo-text-bar-text", but ["bar" "foo"] will not.
-aws-search-ami() {
-  query=*
+# List all AWS AMIs (name and ID) whose name matches a sequence of keywords.
+# Example usage:
+#   aami ubuntu 21.04 amd64 server
+# Caution: the order of the keywords matters and must represent the order in
+# which they appear in the AMI name.
+aami() {
+  local query=*
   for a in "$@"; do query=$query$a*; done
-  aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text
+  aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text \
+  | awk '{print "'$(c yellow)'"$1" '$(c Yellow)'"$2"'$(c)'"}' \
+  | column -t
 }
 
-# List EC2 instances in a given region with their private and public DNS names
-aws-ec2() {
+# List all EC2 instances in a specific region. For each instance, the following
+# information is listed:
+#   - ID
+#   - Type
+#   - Private IP address
+#   - Public IP address
+#   - State
+ae() {
   local region=${1:-$(aws configure get region)}
-  aws ec2 describe-instances --region "$region" --query 'Reservations[*].Instances[*].[InstanceId,PrivateDnsName,PublicDnsName]' --output text
+  aws ec2 describe-instances --region "$region" --query 'Reservations[*].Instances[*].[InstanceId,InstanceType,PrivateIpAddress,PublicIpAddress,State.Name]' --output text \
+    | sort -k 3 \
+    | awk '{printf "'$(c Yellow)'"$1; $1=""; print " '$(c yellow)'"$0"'$(c)'"}' \
+    | sed "s/running/$(c Green)running$(c)/" \
+    | sed "s/terminated/$(c Red)terminated$(c)/" \
+    | sed "s/stopped/$(c Red)stopped$(c)/" \
+    | column -t
 }
 
 alias cfn="aws cloudformation"
