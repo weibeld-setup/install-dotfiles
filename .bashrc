@@ -646,15 +646,31 @@ dktags() {
 # AWS CLI
 #------------------------------------------------------------------------------#
 
-# Get availability zones of a region
-aws-az() {
-  local region=$1
-  aws ec2 describe-availability-zones --region "$region" --query 'AvailabilityZones[*].ZoneName' --output text | tr '\t' '\n'
+# List all AWS regions including its enabled/disabled state (since 2019, new
+# regions can be selectively enabled or disabled, see [1]).
+# [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
+areg() {
+  aws ec2 describe-regions --all-regions --output json \
+    | jq -r '.Regions[] | [.RegionName, .OptInStatus] | @tsv' \
+    | sed "s/not-opted-in/$(c Red)disabled$(c)/" \
+    | sed "s/opt-in-not-required/$(c Green)enabled$(c)/" \
+    | sed "s/opted-in/$(c Green)enabled$(c)/" \
+    | sort \
+    | column -t
 }
 
-# Get AWS regions (for some reason doesn't return all regions)
-aws-regions() {
-  aws ec2 describe-regions --query 'Regions[*].RegionName' --output text | tr '\t' '\n'
+# List the availability zones of a specific region
+aaz() {
+  aws ec2 describe-availability-zones --region "$1" --query 'AvailabilityZones[*].ZoneName' --output text | tr '\t' '\n'
+}
+
+# Search AMIs given a sequence of keywords that are matched against the name of
+# the AMI. The order of the keywords is important. Thus, the keyword sequence
+# ["foo" "bar"] will match "text-foo-text-bar-text", but ["bar" "foo"] will not.
+aws-search-ami() {
+  query=*
+  for a in "$@"; do query=$query$a*; done
+  aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text
 }
 
 # List EC2 instances in a given region with their private and public DNS names
@@ -722,14 +738,6 @@ aws-delete-secret() {
   aws secretsmanager delete-secret --secret-id "$NAME_OR_ARN" --output json
 }
 
-# Search AMIs given a sequence of keywords that are matched against the name of
-# the AMI. The order of the keywords is important. Thus, the keyword sequence
-# ["foo" "bar"] will match "text-foo-text-bar-text", but ["bar" "foo"] will not.
-aws-search-ami() {
-  query=*
-  for a in "$@"; do query=$query$a*; done
-  aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text
-}
 
 complete -C /usr/local/bin/aws_completer aws
 
