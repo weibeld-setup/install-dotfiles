@@ -970,27 +970,59 @@ ksec() {
   fi
 }
 
-# Pretty-print the labels of the specified resource or resources
+# Lists the labels of the specified resources
+# Usage:
+#   klab <args>... [-- <regex>]
+# Parameters:
+#   <args>   Arguments for 'kubectl get' (e.g. 'pods' or 'pods -n foo')
+#   --       Indicates that next arg is a regex selecting resources by name
+#   <regex>  A regex matched against the resource names
 # Usage examples:
-#   // All Services (in the current namespace)
-#   klab svc
-#   // Specific Service (in the current namespace)
-#   klab svc myservice
-#   // Specific Service in a specific namespace
-#   klab svc myservice -n mynamespace     
-#   // Services with a specific label in a specific namespace
-#   klab svc -n mynamespace -l mylabel=myvalue
+#   klab svc                // All Services in current namespace
+#   klab svc mysvc -n myns  // A specific Service in a specific namespace
+#   klab pods -- kibana     // All Pods with 'kibana' in their name
+#   klab pods -- '[0-9]$'   // All Pods whose name ends with a number
 # TODO: enable correct output when there is only a single (or no) label
 klab() {
+  # Parse '-- <regex>' in argument list (if present)
+  local regex=.*
+  for i in $(seq 1 "$#"); do
+    if [[ "${!i}" = -- ]]; then
+      # Extract first arg after --
+      regex="${@:$(($i+1)):1}"
+      # Overwrite arg variable ($@) with args before --
+      set -- "${@:1:$(($i-1))}"
+      break
+    fi
+  done
   kubectl get "$@" --no-headers -o custom-columns=':metadata.name,:metadata.labels' \
+    | awk "\$1~/$regex/" \
     | sed 's/map\[//;s/\]//' \
     | tr -s ' ' \
     | tr ' ' '\n' \
     | sed '/:/s/^/  /' \
-    | awk -F : '!/^ / {print "\033[1;31m"$0"\033[0m"} /^ / {print "\033[1;33m"$1":\033[0;33m"$2"\033[0m"}' \
-    | column -s : -t \
-    | sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
+    | awk -F : '!/^ / {print "'$(c b)'"$0"'$(c)'"} /^ / {print "'$(c)'"$1":'$(c)'"$2"'$(c)'"}' \
+    | column -s : -t 
+    # Fill space between name and value with dots. Note taht this prevents
+    # selection of name or value by double-clicking in iTerm2
+    #| sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
 }
+
+argtest() {
+  local pattern=.*
+  for i in $(seq 1 "$#"); do
+    if [[ "${!i}" = -- ]]; then
+      # Extract first argument after --
+      pattern="${@:$(($i+1)):1}"
+      # Overwrite positional parameters ($@) with args before --
+      set -- "${@:1:$(($i-1))}"
+      break
+    fi
+  done
+  echo "${args[0]}"
+  echo $pattern
+}
+
 
 # Pretty-print the container images of the specified Pod or Pods
 # Usage examples:
