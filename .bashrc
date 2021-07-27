@@ -954,12 +954,20 @@ kpf() {
   kubectl port-forward svc/"$service" "$port" "$@"
 }
 
-# Read and decode a token (a field named 'token') from a Secret. Optionally,
-# specify a different field to read and decode.
-ktok() {
-  secret=$1
-  field=${2:-token}
-  echo $(kubectl get secret "$secret" -o jsonpath="{.data.$field}" | base64 -d)
+# Read and decode a value from a Secret
+# Usage:
+#   ksec <secret> [<key>]
+# If <key> is omitted, then all keys of the secret are listed.
+# TODO: support Secrets in different namespaces.
+ksec() {
+  local secret=$1
+  local key=${2}
+  if [[ -z "$key" ]]; then
+    kubectl get secret "$secret" -o jsonpath='{.data}' | jq -r 'keys | join("\n")'
+  else
+    key=$(sed 's/\./\\\./' <<<"$key")
+    kubectl get secret "$secret" -o jsonpath="{.data.$key}" | base64 -d
+  fi
 }
 
 # Pretty-print the labels of the specified resource or resources
@@ -1260,8 +1268,12 @@ unset_proxy() {
   unset http_proxy https_proxy ftp_proxy no_proxy
 }
 
-# Set proxy if in Swisscom network, otherwise unset proxy
-nc -z serverproxy.corproot.net 8080 &>/dev/null && set_proxy serverproxy || unset_proxy
+# Check if in Swisscom network: if yes, set proxy, if no, unset proxy
+if nc -z serverproxy.corproot.net 8080 &>/dev/null; then
+  set_proxy serverproxy
+else
+  unset_proxy
+fi
 
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
