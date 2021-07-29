@@ -954,11 +954,27 @@ kpf() {
   kubectl port-forward svc/"$service" "$port" "$@"
 }
 
-# Read and decode a value from a Secret
+# Read a field from a ConfigMap
+# Usage:
+#   ksec <configmap> [<key>]
+# If <key> is omitted, then all keys of the ConfigMap are listed.
+# TODO: support specifying namespace for Secret
+kcm() {
+  local cm=$1
+  local key=${2}
+  if [[ -z "$key" ]]; then
+    kubectl get cm "$cm" -o jsonpath='{.data}' | jq -r 'keys | join("\n")'
+  else
+    key=$(sed 's/\./\\\./' <<<"$key")
+    kubectl get cm "$cm" -o jsonpath="{.data.$key}"
+  fi
+}
+
+# Read and decode a field from a Secret
 # Usage:
 #   ksec <secret> [<key>]
-# If <key> is omitted, then all keys of the secret are listed.
-# TODO: support Secrets in different namespaces.
+# If <key> is omitted, then all keys of the Secret are listed.
+# TODO: support specifying namespace for Secret
 ksec() {
   local secret=$1
   local key=${2}
@@ -1003,8 +1019,8 @@ klab() {
     | sed '/:/s/^/  /' \
     | awk -F : '!/^ / {print "'$(c b)'"$0"'$(c)'"} /^ / {print "'$(c)'"$1":'$(c)'"$2"'$(c)'"}' \
     | column -s : -t 
-    # Fill space between name and value with dots. Note taht this prevents
-    # selection of name or value by double-clicking in iTerm2
+    # Fill space between name and value with dots. Note that this prevents
+    # selection of name or value by double-clicking in iTerm2.
     #| sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
 }
 
