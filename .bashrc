@@ -110,6 +110,40 @@ format() {
   # https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
 }
 
+# Split an args sequence at a custom delimiter into two arrays, one containing
+# the args before the delimiter and one containing the args after the delimiter.
+# Usage:
+#   splitargs <arr_a> <arr_b> <delim> <args>...
+# Args:
+#   <arr_a>  Name of an array to which to assign the args before the delimiter
+#   <arr_b>  Name of an array to which to assign the args after the delimiter
+#   <delim>  The delimiter (e.g. --)
+#   <args>   Sequence of arguments (possibly containing)
+# Example usage:
+#   splitargs arr1 arr2 -- before1 before2 -- after1 after2
+# The above results in the following assignments to arr1 and arr2:
+#   - arr1["before1", "before2"]
+#   - arr2["after1", "after2"]
+# If the args sequence does not contain the delimiter, then all the args are
+# assigned to the first array (<arr_a>).
+# CAUTION: the passed in array names must not be __a and __b as these are the
+# locally used array names (causes a "circular name reference" error).
+splitargs() {
+  # Nameref variables, see [1]
+  # [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
+  local -n __a=$1 __b=$2
+  local delim=$3
+  shift 3
+  for i in $(seq 1 "$#"); do
+    if [[ "${!i}" = "$delim" ]]; then
+      __a=("${@:1:$(($i-1))}")  # Args before delimiter
+      __b=("${@:$(($i+1))}")    # Args after delimiter
+      return
+    fi
+  done
+  __a=("$@")  # If the args don't contain the delimiter
+}
+
 # Print an ANSI Select Graphic Rendition (SGR) escape sequence (see [1])
 #
 # Usage:
@@ -956,9 +990,9 @@ kpf() {
 
 # Read a field from a ConfigMap
 # Usage:
-#   ksec <configmap> [<key>]
+#   kcm <configmap> [<key>]
 # If <key> is omitted, then all keys of the ConfigMap are listed.
-# TODO: support specifying namespace for Secret
+# TODO: support specifying namespace for ConfigMap
 kcm() {
   local cm=$1
   local key=${2}
@@ -982,36 +1016,63 @@ ksec() {
     kubectl get secret "$secret" -o jsonpath='{.data}' | jq -r 'keys | join("\n")'
   else
     key=$(sed 's/\./\\\./' <<<"$key")
-    kubectl get secret "$secret" -o jsonpath="{.data.$key}" | base64 -d
+    local value=$(kubectl get secret "$secret" -o jsonpath="{.data.$key}")
+    # In Secrets, null values may be returned as <nil> (in ConfigMaps, "")
+    if [[ "$value" != '<nil>' ]]; then
+      echo "$value" | base64 -d
+    fi
   fi
 }
 
-# Lists the labels of the specified resources
+# Pretty-print the annotations of the specified resources
+# Usage:
+#   kann <args>... [-- <regex>]
+# Parameters:
+#   <args>   Arguments for 'kubectl get' (e.g. 'pods' or 'pods -n foo')
+#   --       Delimiter between 'kubectl get' arguments and an optional regex
+#   <regex>  A regex to filter resources by name
+# Usage examples:
+#   kann svc                  // All Services in the current namespace
+#   kann svc mysvc -n myns    // A specific Service in a specific namespace
+#   kann pods -- '[0-9]$'     // All Pods whose name ends with a number
+kann() {
+  local args regex=.*
+  splitargs args regex -- "$@"
+  kubectl get "${args[@]}" -o json | jq -r '
+    if .items then
+      .items[]
+    else
+      .
+    end
+    | .metadata
+    | if (.name | test("'"$regex"'")) then
+        "'$(c yellow+ b)'\(.name)'$(c)'",
+        if .annotations then
+          .annotations | to_entries[] | "  '$(c b)'\(.key)'$(c)'\n    \(.value)"
+        else
+          "  '$(c d)'<none>'$(c)'"
+        end
+      else
+        empty
+      end'
+}
+
+# Pretty-print the labels of the specified resources
 # Usage:
 #   klab <args>... [-- <regex>]
 # Parameters:
 #   <args>   Arguments for 'kubectl get' (e.g. 'pods' or 'pods -n foo')
-#   --       Indicates that next arg is a regex selecting resources by name
-#   <regex>  A regex matched against the resource names
+#   --       Delimiter between 'kubectl get' arguments and an optional regex
+#   <regex>  A regex to filter resources by name
 # Usage examples:
-#   klab svc                // All Services in current namespace
-#   klab svc mysvc -n myns  // A specific Service in a specific namespace
-#   klab pods -- kibana     // All Pods with 'kibana' in their name
-#   klab pods -- '[0-9]$'   // All Pods whose name ends with a number
-# TODO: enable correct output when there is only a single (or no) label
+#   klab svc                  // All Services in the current namespace
+#   klab svc mysvc -n myns    // A specific Service in a specific namespace
+#   klab pods -- '[0-9]$'     // All Pods whose name ends with a number
+# TODO: fix output when there is only a single (or no) label
 klab() {
-  # Parse '-- <regex>' in argument list (if present)
-  local regex=.*
-  for i in $(seq 1 "$#"); do
-    if [[ "${!i}" = -- ]]; then
-      # Extract first arg after --
-      regex="${@:$(($i+1)):1}"
-      # Overwrite arg variable ($@) with args before --
-      set -- "${@:1:$(($i-1))}"
-      break
-    fi
-  done
-  kubectl get "$@" --no-headers -o custom-columns=':metadata.name,:metadata.labels' \
+  local args regex=.*
+  splitargs args regex -- "$@"
+  kubectl get "${args[@]}" --no-headers -o custom-columns=':metadata.name,:metadata.labels' \
     | awk "\$1~/$regex/" \
     | sed 's/map\[//;s/\]//' \
     | tr -s ' ' \
@@ -1023,22 +1084,6 @@ klab() {
     # selection of name or value by double-clicking in iTerm2.
     #| sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
 }
-
-argtest() {
-  local pattern=.*
-  for i in $(seq 1 "$#"); do
-    if [[ "${!i}" = -- ]]; then
-      # Extract first argument after --
-      pattern="${@:$(($i+1)):1}"
-      # Overwrite positional parameters ($@) with args before --
-      set -- "${@:1:$(($i-1))}"
-      break
-    fi
-  done
-  echo "${args[0]}"
-  echo $pattern
-}
-
 
 # Pretty-print the container images of the specified Pod or Pods
 # Usage examples:
