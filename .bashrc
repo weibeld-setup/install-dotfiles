@@ -144,6 +144,17 @@ splitargs() {
   __a=("$@")  # If the args don't contain the delimiter
 }
 
+# Test if an array contains a specific element.
+# Usage example: array-contains "${myarr[@]}" foo
+array-contains() {
+  local array=(${@:1:$#-1})
+  local element=${@:$#}
+  for i in $(seq 0 $(("${#array}"-1))); do
+    [[ "${array[$i]}" = "$element" ]] && return 0
+  done
+  return 1
+}
+
 # Print an ANSI Select Graphic Rendition (SGR) escape sequence (see [1])
 #
 # Usage:
@@ -1085,6 +1096,22 @@ klab() {
     #| sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
 }
 
+
+# List resources whose name matches a regex.
+# Usage:
+#   kget <args>... <regex>
+# Parameters:
+#   <args>   Arguments for 'kubectl get'
+#   <regex>  Regex to match against resource names
+kget() {
+  local args=(${@:1:$#-1})
+  local regex=${@:$#}
+  local field=1
+  # With --all-namespaces, the resource name is in the second field
+  array-contains "${args[@]}" --all-namespaces && field=2 
+  kubectl get "${args[@]}" --no-headers | awk "\$$field~/$regex/"
+}
+
 # Pretty-print the container images of the specified Pod or Pods
 # Usage examples:
 #   // All Pods (in the current namespace)
@@ -1321,9 +1348,12 @@ pw() {
   aws secretsmanager get-random-password --exclude-punctuation --password-length "$LENGTH" --query RandomPassword --output text
 }
 
-anker() { ssh wk41@anker.inf.unibe.ch; }
+anker() { ssh wk08@anker.inf.unibe.ch; }
 #boyle() { torsocks ssh charles@63alsiqho43t37nfoavp3bctz55bjf4bmcicdt2qtmet6cmufx2juzqd.onion -p 30022; }
 boyle() { ssh charles@130.92.63.21; }
+
+delete-31-august() { ssh -i ~/.ssh/id_rsa root@74.220.21.72; }
+delete-31-august-tmp() { ssh -i ~/.ssh/id_rsa root@74.220.23.205; }
 
 # Added by serverless binary installer
 export PATH="$HOME/.serverless/bin:$PATH"
@@ -1362,8 +1392,8 @@ unset_proxy() {
 }
 
 # Check if in Swisscom network: if yes, set proxy, if no, unset proxy
-if nc -z serverproxy.corproot.net 8080 &>/dev/null; then
-  set_proxy serverproxy
+if nc -z server-proxy.corproot.net 8080 &>/dev/null; then
+  set_proxy server-proxy
 else
   unset_proxy
 fi
@@ -1373,3 +1403,4 @@ fi
 #------------------------------------------------------------------------------#
 
 return 0
+. "$HOME/.cargo/env"
