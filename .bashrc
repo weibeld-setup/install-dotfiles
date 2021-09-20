@@ -1131,6 +1131,24 @@ kim() {
     | awk '!/^ / {print "\033[1;31m"$0"\033[0m"} /^ / {print "\033[0;36m"$0"\033[0m"}'
 }
 
+# Get the number of containers or init containers in the specified Pods
+# Usage:
+#   kcon <kubectl_args>... [-- <args>]
+# Args:
+#   <kubectl_args>  Arguments for 'kubectl get pods'
+#   <args>          Arguments for command (currently, only 'init' is supported)
+# Examples:
+#   kcon                   # Number of containers of Pods in current namespace
+#   kcon --all-namespaces  # Number of containers of Pods across all namespaces
+#   kcon -n foo            # Number of containers of Pods in namespace 'foo'
+#   kcon -n foo -- init    # Number of init containers instead of normal containers
+kcon() {
+  local kubectl_args args
+  splitargs kubectl_args args -- "$@"
+  [[ "$args" = init ]] && c=initContainers || c=containers
+  kubectl get pods "${kubectl_args[@]}" -o json | jq -r "[.items[].spec.$c | length] | add"
+}
+
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
