@@ -1149,6 +1149,16 @@ kcon() {
   kubectl get pods "${kubectl_args[@]}" -o json | jq -r "[.items[].spec.$c | length] | add"
 }
 
+# List the conditions of all the nodes
+# Note: requires GNU sed as gsed
+kncond() {
+  for n in $(kubectl get nodes -o name | cut -d / -f 2); do
+    echo "$(c b)$n$(c)";
+    command kubectl describe node "$n" \
+      | gsed -n '/Conditions:/{:a;N;/Addresses:/!ba;p}' \
+      | sed '1d;$d';
+  done
+}
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
