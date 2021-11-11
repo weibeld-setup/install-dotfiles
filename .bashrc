@@ -25,6 +25,9 @@
 #    exists and we just modify it. The PATH variable is exported by the script
 #    that creates it (e.g. /etc/profile). So, there's no need to re-export
 #    PATH in ~/.bash_profile.
+#
+# Q: Is it necessary to declare all variables in functions as 'local'?
+# A: See https://google.github.io/styleguide/shellguide.html#s7.6-use-local-variables
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
@@ -629,12 +632,12 @@ alias gr='git remote -v'
 alias gs='git status -u'
 alias ga='git add -A'
 alias gc='git commit'
-alias gce='git commit --allow-empty'
 alias gca='git commit --amend'
 alias gp='git push'
 alias gpf='git push -f'
 alias gb="git branch"
 alias gd="git diff"
+alias gpu="git pull"
 
 
 #------------------------------------------------------------------------------#
@@ -1157,6 +1160,35 @@ kncond() {
     command kubectl describe node "$n" \
       | gsed -n '/Conditions:/{:a;N;/Addresses:/!ba;p}' \
       | sed '1d;$d';
+  done
+}
+
+# Find resources that match a regex in their YAMl definition
+# Usage:
+#   kf  <args>... <regex>
+# Args:
+#   <args>    Arguments as supplied to 'kubectl get' (e.g. "pods" "-n" "foo")
+#   <regex>   Regex as supplied to grep (e.g. 'name: foo-[xyz].*')
+# Examples:
+#   # Find all Pods in the 'foo' namespace that have an imagePullSecrets field
+#   kf pods -n foo ' imagePullSecrets:'
+#   # Find all CronJobs in the cluster that have an imagePullPolicy field
+#   kf cronjobs --all-namespaces ' imagePullPolicy:'
+kf() {
+  local args=(${@:1:$#-1})
+  local regex=${@:$#}
+  local line
+  kubectl get "${args[@]}" -o custom-columns=:.metadata.namespace,:.kind,:.metadata.name --no-headers | while read line; do
+    local namespace=$(awk '{print $1}' <<<"$line")
+    local kind=$(awk '{print tolower($2)}' <<<"$line")
+    local name=$(awk '{print $3}' <<<"$line")
+    local result
+    if result=$(kubectl get "$kind" "$name" -n "$namespace" -o yaml | grep -n --color=always "$regex"); then
+      resource="$kind/$name"
+      array-contains "${args[@]}" --all-namespaces && resource="$namespace/$resource"
+      echo "$(c b)$resource$(c)"
+      echo "$result" | sed 's/^/  /'
+    fi
   done
 }
 
