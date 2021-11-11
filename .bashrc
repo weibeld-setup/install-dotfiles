@@ -1163,29 +1163,42 @@ kncond() {
   done
 }
 
-# Find resources that match a regex in their YAMl definition
+# Find resources that match a regex in their YAML definition
 # Usage:
-#   kf  <args>... <regex>
+#   kf  <kubectl_args>... <regex> [ -- <grep_args>... ]
 # Args:
-#   <args>    Arguments as supplied to 'kubectl get' (e.g. "pods" "-n" "foo")
-#   <regex>   Regex as supplied to grep (e.g. 'name: foo-[xyz].*')
+#   <kubectl_args> Args as supplied to 'kubectl get' (e.g. 'pods' '-n' 'foo')
+#   <regex>        Regex as supplied to grep (e.g. 'name: foo-[xyz].*')
+#   <grep_args>    Args as supplied to grep (e.g. '-A2')
 # Examples:
-#   # Find all Pods in the 'foo' namespace that have an imagePullSecrets field
-#   kf pods -n foo ' imagePullSecrets:'
 #   # Find all CronJobs in the cluster that have an imagePullPolicy field
 #   kf cronjobs --all-namespaces ' imagePullPolicy:'
+#   # Find all Pods in the 'foo' namespace that have an imagePullSecrets field
+#   kf pods -n foo ' imagePullSecrets:'
+#   # As above, but also print one line after each matching line (see grep)
+#   kf pods -n foo ' imagePullSecrets:' -- -A1
+# Notes:
+# - Only line-based matching is supported, i.e. regexes spanning multiple
+#   lines are not supported.
 kf() {
-  local args=(${@:1:$#-1})
-  local regex=${@:$#}
+  local kubectl_args grep_args regex
+  if array-contains "$@" --; then
+    local tmp
+    splitargs tmp grep_args -- "$@"
+    # Overwrite $@ with args before '--'
+    set -- "${tmp[@]}"
+  fi
+  kubectl_args=("${@:1:$#-1}")
+  regex="${@:$#}"
   local line
-  kubectl get "${args[@]}" -o custom-columns=:.metadata.namespace,:.kind,:.metadata.name --no-headers | while read line; do
+  kubectl get "${kubectl_args[@]}" -o custom-columns=:.metadata.namespace,:.kind,:.metadata.name --no-headers | while read line; do
     local namespace=$(awk '{print $1}' <<<"$line")
     local kind=$(awk '{print tolower($2)}' <<<"$line")
     local name=$(awk '{print $3}' <<<"$line")
     local result
-    if result=$(kubectl get "$kind" "$name" -n "$namespace" -o yaml | grep -n --color=always "$regex"); then
+    if result=$(kubectl get "$kind" "$name" -n "$namespace" -o yaml | grep -n --color=always "${grep_args[@]}" "$regex"); then
       resource="$kind/$name"
-      array-contains "${args[@]}" --all-namespaces && resource="$namespace/$resource"
+      array-contains "${kubectl_args[@]}" --all-namespaces && resource="$namespace/$resource"
       echo "$(c b)$resource$(c)"
       echo "$result" | sed 's/^/  /'
     fi
