@@ -150,9 +150,9 @@ splitargs() {
 # Test if an array contains a specific element.
 # Usage example: array-contains "${myarr[@]}" foo
 array-contains() {
-  local array=(${@:1:$#-1})
+  local array=("${@:1:$#-1}")
   local element=${@:$#}
-  for i in $(seq 0 $(("${#array}"-1))); do
+  for i in $(seq 0 $(("${#array[@]}"-1))); do
     [[ "${array[$i]}" = "$element" ]] && return 0
   done
   return 1
