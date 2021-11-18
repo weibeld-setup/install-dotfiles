@@ -36,6 +36,8 @@
 
 shopt -s extglob
 shopt -s nullglob
+# Expand environment variables containing a directory name in path strings
+shopt -s direxpand
 set -o pipefail
 
 # Append to the history file ($HISTFILE) rather than overwriting it (for
@@ -337,6 +339,7 @@ alias pgrep='pgrep -fl'
 alias x='chmod +x'
 alias X='chmod -x'
 alias which='which -a'
+alias watch='watch -n 1'
 
 # File sizes
 alias dh='du -h'
@@ -1175,7 +1178,7 @@ kncond() {
 #   kf cronjobs --all-namespaces ' imagePullPolicy:'
 #   # Find all Pods in the 'foo' namespace that have an imagePullSecrets field
 #   kf pods -n foo ' imagePullSecrets:'
-#   # As above, but also print one line after each matching line (see grep)
+#   # As above, but also print one line after each matching line (grep option)
 #   kf pods -n foo ' imagePullSecrets:' -- -A1
 # Notes:
 # - Only line-based matching is supported, i.e. regexes spanning multiple

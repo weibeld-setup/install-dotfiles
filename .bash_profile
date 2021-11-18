@@ -28,12 +28,13 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export GROOVY_HOME=/usr/local/opt/groovy/libexec
 
   # Misc
+  export d=~/Desktop
   export tex_home=/usr/local/texlive
   export fonts_user=~/Library/Fonts
   export fonts_local=/Library/Fonts
   export fonts_system=/System/Library/Fonts
   export PYTHONSTARTUP=~/.python
-  export d=~/Desktop
+  export GOPATH=$HOME/go
 
   # PATH
   path_append "$HOME/bin"
@@ -46,9 +47,14 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   path_append "$(go env GOPATH)/bin"
   path_prepend /usr/local/opt/ruby/bin
   path_prepend /usr/local/lib/ruby/gems/2.6.0/bin
+  # GNU Make
+  path_prepend /usr/local/opt/make/libexec/gnubin
+  # Homebrew version of curl
+  path_prepend /usr/local/opt/curl/bin
   # Added by serverless binary installer
   export PATH="$HOME/.serverless/bin:$PATH"
 
 fi
 
 source ~/.bashrc
+. "$HOME/.cargo/env"
