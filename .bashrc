@@ -1208,6 +1208,33 @@ kf() {
   done
 }
 
+# Print all the volumes of a Pod in the current namespace
+# Usage:
+#   kvol <pod>
+# Notes:
+# - Not all volume types are supported. For volume types that are unsupported,
+#   an appropriate message is printed.
+# - See all existing Kubernetes volume types on [1]
+# - Currently supported volume types:
+#     - configMap
+#     - secret
+#     - persistentVolumeclaim
+# [1] https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#volume-v1-core
+# TODO:
+# - Allow specifying different namespace
+# - Allow specifying multiple Pods
+kvol() {
+  local pod=$1
+  kubectl get pod "$pod" -o go-template='
+    {{- range .spec.volumes }}
+      {{- if .configMap }}{{ printf "ConfigMap: %s\n  ConfigMap: %s\n" .name .configMap.name }}
+      {{- else if .secret }}{{ printf "Secret: %s\n  Secret: %s\n" .name .secret.secretName }}
+      {{- else if .persistentVolumeClaim }}{{ printf "PVC: %s\n  PVC: %s\n" .name .persistentVolumeClaim.claimName }}
+      {{- else }}{{ println "<Unsupported Volume Type>" }}{{ end }}
+    {{- end }}' \
+    | sed -E 's/^([^ ].*)/'$(c b)'\1'$(c)'/'
+} 
+
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
 if [[ -f ~/.kubectl_aliases ]]; then
   source ~/.kubectl_aliases
