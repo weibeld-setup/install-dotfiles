@@ -1212,25 +1212,40 @@ kf() {
 # Usage:
 #   kvol <pod>
 # Notes:
-# - Not all volume types are supported. For volume types that are unsupported,
-#   an appropriate message is printed.
-# - See all existing Kubernetes volume types on [1]
-# - Currently supported volume types:
-#     - configMap
-#     - secret
-#     - persistentVolumeclaim
+# - Only a few selected volume types are currently supported (see below). For
+#   other volume types, emptyDir is assumed. This is because emptyDir is the
+#   only volume type where the volume type field can either be omitted or empty
+#   (it can be omitted because emptyDir is the default volume type and it can
+#   be empty because there are no mandatory settings required for emptyDir).
+#   For example, the following is a valid emptyDir volume specification:
+#     - name: foo
+#   As is the following:
+#     - name: foo
+#       emptyDir: {}
+#   The easiest way to handle this in Go templates is to assume emptyDir when
+#   the volume can't be recognised as any other type. That's because it's not
+#   possible to create an 'if' condition yielding true for a missing map field
+#   (the first case) or for a map field with an empty value (the second case).
+#   The caveat of this is that volume types which are currently not supported
+#   would be displayed as emptyDir.
+# - Currently supported volume types: configMap, secret, persistentVolumeclaim,
+#   hostPath, emptyDir
+# - See all existing volume types in [1]
 # [1] https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#volume-v1-core
 # TODO:
-# - Allow specifying different namespace
 # - Allow specifying multiple Pods
+# - Sort the volumes according to volume type and name
 kvol() {
   local pod=$1
-  kubectl get pod "$pod" -o go-template='
+  shift
+  kubectl get pod "$pod" "$@" -o go-template='
     {{- range .spec.volumes }}
       {{- if .configMap }}{{ printf "ConfigMap: %s\n  ConfigMap: %s\n" .name .configMap.name }}
       {{- else if .secret }}{{ printf "Secret: %s\n  Secret: %s\n" .name .secret.secretName }}
       {{- else if .persistentVolumeClaim }}{{ printf "PVC: %s\n  PVC: %s\n" .name .persistentVolumeClaim.claimName }}
-      {{- else }}{{ println "<Unsupported Volume Type>" }}{{ end }}
+      {{- else if .hostPath }}{{ printf "HostPath: %s\n  Path: %s\n" .name .hostPath.path }}
+      {{- else if .emptyDir }}{{ printf "EmptyDir: %s\n" .name }}
+      {{- else }}{{ printf "EmptyDir: %s\n" .name }}{{ end }}
     {{- end }}' \
     | sed -E 's/^([^ ].*)/'$(c b)'\1'$(c)'/'
 } 
