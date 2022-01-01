@@ -20,6 +20,12 @@ data.location=$HOME/.task
 # Use Monday as the first day of the week in the 'calendar' report
 weekstart=monday
 
+# Define 'later' tag reduce the urgency of a task
+urgency.user.tag.later.coefficient=-6.0
+
+report.next.labels=ID,Active,Age,Deps,P,Project,Tag,Recur,S,Due,Until,Description[shortened],Urg
+report.next.columns=id,start.age,entry.age,depends,priority,project,tags,recur,scheduled.countdown,due.relative,until.remaining,description.oneline,urgency
+
 # To use the default location of the XDG directories,
 # move this configuration file from ~/.taskrc to ~/.config/task/taskrc and uncomment below
 
@@ -43,3 +49,9 @@ weekstart=monday
 #include no-color.theme
 
 news.version=2.6.0
+uda.reviewed.type=date
+uda.reviewed.label=Reviewed
+report._reviewed.description=Tasksh review report.  Adjust the filter to your needs.
+report._reviewed.columns=uuid
+report._reviewed.sort=reviewed+,modified+
+report._reviewed.filter=( reviewed.none: or reviewed.before:now-6days ) and ( +PENDING or +WAITING )
