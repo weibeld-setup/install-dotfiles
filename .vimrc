@@ -274,6 +274,8 @@ map <right> <nop>
 " Closing a tab
 "nnoremap tc     :tabclose<CR>
 
+" Select pasted text
+nnoremap gp `[v`]
 
 " Disabling all format options (e.g. no automatic insertion of comment char)
 set formatoptions=c
@@ -335,16 +337,16 @@ set noautochdir
 " nnoremap <leader>t :s/\<\(\w\)\(\S*\)/\u\1\L\2/g<CR>
 
 " vim-go plugin
-autocmd FileType go nmap gb <Plug>(go-build)
-autocmd FileType go nmap gr <Plug>(go-run)
-autocmd FileType go nmap gi <Plug>(go-install)
-autocmd FileType go nmap gd <Plug>(go-doc)
-autocmd FileType go nmap gdd <Plug>(go-doc-browser)
+"autocmd FileType go nmap gb <Plug>(go-build)
+"autocmd FileType go nmap gr <Plug>(go-run)
+"autocmd FileType go nmap gi <Plug>(go-install)
+"autocmd FileType go nmap gd <Plug>(go-doc)
+"autocmd FileType go nmap gdd <Plug>(go-doc-browser)
 "autocmd FileType go nmap :gi :GoImport<Space>
-autocmd BufWritePost *.go :GoBuild 
+"autocmd BufWritePost *.go :GoBuild 
 
 " Disable 'K' for open docs (https://github.com/fatih/vim-go/issues/140)
-let g:go_doc_keywordprg_enabled = 0
+"let g:go_doc_keywordprg_enabled = 0
 
 " Fix filetype for Bash files
 autocmd BufNewFile,BufRead .bashrc :set filetype=sh
@@ -380,8 +382,14 @@ nnoremap <leader>f /^export async function\\|^export function\\|^async function\
 
 set runtimepath+=~/Desktop/hello-plugin/
 
-autocmd BufNewFile,BufRead Jenkinsfile set syntax=groovy shiftwidth=4 tabstop=4
+autocmd BufNewFile,BufRead Jenkinsfile* set syntax=groovy shiftwidth=4 tabstop=4
 autocmd BufNewFile,BufRead *.groovy set shiftwidth=4 tabstop=4
+autocmd BufNewFile,BufRead *.tmpl set syntax=gotexttmpl
+
+" Aliases :w for :wa and :wq for :waq
+" See https://stackoverflow.com/a/3879737/4747193
+cnoreabbrev w wa
+cnoreabbrev wq xa
 
 " For vim-table-mode plugin
 let g:table_mode_corner='|'
