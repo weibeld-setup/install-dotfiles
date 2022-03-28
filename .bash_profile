@@ -54,3 +54,5 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export PATH="$HOME/.serverless/bin:$PATH"
 
 fi
+
+. ~/.bashrc
