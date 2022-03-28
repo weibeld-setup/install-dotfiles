@@ -41,7 +41,6 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   path_append "/usr/local/sbin"
   path_append "$HOME/.krew/bin"
   path_append "$HOME/.kubectl-plugins"
-  path_append "$HOME/.cargo/bin"
   path_append "$HOME/google-cloud-sdk/bin"
   path_append "$HOME/platform-tools"
   path_append "$(go env GOPATH)/bin"
@@ -55,6 +54,3 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export PATH="$HOME/.serverless/bin:$PATH"
 
 fi
-
-source ~/.bashrc
-. "$HOME/.cargo/env"
