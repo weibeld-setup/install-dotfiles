@@ -22,9 +22,6 @@
 [submodule ".vim/bundle/vim-table-mode"]
 	path = .vim/bundle/vim-table-mode
 	url = https://github.com/dhruvasagar/vim-table-mode
-[submodule ".vim/bundle/vim-json"]
-	path = .vim/bundle/vim-json
-	url = https://github.com/elzr/vim-json
 [submodule ".vim/bundle/vim-caddyfile"]
 	path = .vim/bundle/vim-caddyfile
 	url = https://github.com/isobit/vim-caddyfile
