@@ -35,6 +35,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export fonts_system=/System/Library/Fonts
   export PYTHONSTARTUP=~/.python
   export GOPATH=$HOME/go
+  export HOMEBREW_NO_AUTO_UPDATE=1
 
   # PATH
   path_append "$HOME/bin"
@@ -50,8 +51,13 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   path_prepend /usr/local/opt/make/libexec/gnubin
   # Homebrew version of curl
   path_prepend /usr/local/opt/curl/bin
+  # sketchtool
+  path_append /Applications/Sketch.app/Contents/MacOS
   # Added by serverless binary installer
   export PATH="$HOME/.serverless/bin:$PATH"
+
+  # Command completion
+  complete -C /usr/local/bin/packer packer
 
 fi
 
