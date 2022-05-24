@@ -354,7 +354,8 @@ complete -c comp compr
 # Set default options
 alias curl='curl -s'
 
-# Coloured diff output (required GNU diff)
+# Coloured diff output (requires diffutils [1] package)
+# [1] https://www.gnu.org/software/diffutils/
 alias diff='diff --color'
 
 # Print large directories in the current directory. The threshold for printing
@@ -1485,36 +1486,6 @@ change_mac() {
   sudo ifconfig en0 ether "$mac"
   echo "Changed MAC address of en0 device to $mac"
 }
-
-#------------------------------------------------------------------------------#
-# Swisscom
-#------------------------------------------------------------------------------#
-
-# Always make sure that only the lower-case versions of the proxy variables
-# are set (e.g. http_proxy and no_proxy, and not HTTP_PROXY and NO_PROXY).
-# See https://about.gitlab.com/blog/2021/01/27/we-need-to-talk-no-proxy/
-get_proxy() {
-  env | grep -i proxy | sort --ignore-case || return 0
-}
-
-set_proxy() {
-  local PROXY=http://$1.corproot.net:8080
-  export http_proxy=$PROXY
-  export https_proxy=$PROXY
-  export ftp_proxy=$PROXY
-  export no_proxy=localhost,corproot.net
-}
-
-unset_proxy() {
-  unset http_proxy https_proxy ftp_proxy no_proxy
-}
-
-# Check if in Swisscom network: if yes, set proxy, if no, unset proxy
-if nc -z server-proxy.corproot.net 8080 &>/dev/null; then
-  set_proxy server-proxy
-else
-  unset_proxy
-fi
 
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
