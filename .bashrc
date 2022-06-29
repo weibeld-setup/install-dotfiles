@@ -463,6 +463,33 @@ enc() { echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-; }
 # Print the character encoding used by the terminal
 enc-type() { echo $LC_CTYPE; }
 
+# Helper function for infonice. Extract names of capabilities from infocmp
+# output. Expects a single capability per line (as produced by 'infocmp -1').
+_infonames() {
+  sed '/^#/d' | sed 1d |  sed 's/,$//;s/[=#].*$//;s/^[[:blank:]]*//'
+}
+
+# Format the output of infocmp by including the long names of the capabilities.
+# Usage:
+#   infocmp | infonice
+# Note: works with infocmp options that change the formatting (e.g. '-1', '-f')
+# but not with options that change the output data (e.g. '-L', '-C').
+infonice() {
+  IFS=, read -r -a fields <<<$(cat | sed '/^#/d' | tr -d '[:blank:]\n')
+  term=${fields[0]%%|*}
+  dict=$(paste -d , <(infocmp -1x "$term" | _infonames) <(infocmp -1xL -s i "$term" | _infonames))
+  echo "${fields[0]%|*}|$(tput -T "$term" longname)"
+  for i in $(seq 1 $(("${#fields[@]}"-1))); do
+    name=${fields[$i]%%[#=]*}
+    value=${fields[$i]#*[#=]}
+    longname=$(echo "$dict" | grep "^$name," | cut -d , -f 2)
+    [[ ! "${fields[$i]}" =~ [=#] ]] && type=BOOL value=
+    [[ "${fields[$i]}" =~ '#' ]] && type=NUM
+    [[ "${fields[$i]}" =~ '=' ]] && type=STRING
+    echo "$i,$type,$name,$longname,$value"
+  done | column -t -s ,
+}
+
 #------------------------------------------------------------------------------#
 # Numbers
 #------------------------------------------------------------------------------#
@@ -1372,11 +1399,6 @@ if is-mac; then
   # Copy the content of the supplied file to the clipboard
   clip() {
     cat "$1" | pbcopy
-  }
-
-  # Alias for pbpaste
-  paste() {
-    pbpaste
   }
 
 elif is-linux; then
