@@ -469,39 +469,53 @@ _infonames() {
   sed '/^#/d' | sed 1d |  sed 's/,$//;s/[=#].*$//;s/^[[:blank:]]*//'
 }
 
-# Format the output of infocmp by including the long names of the capabilities.
+# Format output of infocmp in tabular form.
 # Usage:
-#   infocmp | infonice
-# Note: works with infocmp options that change the formatting (e.g. '-1', '-f')
-# but not with options that change the output data (e.g. '-L', '-C').
+#   infonice [term]
+# By default, the terminal in the TERM environment variable is used.
+# The output columns include:
+#   1) Capability type (boolean, numeric, or string)
+#   2) Capability name
+#   3) Corresponding variable name in the terminfo C library
+#   4) Value (for numeric and string capabilities)
+# TODO: rewrite to use ~/.infolookup database (see infolookup), then use
+# something like this:
+#   cat ../.infolookup | grep "$(infocmp -1 | _infonames | sed 's/^/\\t/;s/$/\\t\\|/' | tr -d '\n' | sed 's/\\|$//')" | column -t -s $'\t'
+# And use 'paste' of the above with the values from the infocmp output. This
+# should be much faster than the current solution.
 infonice() {
-  IFS=, read -r -a fields <<<$(cat | sed '/^#/d' | tr -d '[:blank:]\n')
-  local term=${fields[0]%%|*}
+  local term=${1:-$TERM}
+  IFS=, read -r -a fields<<<$(infocmp -1 "$term" | sed '/^#/d' | sed 's/^[[:blank:]]*//' | tr -d '\n')
   local dict=$(paste -d , <(infocmp -1x "$term" | _infonames) <(infocmp -1xL -s i "$term" | _infonames))
-  echo "${fields[0]%|*}|$(tput -T "$term" longname)"
+  echo "${fields[0]}"
   for i in $(seq 1 $(("${#fields[@]}"-1))); do
     name=${fields[$i]%%[#=]*}
     value=${fields[$i]#*[#=]}
     longname=$(echo "$dict" | grep "^$name," | cut -d , -f 2)
-    [[ ! "${fields[$i]}" =~ [=#] ]] && type=BOOL value=
-    [[ "${fields[$i]}" =~ '#' ]] && type=NUM
-    [[ "${fields[$i]}" =~ '=' ]] && type=STRING
+    [[ ! "${fields[$i]}" =~ [=#] ]] && type=Boolean value=
+    [[ "${fields[$i]}" =~ '#' ]] && type=Numeric
+    [[ "${fields[$i]}" =~ '=' ]] && type=String
     echo "$i,$type,$name,$longname,$value"
   done | column -t -s ,
 }
 
-# Look up information about a terminfo capability.
+# Look up information aboutany terminfo capabilities.
 # Usage:
 #   infolookup <name>...
-# <name> is a terminfo capability name (e.g. 'smul'). Multiple capabilities
-# can be specified.
+#   infolookup '*'
+# <name> is the name of any capability supported by terminfo (may be repeated).
+# If '*' is given as the only argument, then all terminfo capabilities are
+# printed in a compact form.
 # The data is extracted from the terminfo man page. On the first run, a database
-# is generated in a local file. On subsequent runs, the information is looked up
+# is created in a local file. Subsequent runs then just look up the information
 # from this database.
 # The displayed information for each capability includes:
 #   1) Type (boolean, numeric, or string)
 #   2) C variable name (as used in the terminfo library)
 #   3) Description 
+# TODO: sort database alphabetically by the short terminfo name (currently
+# is sorted by the long C variable name). Sort first by type (Boolean, Numeric,
+# String), and secondly by the short terminfo name.
 infolookup() {
   local DB=~/.infolookup
   # Generate database from 'terminfo' man page
@@ -518,23 +532,28 @@ infolookup() {
           longname=$(awk '{print $1}' <<<"$line")
           name=$(awk '{print $2}' <<<"$line");;
         *)
-          description="$line"
+          description=$(tr '\t' ' ' <<<"$line")
           ready=1;;
       esac
       if [[ "$ready" = 1 ]]; then
-        echo "$name $longname $type $description" >>"$DB"
+        echo -e "$type\t$name\t$longname\t$description" >>"$DB"
         ready=0
       fi
     done
   fi
-  # Lookup
-  for a in "$@"; do
-    result=$(grep "^$a " "$DB") || { echo "Error: $a not found"; return 1; }
-    echo -e "\e[1m$(echo "$result" | cut -d ' ' -f 1)\e[0m"
-    echo "  $(echo "$result" | cut -d ' ' -f 3)"
-    echo "  $(echo "$result" | cut -d ' ' -f 2)"
-    echo "  $(echo "$result" | cut -d ' ' -f 4- | sed 's/^./\U&/;/[^\.]$/s/$/\./')"
-  done
+  # Print all capabilities
+  if [[ "$1" = '*' ]]; then
+    cat "$DB" | sed '/^#/d' | nl -w 3 | column -t -s $'\t'
+  # Look up specific capabilities
+  else
+    for a in "$@"; do
+      result=$(grep "\t$a\t" "$DB") || { echo "Error: $a not found"; return 1; }
+      echo -e "\e[1m$(echo "$result" | cut -d $'\t' -f 2)\e[0m"
+      echo "  $(echo "$result" | cut -d $'\t' -f 1)"
+      echo "  $(echo "$result" | cut -d $'\t' -f 3)"
+      echo "  $(echo "$result" | cut -d $'\t' -f 4 | sed 's/^./\U&/;/[^\.]$/s/$/\./')"
+    done
+  fi
 }
 
 #------------------------------------------------------------------------------#
