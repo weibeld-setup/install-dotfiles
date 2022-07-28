@@ -1005,6 +1005,22 @@ aws-delete-secret() {
 complete -C /usr/local/bin/aws_completer aws
 
 #------------------------------------------------------------------------------#
+# Azure CLI
+#------------------------------------------------------------------------------#
+
+# List all currently known Microsoft accounts
+az-accounts() {
+  az account list --query "[*].user.name" -o tsv | sort | uniq
+}
+
+# List the subscription of a specific Microsoft account
+az-subscriptions() {
+  az account list --query "[?user.name=='$(az-accounts | fzf)']"
+}
+
+# TODO: add similar commands for tenants when 'az account tenant' is out of preview
+
+#------------------------------------------------------------------------------#
 # Kubernetes
 #------------------------------------------------------------------------------#
 
