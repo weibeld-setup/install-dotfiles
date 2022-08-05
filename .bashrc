@@ -811,6 +811,9 @@ alias gpf='git push -f'
 alias gb="git branch"
 alias gd="git diff"
 alias gpu="git pull"
+gco() {
+  git checkout $(git branch | fzf --tac | sed 's/^[^a-zA-Z0-9]*//')
+}
 
 
 #------------------------------------------------------------------------------#
@@ -1008,14 +1011,25 @@ complete -C /usr/local/bin/aws_completer aws
 # Azure CLI
 #------------------------------------------------------------------------------#
 
-# List all currently known Microsoft accounts
-az-accounts() {
+# List all currently known Azure users (e.g. Microsoft accounts)
+az-users() {
   az account list --query "[*].user.name" -o tsv | sort | uniq
 }
 
-# List the subscription of a specific Microsoft account
+# List the subscriptions for a specific user
 az-subscriptions() {
-  az account list --query "[?user.name=='$(az-accounts | fzf)']"
+  local user=${1:-$(az-users | fzf)}
+  az account list --query "[?user.name=='$user']"
+}
+
+# List the tenants, includings its subscriptions, for a specific user
+az-tenants() {
+  local user=${1:-$(az-users | fzf)}
+  local json=$(az account list --all --query "[?user.name=='$user']" -o json)
+  for t in $(echo "$json" | jq -r '.[] | .tenantId' | sort |  uniq); do
+    [[ -t 1 ]] && echo "$(c b)$t$(c)" || echo "$t"
+    echo "$json" | jq -r '.[] | select(.tenantId == "'$t'") | "  \(if .isDefault then "*" else "-" end) \(.name)\n    \(.id)"'
+  done
 }
 
 # TODO: add similar commands for tenants when 'az account tenant' is out of preview
