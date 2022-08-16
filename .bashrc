@@ -239,6 +239,26 @@ c() {
   printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
 }
 
+# Print coloured message to stdout/stderr if connected to terminal and omit the
+# colours if not connected to a terminal.
+# Usage:
+#   c-print <colour-attribute>... <msg>
+# Examples:
+#   c-print red b "Foo bar"         # Print red bold message to stdout
+#   c-print red b "Foo bar" >out    # Colours omitted because stdout is file
+#   c-print-stderr red b "Foo bar"  # Print red bold message to stderr
+c-echo() { __c-print 1 "$@"; }
+c-echo-stderr() { __c-print 2 "$@"; }
+__c-echo() {
+  fd=$1
+  c_args=(${@:2:$#-2})
+  msg=${@:$#}
+  [[ -t "$fd" ]] && msg=$(c "${c_args[@]}")$msg$(c)
+  if [[ "$fd" -eq 1 ]]; then echo "$msg"
+  elif [[ "$fd" -eq 2 ]]; then echo "$msg" >/dev/stderr
+  else return 1; fi
+}
+
 #------------------------------------------------------------------------------#
 # Configure Readline
 # https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
@@ -1047,13 +1067,13 @@ azure-pipeline-templates() {
 __azure-pipeline-templates() {
   local path=$1
   local depth=$2
-  [[ ! -f "$path" ]] && { echo "Error: path does not exist: $path"; return 1; }
+  [[ ! -f "$path" ]] && { c-echo red "Error: file not found: $path"; return; }
   [[ "$depth" -gt 0 ]] && printf '|   %.0s' $(seq "$depth")
   echo "$path"
   local refs=$(sed -n '/[ -]*template:\s/s/^[ -]*template:\s*\([a-zA-Z0-9/._-]*\.yaml\).*$/\1/p' "$path")
   [[ -z "$refs" ]] && return
   for ref in $(realpath --relative-to "$PWD" $(sed "s|^|$(dirname "$path")/|" <<<"$refs") | awk '!seen[$0]++'); do
-    __azure-pipeline-templates "$ref" "$(($depth+1))" || return 1
+    __azure-pipeline-templates "$ref" "$(($depth+1))"
   done
 }
 
