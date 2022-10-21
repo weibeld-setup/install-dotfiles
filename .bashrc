@@ -242,13 +242,13 @@ c() {
 # Print coloured message to stdout/stderr if connected to terminal and omit the
 # colours if not connected to a terminal.
 # Usage:
-#   c-print <colour-attribute>... <msg>
+#   c-echo <colour-attribute>... <msg>
 # Examples:
-#   c-print red b "Foo bar"         # Print red bold message to stdout
-#   c-print red b "Foo bar" >out    # Colours omitted because stdout is file
-#   c-print-stderr red b "Foo bar"  # Print red bold message to stderr
-c-echo() { __c-print 1 "$@"; }
-c-echo-stderr() { __c-print 2 "$@"; }
+#   c-echo red b "Foo bar"         # Print red bold message to stdout
+#   c-echo red b "Foo bar" >out    # Colours omitted because stdout is file
+#   c-echo-stderr red b "Foo bar"  # Print red bold message to stderr
+c-echo() { __c-echo 1 "$@"; }
+c-echo-stderr() { __c-echo 2 "$@"; }
 __c-echo() {
   fd=$1
   c_args=(${@:2:$#-2})
@@ -875,7 +875,7 @@ dkrc() {
 }
 
 # Stop all running containers
-dksc() {
+dks() {
   local c=$(docker ps -q)
   is-set "$c" && docker stop $c || echo "No running containers"
 }
@@ -1058,7 +1058,7 @@ az-tenants() {
 # Usage:
 #   azure-pipeline-templates <file>...
 # Depends on:
-#   realpath
+#   realpath (brew install coreutils)
 azure-pipeline-templates() {
   for file in "$@"; do
     __azure-pipeline-templates "${file#./}" 0
@@ -1361,23 +1361,34 @@ kget() {
   kubectl get "${args[@]}" --no-headers | awk "\$$field~/$regex/"
 }
 
-# Pretty-print the container images of the specified Pod or Pods
-# Usage examples:
-#   // All Pods (in the current namespace)
-#   kim
-#   // Specific Pod (in the current namespace)
-#   kim mypod
-#   // Specific Pod in a specific namespace
-#   kim mypod -n my-namespace
-#   // Pods with a specific label in a specific namespace
-#   kim -n mynamespace -l mylabel=myvalue
-# TODO: include init containers in the output
+# Print container images of specified pods.
+# Usage:
+#   kim [<pods>] [-- [-c]]
+# Args:
+#   <pods>: Arguments for 'kubectl get pods', e.g. '--all-namespaces'
+#   -c:     Print the output as a CSV file (default is table)
+# Example:
+#   kim -n kube-system -- -c
+# TODO:
+#   - Include init containers in the output?
 kim() {
-  kubectl get pods "$@" --no-headers -o custom-columns=':metadata.name,:spec.containers[*].image' \
-    | tr -s ' ' \
-    | sed 's/ /\'$'\n''  /' \
-    | sed '/^  /s/,/\'$'\n''  /' \
-    | awk '!/^ / {print "\033[1;31m"$0"\033[0m"} /^ / {print "\033[0;36m"$0"\033[0m"}'
+  local args1 args2
+  splitargs args1 args2 -- "$@"
+  local out=$(kubectl get pods "${args1[@]}" --no-headers -o custom-columns=':metadata.namespace,:metadata.name,:spec.containers[*].image' | tr -s ' ' | tr ' ' ,)
+  [[ -z "$out" ]] && { echo "No pods found"; return; }
+  # Make first two columns bold, if stdout is terminal or pipe (i.e. not file)
+  if [[ ! -f /dev/stdout ]]; then
+    out=$(echo "$out" | sed "s/^\([^,]*,[^,]*\)/\1$(c)/;s/^\([^,]*,\)/\1$(c b)/;s/^\([^,]*\)/\1$(c)/;s/^/$(c b)/")
+  fi
+  # Remove first column, if pods are only from single namespace
+  if [[ ! "${args1[@]}" =~ --all-namespaces|-A ]]; then
+    out=$(echo "$out" | sed 's/^[^,]*,//')
+  fi
+  # Format output as table, if -c is not specified
+  if [[ ! "${args2[@]}" =~ -c ]]; then
+    out=$(echo "$out" | column -t -s ,)
+  fi
+  echo "$out"
 }
 
 # Get the number of containers or init containers in the specified Pods
