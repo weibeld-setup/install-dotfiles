@@ -117,12 +117,6 @@ set colorcolumn=80,100
 " Change current line to title case
 nnoremap <leader>T :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>          
 
-" Map Ctrl-<dash> to em-dash (U+2014)
-inoremap  —
-
-" Right arrow
-inoremap <C-r> →
-
 "=============================================================================="
 " Buffers
 "=============================================================================="
@@ -356,7 +350,7 @@ let g:terraform_align=1
 "let g:terraform_fold_sections=1
 "let g:terraform_remap_spacebar=1
 let g:terraform_commentstring='//%s'
-let g:terraform_fmt_on_save=1
+let g:terraform_fmt_on_save=0
 
 "=============================================================================="
 " Status line
@@ -388,8 +382,18 @@ autocmd BufNewFile,BufRead *.tmpl set syntax=gotexttmpl
 
 " Aliases :w for :wa and :wq for :waq
 " See https://stackoverflow.com/a/3879737/4747193
-cnoreabbrev w wa
 cnoreabbrev wq xa
 
 " For vim-table-mode plugin
 let g:table_mode_corner='|'
+
+" Abbreviations
+
+ab :tick: ✅
+ab :cross: ❌
+ab :black: ⬛
+ab :white: ⬜
+ab :rightarrow: →
+
+" Map Ctrl-<dash> to em-dash (U+2014)
+inoremap  —
