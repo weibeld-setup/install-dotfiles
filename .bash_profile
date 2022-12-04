@@ -36,6 +36,7 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export PYTHONSTARTUP=~/.python
   export GOPATH=$HOME/go
   export HOMEBREW_NO_AUTO_UPDATE=1
+  alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 
   # PATH
   path_append "$HOME/bin"

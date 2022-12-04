@@ -220,7 +220,7 @@ nnoremap <BS> i<BS><Esc>l
 
 
 " Use specific color scheme if it exists (default, if it doesn't exist)
-silent! colorscheme slate
+silent! colorscheme koehler
 
 
 " Define formatting of invisible characters
