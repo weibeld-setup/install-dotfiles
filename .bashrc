@@ -913,11 +913,14 @@ dktags() {
 # AWS CLI
 #------------------------------------------------------------------------------#
 
-# List all AWS regions including its enabled/disabled state (since 2019, new
-# regions can be selectively enabled or disabled, see [1]).
+alias ac="vim ~/.aws/config"
+alias acr="vim ~/.aws/credentials"
+
+# List all AWS regions including its enabled/disabled state
+# Note: since 2019, new regions can be selectively enabled or disabled [1]
 # [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
 areg() {
-  aws ec2 describe-regions --all-regions --output json \
+  aws ec2 describe-regions --no-cli-auto-prompt --all-regions --output json \
     | jq -r '.Regions[] | [.RegionName, .OptInStatus] | @tsv' \
     | sed "s/not-opted-in/$(c red b)disabled$(c)/" \
     | sed "s/opt-in-not-required/$(c green b)enabled$(c)/" \
@@ -928,20 +931,56 @@ areg() {
 
 # List the availability zones of a specific region
 aaz() {
-  aws ec2 describe-availability-zones --region "$1" --query 'AvailabilityZones[*].ZoneName' --output text | tr '\t' '\n'
+  [[ -z "$1" ]] && { echo "Usage: aaz <region>"; return 1; }
+  aws ec2 describe-availability-zones \
+    --no-cli-auto-prompt \
+    --region "$1" \
+    --query 'AvailabilityZones[].ZoneName' \
+    --output text \
+    | tr '\t' '\n'
 }
 
-# List all AWS AMIs (name and ID) whose name matches a sequence of keywords.
-# Example usage:
-#   aami ubuntu 21.04 amd64 server
-# Caution: the order of the keywords matters and must represent the order in
-# which they appear in the AMI name.
+# List all AMIs in the current region that match a name pattern and optionally
+# an owner. The AMIs are sorted by creation date with the newest at the bottom.
+# Usage:
+#   aami <pattern> [<owner>]
+# Examples:
+#   # All AMIs matching the given name pattern
+#   aami '*ubuntu*22.10*'
+#   # All AMIs matching the given name pattern and created by the given owner
+#   aami '*ubuntu*22.10*' 099720109477
+#   # All AMIs created by the given owner
+#   aami '*' 099720109477
+# Notes:
+#   - Server-side filtering (--filter) and client-side filtering (--query) is
+#     explained in [1]
+#   - Client-side filtering (--query) uses JMESPath syntax [2]
+#   - The sort_by() expression is explained in [3]
+# [1] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
+# [2] https://jmespath.org/
+# [3] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html#cli-usage-filter-client-side-functions
 aami() {
-  local query=*
-  for a in "$@"; do query=$query$a*; done
-  aws ec2 describe-images --filters "Name=name,Values=$query" --query 'Images[*].[Name,ImageId]' --output text \
-  | awk '{print "'$(c yellow)'"$1" '$(c yellow b)'"$2"'$(c)'"}' \
-  | column -t
+  local filter=$1
+  [[ -n "$2" ]] && local owner="--owners $2"
+  aws ec2 describe-images \
+    $owner \
+    --no-cli-auto-prompt \
+    --filter "Name=name,Values=$1" \
+    --query 'sort_by(Images,&CreationDate)[].{name:Name,description:Description,owner:OwnerId,date:CreationDate,id:ImageId}'
+}
+
+# List all security groups in the current region.
+asg() {
+  aws ec2 describe-security-groups \
+    --no-cli-auto-prompt \
+    --query 'SecurityGroups[].{name:GroupName,description:Description,id:GroupId}'
+}
+
+# List all key pairs in the current region.
+akp() {
+   aws ec2 describe-key-pairs \
+    --no-cli-auto-prompt \
+    --query 'KeyPairs[].{name:KeyName,description:Description,id:KeyPairId}'
 }
 
 # List all EC2 instances in a specific region. For each instance, the following
