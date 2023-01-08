@@ -955,10 +955,10 @@ aaz() {
 #   - Server-side filtering (--filter) and client-side filtering (--query) is
 #     explained in [1]
 #   - Client-side filtering (--query) uses JMESPath syntax [2]
-#   - The sort_by() expression is explained in [3]
+#   - The sort_by() function is specified in the JMESPath specification [3]
 # [1] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
 # [2] https://jmespath.org/
-# [3] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html#cli-usage-filter-client-side-functions
+# [3] https://jmespath.org/specification.html#sort-by
 aami() {
   local filter=$1
   [[ -n "$2" ]] && local owner="--owners $2"
@@ -1739,7 +1739,6 @@ fi
 # Misc
 #------------------------------------------------------------------------------#
 
-alias asciicast2gif='docker run --rm -v "$PWD":/data asciinema/asciicast2gif'
 # Authenticate with SSH key
 alias ssh-nine='ssh -i ~/.ssh/nine weibeld@weibeld.nine.ch'
 # Authenticate with LDAP password and OTP from Google Authenticator
@@ -1772,6 +1771,40 @@ change_mac() {
   local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g;s/.$//')
   sudo ifconfig en0 ether "$mac"
   echo "Changed MAC address of en0 device to $mac"
+}
+
+# JMESPath Terminal
+# https://github.com/jmespath/jmespath.terminal
+jpterm() {
+  python /Users/dw/Library/Python/2.7/lib/python/site-packages/jpterm.py
+}
+
+# Split a GIF file into its individual frames. Each frame is saved as an
+# individual GIF file in a directory named after the input file.
+# Usage:
+#   gif-split <file.gif>
+# Notes:
+#   - Requires gifsicle [1]. Install with 'brew install gifsicle'.
+# [1] https://www.lcdf.org/gifsicle/
+gif-split() {
+  ensure gifsicle
+  local dir=$1.split
+  mkdir "$dir"
+  cp "$1" "$dir"
+  cd "$dir"
+  gifsicle --unoptimize --explode "$1"
+  rm "$1"
+  # Rename files from '<name>.gif.001' to '<name>.001.gif'
+  local name=${1%.gif}
+  local n=$(($(ls | wc -l)))
+  local digits=$(($(floor $(log10 "$n"))+1))
+  i=1
+  for f in *; do
+    mv "$f" "$name.$(pad 3 "$i").gif"
+    ((i++))
+  done
+  cd ..
+  echo "$n frames saved in $dir"
 }
 
 #------------------------------------------------------------------------------#
