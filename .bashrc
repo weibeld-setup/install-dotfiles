@@ -1788,23 +1788,17 @@ jpterm() {
 # [1] https://www.lcdf.org/gifsicle/
 gif-split() {
   ensure gifsicle
-  local dir=$1.split
-  mkdir "$dir"
-  cp "$1" "$dir"
-  cd "$dir"
-  gifsicle --unoptimize --explode "$1"
-  rm "$1"
-  # Rename files from '<name>.gif.001' to '<name>.001.gif'
   local name=${1%.gif}
-  local n=$(($(ls | wc -l)))
-  local digits=$(($(floor $(log10 "$n"))+1))
-  i=1
-  for f in *; do
-    mv "$f" "$name.$(pad 3 "$i").gif"
-    ((i++))
+  local dir=$name.gif.split
+  mkdir "$dir"
+  gifsicle --unoptimize --explode --output "$dir/$name" "$1"
+  # Rename files from '<name>.<i>' to '<name>.<i+1>.gif'. The increment by 1
+  # is because gifsicle labels the frames starting from 0 rather than 1.
+  for f in "$dir"/*; do
+    local i=${f##*.}
+    mv "$f" "${f%.*}.$(pad "${#i}" $(bc <<<"$i+1")).gif"
   done
-  cd ..
-  echo "$n frames saved in $dir"
+  echo "$(($(ls "$dir" | wc -l))) frames saved in $dir"
 }
 
 #------------------------------------------------------------------------------#
