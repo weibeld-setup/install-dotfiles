@@ -916,17 +916,72 @@ dktags() {
 alias ac="vim ~/.aws/config"
 alias acr="vim ~/.aws/credentials"
 
-# List all AWS regions including its enabled/disabled state
-# Note: since 2019, new regions can be selectively enabled or disabled [1]
+# List AWS regions
+# Usage:
+#   areg [-a|--all]
+# Without any arguments, the IDs of the enabled regions are listed (since 2019,
+# new regions have to be explicitly enabled [1]). With -a|--all, all regions
+# (including disabled ones) are listed, including additional information. The
+# latter option is for human consumption only.
 # [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
 areg() {
-  aws ec2 describe-regions --no-cli-auto-prompt --all-regions --output json \
-    | jq -r '.Regions[] | [.RegionName, .OptInStatus] | @tsv' \
-    | sed "s/not-opted-in/$(c red b)disabled$(c)/" \
-    | sed "s/opt-in-not-required/$(c green b)enabled$(c)/" \
-    | sed "s/opted-in/$(c green b)enabled$(c)/" \
-    | sort \
-    | column -t
+  if [[ "$#" = 0 ]]; then
+    aws ec2 describe-regions \
+      --no-cli-auto-prompt \
+      --query 'Regions[].RegionName' |
+      jq -r '.[]' |
+      sort
+  # sed expression for inserting region name column can be created from a file
+  # containing region IDs and names in tab-separated columns as in [1]. A full
+  # list of regions, including human-readable names, can be found in [2].
+  # [1] sed 's|^|        s/^|;s|\t|\\t/\\0|;s|$|\\t/;|'
+  # [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+  elif [[ "$1" =~ --all|-a ]]; then
+    aws ec2 describe-regions \
+      --no-cli-auto-prompt \
+      --all-regions \
+      --query 'Regions[].[RegionName,OptInStatus]' |
+      jq -r '.[] | join("\t")' |
+      sed "
+        s/\topted-in/\tenabled\tManually enabled/;
+        s/\topt-in-not-required/\tenabled\tEnabled by default/;
+        s/\tnot-opted-in/\tdisabled\tMay be enabled/" |
+      sed '
+        s/^af-south-1\t/\0Cape Town\t/;
+        s/^ap-east-1\t/\0Hong Kong\t/;
+        s/^ap-northeast-1\t/\0Tokyo\t/;
+        s/^ap-northeast-2\t/\0Seoul\t/;
+        s/^ap-northeast-3\t/\0Osaka\t/;
+        s/^ap-south-1\t/\0Mumbai\t/;
+        s/^ap-south-2\t/\0Hyderabad\t/;
+        s/^ap-southeast-1\t/\0Singapore\t/;
+        s/^ap-southeast-2\t/\0Sydney\t/;
+        s/^ap-southeast-3\t/\0Jakarta\t/;
+        s/^ca-central-1\t/\0Central\t/;
+        s/^eu-central-1\t/\0Frankfurt\t/;
+        s/^eu-central-2\t/\0Zurich\t/;
+        s/^eu-north-1\t/\0Stockholm\t/;
+        s/^eu-south-1\t/\0Milan\t/;
+        s/^eu-south-2\t/\0Spain\t/;
+        s/^eu-west-1\t/\0Ireland\t/;
+        s/^eu-west-2\t/\0London\t/;
+        s/^eu-west-3\t/\0Paris\t/;
+        s/^me-central-1\t/\0UAE\t/;
+        s/^me-south-1\t/\0Bahrain\t/;
+        s/^sa-east-1\t/\0São Paulo\t/;
+        s/^us-east-1\t/\0N. Virginia\t/;
+        s/^us-east-2\t/\0Ohio\t/;
+        s/^us-west-1\t/\0N. California\t/;
+        s/^us-west-2\t/\0Oregon\t/' |
+      sort -t $'\t' -k3,3r -k1,1 |
+      column -t -s $'\t' |
+      sed "
+        /May be enabled$/s/^/$(c d)/;s/$/$(c)/;
+        s/Manually enabled/$(c d)\0$(c)/" |
+      sed "
+        s/ enabled /$(c green)\0$(c)/;
+        s/ disabled /$(c)$(c red)\0$(c)$(c d)/"
+  fi
 }
 
 # List the availability zones of a specific region
