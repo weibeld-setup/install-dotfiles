@@ -1801,6 +1801,15 @@ gif-split() {
   echo "$(($(ls "$dir" | wc -l))) frames saved in $dir"
 }
 
+# Trim a GIF file from a given start frame number to a given end frame number.
+# The counting of the frame numbers starts at 1.
+# Usage:
+#   gif-trim <file.gif> <start> <end>
+gif-trim() {
+  ensure gifsicle
+  gifsicle --unoptimize "$1" "#$(("$2"-1))-$(("$3"-1))" -O2 -o "${1%.gif}"-trimmed.gif
+}
+
 #------------------------------------------------------------------------------#
 # Ensure exit code 0 for the command that sources this file
 #------------------------------------------------------------------------------#
