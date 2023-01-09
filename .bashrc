@@ -916,13 +916,12 @@ dktags() {
 alias ac="vim ~/.aws/config"
 alias acr="vim ~/.aws/credentials"
 
-# List AWS regions
+# List enabled (or all) AWS regions.
 # Usage:
 #   areg [-a|--all]
-# Without any arguments, the IDs of the enabled regions are listed (since 2019,
-# new regions have to be explicitly enabled [1]). With -a|--all, all regions
-# (including disabled ones) are listed, including additional information. The
-# latter option is for human consumption only.
+# Without any arguments, only the IDs of the enabled regions are listed (since
+# 2019, new regions have to be explicitly enabled [1]). With -a|--all, all
+# regions (including disabled ones) are listed, including additional info.
 # [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
 areg() {
   if [[ "$#" = 0 ]]; then
@@ -984,108 +983,68 @@ areg() {
   fi
 }
 
-# List the availability zones of a specific region
+# List the availability zones of a specific region. Additional arguments for
+# the 'describe-availability-zones' command may be supplied (e.g. --region).
 aaz() {
-  [[ -z "$1" ]] && { echo "Usage: aaz <region>"; return 1; }
   aws ec2 describe-availability-zones \
     --no-cli-auto-prompt \
-    --region "$1" \
     --query 'AvailabilityZones[].ZoneName' \
-    --output text \
-    | tr '\t' '\n'
+    "$@" |
+    jq -r '.[]' |
+    sort
 }
 
-# List all AMIs in the current region that match a name pattern and optionally
-# an owner. The AMIs are sorted by creation date with the newest at the bottom.
+# List the AMIs matching a given name pattern in the current region. The AMIs
+# are sorted by creation date with the newest at the bottom. Additional args
+# for the 'describe-images' command may be supplied (e.g. --region, --owner).
 # Usage:
-#   aami <pattern> [<owner>]
+#   aami <pattern> [args...]
 # Examples:
-#   # All AMIs matching the given name pattern
 #   aami '*ubuntu*22.10*'
-#   # All AMIs matching the given name pattern and created by the given owner
-#   aami '*ubuntu*22.10*' 099720109477
-#   # All AMIs created by the given owner
-#   aami '*' 099720109477
+#   aami '*ubuntu*22.10*' --region eu-central-1
+#   aami '*ubuntu*22.10*' --owner 099720109477
 # Notes:
-#   - Server-side filtering (--filter) and client-side filtering (--query) is
-#     explained in [1]
-#   - Client-side filtering (--query) uses JMESPath syntax [2]
-#   - The sort_by() function is specified in the JMESPath specification [3]
+#   - For server-side (--filter) and client-side (--query) filtering, see [1].
+#   - Client-side filtering uses JMESPath [2]. For sort_by(), see [3].
+#   - 099720109477 is Canonical's owner ID. Owner IDs are stable across regions.
 # [1] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
 # [2] https://jmespath.org/
 # [3] https://jmespath.org/specification.html#sort-by
 aami() {
   local filter=$1
-  [[ -n "$2" ]] && local owner="--owners $2"
+  shift 1
   aws ec2 describe-images \
-    $owner \
     --no-cli-auto-prompt \
-    --filter "Name=name,Values=$1" \
-    --query 'sort_by(Images,&CreationDate)[].{name:Name,description:Description,owner:OwnerId,date:CreationDate,id:ImageId}'
+    --filter "Name=name,Values=$filter" \
+    --query 'sort_by(Images,&CreationDate)[].{name:Name,description:Description,owner:OwnerId,date:CreationDate,id:ImageId}' \
+    "$@"
 }
 
-# List all security groups in the current region.
+# List all security groups in the current region. Additional arguments for the
+# 'describe-security-groups' command may be supplied (e.g. --region).
 asg() {
   aws ec2 describe-security-groups \
     --no-cli-auto-prompt \
-    --query 'SecurityGroups[].{name:GroupName,description:Description,id:GroupId}'
+    --query 'SecurityGroups[].{id:GroupId,name:GroupName,description:Description}' \
+    "$@"
 }
 
-# List all key pairs in the current region.
-akp() {
+# List all key pairs in the current region. Additional arguments for the
+# 'describe-key-pairs' command may be supplied (e.g. --region).
+akey() {
    aws ec2 describe-key-pairs \
     --no-cli-auto-prompt \
-    --query 'KeyPairs[].{name:KeyName,description:Description,id:KeyPairId}'
+    --query 'KeyPairs[].{id:KeyPairId,name:KeyName,description:Description}' \
+    "$@"
 }
 
-# List all EC2 instances in a specific region. For each instance, the following
-# information is listed:
-#   - ID
-#   - Type
-#   - Private IP address
-#   - Public IP address
-#   - State
-ae() {
-  local region=${1:-$(aws configure get region)}
-  aws ec2 describe-instances --region "$region" --query 'Reservations[*].Instances[*].[InstanceId,InstanceType,PrivateIpAddress,PublicIpAddress,State.Name]' --output text \
-    | sort -k 3 \
-    | awk '{printf "'$(c b)'"$1; $1=""; print " '$(c)'"$0"'$(c)'"}' \
-    | sed "s/\(running\)/$(c green b)\1$(c)/" \
-    | sed "s/\(stopped\)/$(c red b)\1$(c)/" \
-    | sed "s/\(terminated\)/$(c red b)\1$(c)/" \
-    | sed "s/\(pending\)/$(c yellow b)\1$(c)/" \
-    | sed "s/\(stopping\)/$(c yellow b)\1$(c)/" \
-    | sed "s/\(shutting-down\)/$(c yellow b)\1$(c)/" \
-    | column -t
-}
-
-alias cfn="aws cloudformation"
-
-# List all CloudFormation export values in the default region
-cfn-exports() {
-  aws cloudformation list-exports --output json --query 'Exports[*].Name'
-  #aws cloudformation list-exports --output json | jq -r '.Exports|.[]|.Name'
-}
-
-# Validate a template
-cfn-validate() {
-  aws cloudformation validate-template --template-body "$(cat  $1)"
-}
-
-# SAM package
-smp() {
-  sam package --template-file template.yml --output-template-file package.yml --s3-bucket quantumsense-sam
-}
-
-# SAM deploy
-smd() {
-  [[ -z "$1" ]] && { echo "Usage: smd STACK_NAME"; return 1; }
-  sam deploy --template-file package.yml --capabilities CAPABILITY_IAM --stack-name "$1"
-}
-# SAM package and deploy
-sm() {
-  [[ -z "$1" ]] && { echo "Usage: smd STACK_NAME"; return 1; }
-  smp && smd "$1"
+# List all EC2 instances in the current region. Additional arguments for the
+# 'describe-instances' command may be supplied (e.g. --region).
+ai() {
+  aws ec2 describe-instances \
+    --no-cli-auto-prompt \
+    --query 'Reservations[].Instances[].{id:InstanceId,type:InstanceType,public_ip:PublicIpAddress,key:KeyName,state:State.Name,launched:LaunchTime}' \
+    "$@"
 }
 
 # Get a secret from AWS Secrets Manager
@@ -1118,6 +1077,34 @@ aws-delete-secret() {
   aws secretsmanager delete-secret --secret-id "$NAME_OR_ARN" --output json
 }
 
+alias cfn="aws cloudformation"
+
+# List all CloudFormation export values in the default region
+cfn-exports() {
+  aws cloudformation list-exports --output json --query 'Exports[*].Name'
+  #aws cloudformation list-exports --output json | jq -r '.Exports|.[]|.Name'
+}
+
+# Validate a template
+cfn-validate() {
+  aws cloudformation validate-template --template-body "$(cat  $1)"
+}
+
+# SAM package
+smp() {
+  sam package --template-file template.yml --output-template-file package.yml --s3-bucket quantumsense-sam
+}
+
+# SAM deploy
+smd() {
+  [[ -z "$1" ]] && { echo "Usage: smd STACK_NAME"; return 1; }
+  sam deploy --template-file package.yml --capabilities CAPABILITY_IAM --stack-name "$1"
+}
+# SAM package and deploy
+sm() {
+  [[ -z "$1" ]] && { echo "Usage: smd STACK_NAME"; return 1; }
+  smp && smd "$1"
+}
 
 complete -C /usr/local/bin/aws_completer aws
 
