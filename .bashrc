@@ -994,17 +994,22 @@ aaz() {
     sort
 }
 
-# List the AMIs matching a given name pattern in the current region. The AMIs
-# are sorted by creation date with the newest at the bottom. Additional args
-# for the 'describe-images' command may be supplied (e.g. --region, --owner).
+# List AMIs that match a given name pattern in the current region. Pattern
+# matching may be skipped by using '-' as the pattern. This allows to either
+# list all AMIs or look up specific AMIs by their IDs (with --image-ids). The
+# AMIs are sorted by creation date with the newest at the bottom. Additional
+# arguments for the 'describe-images' command may be supplied (e.g. --region,
+# --owner, --image-ids).
 # Usage:
-#   aami <pattern> [args...]
+#   aami <pattern>|- [args...]
 # Examples:
 #   aami '*ubuntu*22.10*'
 #   aami '*ubuntu*22.10*' --region eu-central-1
 #   aami '*ubuntu*22.10*' --owner 099720109477
+#   aami - --image-ids ami-07ba2051dbeeac4b7 ami-024dbc4111461f2f9
+#   aami -
 # Notes:
-#   - For server-side (--filter) and client-side (--query) filtering, see [1].
+#   - For server-side (--filters) and client-side (--query) filtering, see [1].
 #   - Client-side filtering uses JMESPath [2]. For sort_by(), see [3].
 #   - 099720109477 is Canonical's owner ID. Owner IDs are stable across regions.
 # [1] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
@@ -1012,11 +1017,12 @@ aaz() {
 # [3] https://jmespath.org/specification.html#sort-by
 aami() {
   local filter=$1
+  [[ "$filter" = - ]] && filter=*
   shift 1
   aws ec2 describe-images \
     --no-cli-auto-prompt \
-    --filter "Name=name,Values=$filter" \
-    --query 'sort_by(Images,&CreationDate)[].{name:Name,description:Description,owner:OwnerId,date:CreationDate,id:ImageId}' \
+    --filters "Name=name,Values=$filter" \
+    --query 'sort_by(Images,&CreationDate)[].{id:ImageId,name:Name,description:Description,owner:OwnerId,creation_date:CreationDate}' \
     "$@"
 }
 
@@ -1039,12 +1045,13 @@ akey() {
 }
 
 # List all EC2 instances in the current region. Additional arguments for the
-# 'describe-instances' command may be supplied (e.g. --region).
+# 'describe-instances' command may be supplied (e.g. --region, --filters).
 ai() {
   aws ec2 describe-instances \
     --no-cli-auto-prompt \
-    --query 'Reservations[].Instances[].{id:InstanceId,type:InstanceType,public_ip:PublicIpAddress,key:KeyName,state:State.Name,launched:LaunchTime}' \
-    "$@"
+    --query 'Reservations[].Instances[].{id:InstanceId,type:InstanceType,image:ImageId,public_ip:PublicIpAddress,key:KeyName,launch_date:LaunchTime,state:State.Name} | sort_by([],&launch_date)' \
+    "$@" |
+    if [[ -t 1 ]]; then sed -E "s/\"(running)\"/\"$(c green)\1$(c)\"/;s/\"(pending|shutting-down|terminated|stopping|stopped)\"/\"$(c red)\1$(c)\"/"; else cat; fi
 }
 
 # Get a secret from AWS Secrets Manager
