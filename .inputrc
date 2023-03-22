@@ -1,3 +1,0 @@
-# Bind GNU Readline kill-whole-line function to Ctrl-I
-# https://tiswww.cwru.edu/php/chet/readline/rluserman.html#Bindable-Readline-Commands
-C-i: kill-whole-line
