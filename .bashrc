@@ -30,6 +30,10 @@
 # A: See https://google.github.io/styleguide/shellguide.html#s7.6-use-local-variables
 #------------------------------------------------------------------------------#
 
+t() {
+  echo hello
+}
+
 #------------------------------------------------------------------------------#
 # Shell options
 #------------------------------------------------------------------------------#
@@ -732,7 +736,9 @@ sec2min() {
 # Merge PDF files with pdftk. Requires pdftk.
 pdf-merge() {
   ensure pdftk || return 1
-  pdftk "$@" cat output mymerged.pdf
+  local out=out-pdf-merge.pdf
+  pdftk "$@" cat output "$out"
+  echo "$out"
 }
 
 # Extract the table of contents from a PDF file
@@ -913,6 +919,8 @@ dktags() {
 # AWS CLI
 #------------------------------------------------------------------------------#
 
+alias a=aws
+alias ae="aws ec2"
 alias ac="vim ~/.aws/config"
 alias acr="vim ~/.aws/credentials"
 
@@ -923,6 +931,7 @@ alias acr="vim ~/.aws/credentials"
 # 2019, new regions have to be explicitly enabled [1]). With -a|--all, all
 # regions (including disabled ones) are listed, including additional info.
 # [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
+# TODO: add support for additional arguments to aws CLI (e.g. --profile)
 areg() {
   if [[ "$#" = 0 ]]; then
     aws ec2 describe-regions \
@@ -956,6 +965,7 @@ areg() {
         s/^ap-southeast-1\t/\0Singapore\t/;
         s/^ap-southeast-2\t/\0Sydney\t/;
         s/^ap-southeast-3\t/\0Jakarta\t/;
+        s/^ap-southeast-4\t/\0Melbourne\t/;
         s/^ca-central-1\t/\0Central\t/;
         s/^eu-central-1\t/\0Frankfurt\t/;
         s/^eu-central-2\t/\0Zurich\t/;
@@ -1653,13 +1663,16 @@ alias tf=terraform
 
 alias tfa='terraform apply'
 alias tfd='terraform destroy'
-alias tfay='terraform apply --auto-approve'
-alias tfdy='terraform destroy --auto-approve'
+alias tfaa='terraform apply --auto-approve'
+alias tfdd='terraform destroy --auto-approve'
 
 #------------------------------------------------------------------------------#
 # macOS and Linux specific functions
 #------------------------------------------------------------------------------#
 if is-mac; then
+
+  # Use Vim installed by Homebrew
+  alias vim=/usr/local/bin/vim
 
   # Recursively delete all .DS_Store files in the current directory
   alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
@@ -1714,6 +1727,24 @@ if is-mac; then
   clip() {
     cat "$1" | pbcopy
   }
+
+  # Remove application support files after uninstalling Docker Desktop on macOS
+  post-uninstall-docker-desktop() {
+    sudo rm -rf /usr/local/lib/docker/
+    # This is usually the only large directory
+    rm -rf ~/Library/Containers/com.docker.docker
+    rm -rf ~/.docker/
+    rm -rf ~/Library/Application\ Support/Docker\ Desktop
+    rm -rf ~/Library/Saved\ Application\ State/com.electron.docker*
+    rm -rf ~/Library/Preferences/com.electron.docker*
+    rm -rf ~/Library/Group\ Containers/group.com.docker
+    rm -rf ~/Library/Logs/Docker\ Desktop
+  }
+
+  make-space() {
+    sudo rm -rf ./Library/Caches
+  }
+
 
 elif is-linux; then
 
