@@ -69,6 +69,14 @@ ensure() {
   which -s "$1" || { echo "Error: '$1' not installed."; return 1; } 
 }
 
+# Test whether a Homebrew formula or cask, respectively, is installed.
+is-homebrew-formula-installed() {
+  brew ls --versions "$1" >/dev/null
+}
+is-homebrew-cask-installed() {
+  brew ls --cask --versions "$1" >/dev/null
+}
+
 # Capitalise the first letter of a string
 capitalize () {
   echo $(echo "${1:0:1}" | tr '[:lower:]' '[:upper:]')"${1:1}"
@@ -311,9 +319,9 @@ __dump_history() {
 #------------------------------------------------------------------------------#
 
 if is-mac ; then
-  source /usr/local/etc/profile.d/bash_completion.sh
+  source $(brew --prefix)/etc/profile.d/bash_completion.sh
   # Source completion scripts of Homebrew formulas
-  for f in /usr/local/etc/bash_completion.d/*; do
+  for f in $(brew --prefix)/etc/bash_completion.d/*; do
     source "$f"
   done
 fi
@@ -1123,7 +1131,7 @@ sm() {
   smp && smd "$1"
 }
 
-complete -C /usr/local/bin/aws_completer aws
+complete -C $(brew --prefix)/bin/aws_completer aws
 
 #------------------------------------------------------------------------------#
 # Azure
@@ -1656,7 +1664,7 @@ prometheus-clean() {
 #------------------------------------------------------------------------------#
 
 # Terraform autocompletion (installed with terraform --install-autocomplete)
-complete -C /usr/local/bin/terraform terraform
+complete -C $(brew --prefix)/bin/terraform terraform
 
 alias tf=terraform
 #complete -F _complete_alias t
@@ -1671,8 +1679,10 @@ alias tfdd='terraform destroy --auto-approve'
 #------------------------------------------------------------------------------#
 if is-mac; then
 
-  # Use Vim installed by Homebrew
-  alias vim=/usr/local/bin/vim
+  # Use Homebrew Vim by default
+  if is-homebrew-formula-installed vim; then
+    alias vim=$(brew --prefix)/bin/vim
+  fi
 
   # Recursively delete all .DS_Store files in the current directory
   alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'

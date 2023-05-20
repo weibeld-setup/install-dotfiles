@@ -21,44 +21,50 @@ if [[ "$OSTYPE" =~ darwin ]]; then
   export HISTSIZE=5000
   export HISTFILESIZE=5000
 
+  # Homebrew
+  # Correct prefix depends on chip architecture (Intel or Apple).
+  # See https://docs.brew.sh/FAQ#why-should-i-install-homebrew-in-the-default-location
+  eval $(/opt/homebrew/bin/brew shellenv)
+  #eval $(/usr/local/bin/brew shellenv)
+  export HOMEBREW_NO_AUTO_UPDATE=1
+
   # Java
   #export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.0.3.jdk/Contents/Home
-  export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
-  export JUNIT_HOME=$JAVA_HOME/lib
-  export GROOVY_HOME=/usr/local/opt/groovy/libexec
+  #export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
+  #export JUNIT_HOME=$JAVA_HOME/lib
+  #export GROOVY_HOME=/usr/local/opt/groovy/libexec
 
   # Misc
   export d=~/Desktop
-  export tex_home=/usr/local/texlive
+  #export tex_home=/usr/local/texlive
   export fonts_user=~/Library/Fonts
   export fonts_local=/Library/Fonts
   export fonts_system=/System/Library/Fonts
-  export PYTHONSTARTUP=~/.python
-  export GOPATH=$HOME/go
-  export HOMEBREW_NO_AUTO_UPDATE=1
-  alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+  #export PYTHONSTARTUP=~/.python
+  #export GOPATH=$HOME/go
+  #alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 
   # PATH
-  path_append "$HOME/bin"
-  path_append "/usr/local/sbin"
-  path_append "$HOME/.krew/bin"
-  path_append "$HOME/.kubectl-plugins"
-  path_append "$HOME/google-cloud-sdk/bin"
-  path_append "$HOME/platform-tools"
-  path_append "$(go env GOPATH)/bin"
-  path_prepend /usr/local/opt/ruby/bin
-  path_prepend /usr/local/lib/ruby/gems/2.6.0/bin
+  #path_append "$HOME/bin"
+  #path_append "/usr/local/sbin"
+  #path_append "$HOME/.krew/bin"
+  #path_append "$HOME/.kubectl-plugins"
+  #path_append "$HOME/google-cloud-sdk/bin"
+  #path_append "$HOME/platform-tools"
+  #path_append "$(go env GOPATH)/bin"
+  #path_prepend /usr/local/opt/ruby/bin
+  #path_prepend /usr/local/lib/ruby/gems/2.6.0/bin
   # GNU Make
-  path_prepend /usr/local/opt/make/libexec/gnubin
+  #path_prepend /usr/local/opt/make/libexec/gnubin
   # Homebrew version of curl
-  path_prepend /usr/local/opt/curl/bin
+  #path_prepend /usr/local/opt/curl/bin
   # sketchtool
-  path_append /Applications/Sketch.app/Contents/MacOS
+  #path_append /Applications/Sketch.app/Contents/MacOS
   # Added by serverless binary installer
-  export PATH="$HOME/.serverless/bin:$PATH"
+  #export PATH="$HOME/.serverless/bin:$PATH"
 
   # Command completion
-  complete -C /usr/local/bin/packer packer
+  #complete -C /usr/local/bin/packer packer
 
 fi
 
