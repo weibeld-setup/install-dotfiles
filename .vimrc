@@ -29,28 +29,26 @@ set shortmess-=S
 set autowrite
 
 " Disable code folding
-set nofoldenable
+"set nofoldenable
+" TODO: if necessary, enable only for JSON files
+set foldmethod=syntax
 
-" Navigate in steps of multiple lines/columns
-nnoremap <C-h> 5h
-nnoremap <C-l> 5l
+" Navigate in steps of multiple lines
 nnoremap <C-j> 5j
 nnoremap <C-k> 5k
-
-vnoremap <C-h> 5h
-vnoremap <C-l> 5l
 vnoremap <C-j> 5j
 vnoremap <C-k> 5k
-
-nnoremap H 20h
-nnoremap L 20l
 nnoremap J 10j
 nnoremap K 10k
-
-nnoremap H 20h
-vnoremap L 20l
 vnoremap J 10j
 vnoremap K 10k
+
+" Alternative shortcuts for moving to beginning and end of line
+nmap <C-h> ^
+nmap <C-l> $
+
+nmap tt i#
+
 
 " Scroll single line up and down (use Ctrl-F and Ctrl-B to scroll by half pages)
 nnoremap <C-u> <C-y>
@@ -386,6 +384,8 @@ cnoreabbrev wq xa
 
 " For vim-table-mode plugin
 let g:table_mode_corner='|'
+" This is the default for toggling table mode, but it's here for reference
+nnoremap <leader>tm :TableModeToggle<CR>
 
 " Abbreviations
 
