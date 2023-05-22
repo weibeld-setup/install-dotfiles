@@ -1687,6 +1687,17 @@ if is-mac; then
   # Recursively delete all .DS_Store files in the current directory
   alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
 
+  # Move one or more files or directories to the trash
+  trash() {
+    for i in "$@"; do
+      # mv fails if target directory already exists
+      if ! mv "$i" ~/.Trash &>/dev/null; then
+        rm -rf ~/.Trash/"$i"
+        mv "$i" ~/.Trash
+      fi
+    done
+  }
+
   # Make Finder hiding hidden files, e.g. dotfiles (default)
   finder_hide() {
     defaults write com.apple.finder AppleShowAllFiles FALSE
