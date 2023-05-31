@@ -1692,9 +1692,14 @@ alias tfdd='terraform destroy --auto-approve'
 #------------------------------------------------------------------------------#
 if is-mac; then
 
-  # Use Homebrew Vim by default
+  # If Vim is installed from Homebrew Vim, use it instead of default Vim
   if is-homebrew-formula-installed vim; then
     alias vim=$(brew --prefix)/bin/vim
+  fi
+
+  # If Neovim is installed, use it instead of Vim
+  if is-homebrew-formula-installed neovim; then
+    alias vim=nvim
   fi
 
   # Recursively delete all .DS_Store files in the current directory
