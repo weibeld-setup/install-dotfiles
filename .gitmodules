@@ -1,30 +1,6 @@
-[submodule ".vim/bundle/vim-submode"]
-	path = .vim/bundle/vim-submode
+[submodule ".vim/plugged/vim-submode"]
+	path = .vim/plugged/vim-submode
 	url = https://github.com/kana/vim-submode
-[submodule ".vim/bundle/vim-surround"]
-	path = .vim/bundle/vim-surround
-	url = https://github.com/tpope/vim-surround
-[submodule ".vim/bundle/vim-mustache-handlebars"]
-	path = .vim/bundle/vim-mustache-handlebars
-	url = https://github.com/mustache/vim-mustache-handlebars
-[submodule ".vim/bundle/tabular"]
-	path = .vim/bundle/tabular
-	url = https://github.com/godlygeek/tabular
-[submodule ".vim/bundle/vim-terraform"]
-	path = .vim/bundle/vim-terraform
-	url = https://github.com/hashivim/vim-terraform
-[submodule ".vim/bundle/vim-buftabline"]
-	path = .vim/bundle/vim-buftabline
-	url = https://github.com/ap/vim-buftabline
-[submodule "vim-table-mode"]
-	path = vim-table-mode
+[submodule ".vim/plugged/vim-table-mode"]
+	path = .vim/plugged/vim-table-mode
 	url = https://github.com/dhruvasagar/vim-table-mode
-[submodule ".vim/bundle/vim-table-mode"]
-	path = .vim/bundle/vim-table-mode
-	url = https://github.com/dhruvasagar/vim-table-mode
-[submodule ".vim/bundle/vim-caddyfile"]
-	path = .vim/bundle/vim-caddyfile
-	url = https://github.com/isobit/vim-caddyfile
-[submodule ".vim/bundle/vim-helm"]
-	path = .vim/bundle/vim-helm
-	url = https://github.com/towolf/vim-helm

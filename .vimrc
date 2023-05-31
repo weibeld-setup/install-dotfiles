@@ -1,399 +1,349 @@
-"~/.vimrc"
-" Note: split lines with \ at the beginning of the new line.
+" .vimrc file for Vim and Neovim
 "
-" Daniel Weibel <daniel.weibel@unifr.ch> May 2015
+" This file is intended to have the same effect on Vim and Neovim and to be
+" fully compatible with both. The config directory is assumed to be ~/.vim
+" which is the default in Vim, but is explicitly configured for Neovim here.
 "------------------------------------------------------------------------------"
 
-execute pathogen#infect()
-" Extend surround plugin with LaTeX command (usage example: ysiwc textbf)
-let g:surround_{char2nr('c')} = "\\\1command\1{\r}"
+"------------------------------------------------------------------------------"
+" Vim-only settings
+"------------------------------------------------------------------------------"
+if !has('nvim')
 
-" Prevent parenthesis matching plugin from being loaded
-let loaded_matchparen=1
+  " Disable vi-compatibility mode (default even in Vim, except when -u is used)
+  set nocompatible
 
-" Use line numbers
+  " Enable incremental search with highlighting
+  set incsearch
+  set hlsearch
+  nohlsearch
+
+  " Display number and index of search results
+  set shortmess-=S
+
+  " Enable popup menu for command completion
+  set wildmenu
+  set wildoptions=pum,tagfile
+
+  " Enable the Backspace key in insert mode
+  set backspace=indent,eol,start
+
+  " Always display the status line
+  set laststatus=2
+
+"------------------------------------------------------------------------------"
+" Neovim-only settings
+"------------------------------------------------------------------------------"
+else
+  " Use ~/.vim as main config directory (this is the default in Vim)
+  set runtimepath+=~/.vim
+endif
+
+"------------------------------------------------------------------------------"
+" vim-plug (plugins)
+"------------------------------------------------------------------------------"
+
+" ~/.vim/plugged as vim-plug dir (Neovim default: ~/.local/share/nvim/plugged)
+call plug#begin('~/.vim/plugged')
+
+"------------------------------------------------------------------------------"
+" Plugin: vim-submode
+"------------------------------------------------------------------------------"
+
+" Create temporary custom modes with their own key mappings
+" Notes:
+"   - Due to a current design flaw [1], the concatenation of submode name
+"     and LHS mapping must not exceed a certain limit in the submode#enter_with
+"     and submode#map functions, otherwise the plugin fails. Read more in [2].
+"   - It's sometimes  useful to include the enter mapping (submode#enter_with)
+"     also in the submode itself (submode#map). This avoids confusion when
+"     accidentially pressing the enter mapping when already in the submode. 
+"     Thus, some submode mapping definitions have two submode#map commands.
+" References:
+"   [1] https://github.com/kana/vim-submode/issues/33
+"   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
+Plug 'kana/vim-submode'
+
+"------------------------------------------------------------------------------"
+" Plugin: vim-table-mode
+"------------------------------------------------------------------------------"
+
+" Automatically format Markdown tables
+Plug 'dhruvasagar/vim-table-mode'
+let g:table_mode_corner='|'
+
+call plug#end()
+
+"------------------------------------------------------------------------------"
+" General settings
+"------------------------------------------------------------------------------"
+
+" Enable line numbers
 set number
 
-" Highlicht first matches of search while typing pattern
-set incsearch
-
-" Highlight search matches (but prevent highlighting matches from last search
-" when this file is sourced).
-set hlsearch
-nohlsearch
-
-" Show number of search results and index of current result
-set shortmess-=S
-
-" Save file automatically when using :make
-set autowrite
+" Ensure line wrapping at word boundaries instead of anywhere in the word
+set linebreak
 
 " Disable code folding
-"set nofoldenable
-" TODO: if necessary, enable only for JSON files
-set foldmethod=syntax
+set nofoldenable
 
-" Navigate in steps of multiple lines
-nnoremap <C-j> 5j
-nnoremap <C-k> 5k
-vnoremap <C-j> 5j
-vnoremap <C-k> 5k
-nnoremap J 10j
-nnoremap K 10k
-vnoremap J 10j
-vnoremap K 10k
+" Disable swap files
+set noswapfile
 
-" Alternative shortcuts for moving to beginning and end of line
-nmap <C-h> ^
-nmap <C-l> $
+" Allow opening another buffer without saving the current buffer
+set hidden
 
-nmap tt i#
+" Shell-like completion in wildmenu (complete to longest common match)
+set wildmode=longest:full,full
 
+" Number of lines to scroll with Ctrl-U and Ctrl-D (default is half the screen)
+set scroll=2
 
-" Scroll single line up and down (use Ctrl-F and Ctrl-B to scroll by half pages)
-nnoremap <C-u> <C-y>
-nnoremap <C-d> <C-e>
+" Minimum number of lines below or above the cursor when scrolling
+set scrolloff=5
 
-nnoremap m @
+" Disable all auto-formatting of text (see :help fo-table)
+set formatoptions=
 
-"=============================================================================="
-" Leader key and mappings
-"=============================================================================="
-
-let mapleader = "\<Space>"
-
-nnoremap <leader>w :w<CR>
-nnoremap <leader>q :x<CR>
-"nnoremap <leader>q :q<CR>
-nnoremap <leader>Q :qa<CR>
-nnoremap <leader>r :source $MYVIMRC<CR>
-nnoremap <leader>v :e $MYVIMRC<CR>
-nnoremap <leader>e :e 
-"nnoremap <leader>t :terminal<CR>
-
-" Toggle display of line numbers
-nnoremap <leader>n :set number!<CR>
-
-" Search/substitute word under cursor 
-
-"nnoremap <leader>s /<C-r><C-w><CR>
-
-" Highlight occurrences of word under cursor and show number of matches. (Ctrl-R
-" Ctrl-W inserts word under cursor in command-line mode, see :h c_CTRL-R_CTRL-W)
-nnoremap <leader>s :%s/<C-r><C-w>//gn<CR><C-o>
-
-" Substitute all occurrences of word under cursor (unfortunately jumps to the
-" next occurrenc of cursor word when 'incsearch' is on).
-nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
-
-" Clear highlighted search matches
-nnoremap <leader>, :nohlsearch<CR>
-
-" Toggle invisible characters
-nnoremap <leader>. :set list!<CR>
-
-" Move line up and down in normal mode
-"nnoremap <leader>k :m-2<CR>==
-"nnoremap <leader>j :m+<CR>==
-
-" Move selected lines up and down in visual mode
-"xnoremap <leader>k :m-2<CR>gv=gv
-"xnoremap <leader>j :m'>+<CR>gv=gv
-
-" Toggle colour column
-"nnoremap <leader>c :call g:ToggleColorColumn()<CR>
-function! g:ToggleColorColumn()
-  if &colorcolumn == ''
-    setlocal colorcolumn=80,100
-  else
-    setlocal colorcolumn&
-  endif
-endfunction
-set colorcolumn=80,100
-
-
-" Change current line to title case
-nnoremap <leader>T :s/\<\(\w\)\(\w*\)\>/\u\1\L\2/g<CR>:nohlsearch<CR>          
-
-"=============================================================================="
-" Buffers
-"=============================================================================="
-
-nnoremap <C-n> :bnext<CR>
-nnoremap <C-p> :bprevious<CR>
-"nnoremap <C-w> <C-^>
-nnoremap <leader>b :buffer 
-nnoremap <leader>d :bd<CR>
-nnoremap <leader>bo :BufOnly<CR>
-nnoremap <leader>B :buffers<CR>
-"nnoremap <leader><Tab> <C-^> 
-"nnoremap <C-b> :enew<CR>
-
-"=============================================================================="
-" Split windows
-"=============================================================================="
-
-set splitbelow
-set splitright
-
-nnoremap <silent> <leader>h :call WinMove('h')<CR>
-nnoremap <silent> <leader>j :call WinMove('j')<CR>
-nnoremap <silent> <leader>k :call WinMove('k')<CR>
-nnoremap <silent> <leader>l :call WinMove('l')<CR>
-"nnoremap          <leader>d <C-w>q
-nnoremap          <Tab>     <C-w>w
-
-" Move to adjacent window on the  left/bottom/top/right, or create new one if
-" at edge. New window starts with current buffer to prevent empty buffers.
-function! WinMove(key)
-  let t:curwin = winnr()
-  exec "wincmd ".a:key
-  " If still in same window (i.e. we're at the edge), create a new window
-  if (t:curwin == winnr())
-    if (a:key == "h")
-      wincmd v
-      wincmd h
-    elseif (a:key == "j")
-      wincmd s
-    elseif (a:key == "k")
-      wincmd s
-      wincmd k
-    elseif (a:key == "l")
-      wincmd v
-    endif
-  endif    
-endfunction
-
-" Resize split windows, requires https://github.com/kana/vim-submode
-" Increase width and height of current window
-call submode#enter_with('resize-window', 'n', '', '<leader>H', '5<C-w>>')
-call submode#map('resize-window', 'n', '', 'H', '5<C-w>>')
-call submode#enter_with('resize-window', 'n', '', '<leader>J', '5<C-w>+')
-call submode#map('resize-window', 'n', '', 'J', '5<C-w>+')
-" Decrease width and height of current window
-call submode#enter_with('resize-window', 'n', '', '<leader>L', '5<C-w><')
-call submode#map('resize-window', 'n', '', 'L', '5<C-w><')
-call submode#enter_with('resize-window', 'n', '', '<leader>K', '5<C-w>-')
-call submode#map('resize-window', 'n', '', 'K', '5<C-w>-')
-let g:submode_timeout = 0
-let g:submode_keep_leaving_key = 1
-
-"=============================================================================="
-" Netrw
-"=============================================================================="
-
-" See browsing commands on 'h: netrw-quickhelp': <CR> = open, R = rename,
-" D = delete file, - = root up, gn = root down (to directory under cursor)
-let g:netrw_banner=0
-let g:netrw_winsize=20
-let g:netrw_liststyle=3
-let g:netrw_localrmdir='rm -r'
-let g:netrw_maxfilenamelen=64
-nnoremap <leader>E :call MyLexplore()<CR>
-function! MyLexplore()
-  " Make sure files are opened in the last active window (default is window 2).
-  " You can also set this ad-hoc with ':NetrwC <n>' or '<n>C'.
-  let g:netrw_chgwin = winnr() + 1
-  :Lexplore
-endfunction
-
-" Set spelling language(s)
-set spelllang=en
+" Use Bash instead of sh for default shell syntax (see :h ft-sh-syntax)
+let g:is_bash=1
 
 " Do not move cursor one position back when exiting insert mode
 " autocmd InsertEnter * let CursorColumnI = col('.')
 " autocmd CursorMovedI * let CursorColumnI = col('.')
 " autocmd InsertLeave * if col('.') != CursorColumnI | call cursor(0, col('.')+1) | endif
 
-autocmd VimEnter * set expandtab
+"------------------------------------------------------------------------------"
+" UI elements and colours
+"------------------------------------------------------------------------------"
 
-" Use Enter to insert an empty line below
-nnoremap <CR> o<Esc>
+" Colour column
+set colorcolumn=80
+highlight ColorColumn ctermbg=235
 
-" O (big-O) to open a line two lines below
-nnoremap O o<CR>
-
-" Use Back to delete the character to the left of the cursor
-nnoremap <BS> i<BS><Esc>l
-
-
-" Use specific color scheme if it exists (default, if it doesn't exist)
-silent! colorscheme koehler
-
-
-" Define formatting of invisible characters
-"set listchars=tab:>-,trail:.,eol:¬
-
-
+" Cursor line
 set cursorline
-" hi CursorLine cterm=NONE ctermbg=DarkGray  " For some reason does not work
+highlight LineNr ctermfg=yellow cterm=None
+highlight CursorLine ctermbg=239 cterm=None
+highlight CursorLineNr ctermbg=yellow ctermfg=black cterm=bold 
 
+" Status line
+" Items from left to right:
+"   1. Current working directory
+"   2. File name
+"   3. Buffer number
+"   4. Modified indicator
+"   5. Read-only indicator
+"   6. Help page indicator (whether the buffer is a help page)
+"   7. Current column
+"   8. Current line and total number of lines
+"   9. Percentage of current line through file
+set statusline=[%{getcwd()}]\ [%f]\ [B=%n]\ %m\ %r\ %h\ %=[C\=%c]\ [L\=%l/%L]\ [%p%%]
+highlight StatusLine ctermbg=green ctermfg=black cterm=bold
+highlight StatusLineNC ctermbg=254 ctermfg=black cterm=bold
 
-" Minimum number of lines below or above the cursor when scrolling
-set scrolloff=5
+" Tabline
+set showtabline=2
+set tabline=%!MyTabline()
+highlight TabLine ctermbg=black ctermfg=white cterm=bold
+highlight TabLineSel ctermbg=green ctermfg=black cterm=bold
+highlight TabLineFill ctermbg=black cterm=none
 
-" Wrap lines at window border *between words*
-set linebreak 
+" Auto-completion popup menu (wildmenu)
+highlight Pmenu ctermfg=white ctermbg=blue
+highlight PmenuSel ctermbg=5 ctermfg=black cterm=bold
+highlight PmenuThumb ctermbg=darkblue
+highlight PmenuSbar ctermbg=grey
 
-" Alternative for ':' for entering command line
-"nnoremap - :
+" Search highlighing
+highlight Search ctermbg=5 ctermfg=black
 
-" Number of Ex commands (:) recorded in the history (default is 20)
-set history=200
+" Visual mode
+highlight Visual ctermbg=lightblue ctermfg=black
 
-" Moving up and down in soft-wrapped lines
+" Vertical split bar
+set fillchars+=vert:\ 
+highlight VertSplit ctermbg=254 cterm=none
+
+"------------------------------------------------------------------------------"
+" Mappings
+"------------------------------------------------------------------------------"
+
+" Leader key
+let mapleader = "\<Space>"
+
+" Quick navigation in normal mode
+nnoremap <C-j> 5j
+nnoremap <C-k> 5k
+nnoremap <C-h> 20h
+nnoremap <C-l> 20l
+nnoremap J 10j
+nnoremap K 10k
+
+" Quick navigation in visual mode
+vnoremap <C-j> 5j
+vnoremap <C-k> 5k
+vnoremap J 10j
+vnoremap K 10k
+
+" Navigate up and down through wrapped lines like through real lines
 nnoremap j gj
 nnoremap k gk
 
-" Little one-line horizontal menu for completion suggestions
-set wildmenu
-" Complete to longest common substring and show alternatives in wildmenu
-set wildmode=longest:full,full
-
-" Disable arrow keys
-map <up>    <nop>
-map <down>  <nop>
-map <left>  <nop>
-map <right> <nop>
-
-" Window operations with Ctrl-A (like in tmux)
-"nnoremap <C-a> <C-w>
-
-" Cycling between tabs as in tmux
-"nnoremap <C-a>n gt
-"nnoremap <C-a>p gT
-
-" Closing a tab
-"nnoremap tc     :tabclose<CR>
-
-" Select pasted text
-nnoremap gp `[v`]
-
-" Disabling all format options (e.g. no automatic insertion of comment char)
-set formatoptions=c
-
-" If a new file is opened, hide existing buffer instead of closing it
-set hidden
-
-" Tab and indenting setup
-set tabstop=2     " Tab width
-set shiftwidth=2  " Indent width of '>>' or '<<'
-set expandtab     " Use spaces for tabs
-
-" Enable the backspace key
-set backspace=indent,eol,start
-
-" No backup files (.swp)
-set nobackup
-set noswapfile
-
-" Alternatives for Esc in insert mode
-inoremap <C-k> <Esc>
-
-" Enable detection of file type for file-type specific plugins
-filetype plugin on
-
-" Enable syntax highlighting
-syntax on
-
-" Enable Bash variant of sh syntax highlighting mode (sh.vim)
-let g:is_bash=1
-
-" Event handlers
-if has("autocmd")
-  " Source the .vimrc file automatically when it is saved
-  " autocmd bufwritepost .vimrc source $MYVIMRC
-  " No colorcolumn in TeX files
-  "autocmd filetype tex if v:version >= 703 set colorcolumn= endif
-endif
+" Miscellaneous mappings
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+nnoremap <leader>Q :qa<CR>
+nnoremap <leader>Z :qa!<CR>
+nnoremap <leader>b :bdelete<CR>
+nnoremap <leader>B :bdelete!<CR>
+nnoremap <leader>l :ls<CR>
+nnoremap <leader>n :set number!<CR>
+nnoremap <leader>, :nohlsearch<CR>
+nnoremap ZZ <Nop>
 
 
-" Disable certain modules of the vim-pandoc plugin
-let g:pandoc#modules#disabled = [ "spell", "folding" ]
+" Allow inserting new lines and deleting characters from normal mode
+nnoremap <CR> o<Esc>
+nnoremap <BS> i<BS><Esc>l
 
-" Disable "conceal" for the vim-pandoc-syntax plugin
-let g:pandoc#syntax#conceal#use = 0
+" Remap q[:/?] commands (to open the command-line window, see ':help q:') to
+" h[:/?] to prevent mistyping ':q' (quit) as 'q:'.
+nnoremap q: <Nop>
+nnoremap q/ <Nop>
+nnoremap q? <Nop>
+nnoremap h: q/
+nnoremap h/ q/
+nnoremap h? q?
 
+" Highlight/replace word under cursor. The difference between s|r and S|R is
+" that s|r defines a word as 'word' and S|R as 'WORD' (e.g. '[foo]-bar' vs.
+" '[foo-bar]'.). See ':h word', ':h WORD', ':h c_CTRL-R_CTRL-W').
+nnoremap <leader>s :%s/<C-r><C-w>//gn<CR><C-o>
+nnoremap <leader>S :%s/<C-r><C-a>//gn<CR><C-o>
+nnoremap <leader>r :%s/\<<C-r><C-w>\>//g<left><left>
+nnoremap <leader>R :%s/\<<C-r><C-a>\>//g<left><left>
 
-" WildMenu: color of the selected item in the wildemnu (filename completion bar). The
-" color of the bar itself is equals to StatusLine.
-hi WildMenu ctermbg=white ctermfg=black cterm=bold
+"------------------------------------------------------------------------------"
+" Tabs, windows, and buffers
+"------------------------------------------------------------------------------"
 
-hi TabLine    ctermbg=black ctermfg=darkgray cterm=none
-hi TabLineSel ctermbg=darkgray ctermfg=white cterm=bold
-hi TabLineFill ctermfg=black
+" Notes: a Vim tab contains one or more windows. A window displays exactly one
+" buffer. A buffer may be displayed in zero or more windows at the same time.
+" An instance of Vim may contain one or more tabs. Window IDs are relative to
+" the tab that contains these windows. However, buffer IDs are global across
+" all tabs and windows. Vim tabs are similar to windows in tmux and Vim windows
+" are similar to panes in tmux.
+" References:
+"   [1] :h window
+"   [2] :h tab-pages
 
-" Do Not Change The Working Directory When Opening A File
-set noautochdir
+" Create a new tab at the end of the tabline
+nnoremap <C-w>c :$tabnew<CR>
 
-" nnoremap <leader>t :s/\<\(\w\)\(\S*\)/\u\1\L\2/g<CR>
+" Cycle to next tab
+call submode#enter_with('switch-tab', 'n', '', '<C-w>n', 'gt')
+call submode#map('switch-tab', 'n', '', 'n', 'gt')
+call submode#map('switch-tab', 'n', '', '<C-w>n', 'gt')
 
-" vim-go plugin
-"autocmd FileType go nmap gb <Plug>(go-build)
-"autocmd FileType go nmap gr <Plug>(go-run)
-"autocmd FileType go nmap gi <Plug>(go-install)
-"autocmd FileType go nmap gd <Plug>(go-doc)
-"autocmd FileType go nmap gdd <Plug>(go-doc-browser)
-"autocmd FileType go nmap :gi :GoImport<Space>
-"autocmd BufWritePost *.go :GoBuild 
+" Cycle to previous tab
+call submode#enter_with('switch-tab', 'n', '', '<C-w>p', 'gT')
+call submode#map('switch-tab', 'n', '', 'p', 'gT')
+call submode#map('switch-tab', 'n', '', '<C-w>p', 'gT')
 
-" Disable 'K' for open docs (https://github.com/fatih/vim-go/issues/140)
-"let g:go_doc_keywordprg_enabled = 0
+" Move current tab to the right (does not cycle)
+call submode#enter_with('move-tab', 'n', '', '<C-w>N', ':+tabmove<CR>')
+call submode#map('move-tab', 'n', '', 'N', ':+tabmove<CR>')
+call submode#map('move-tab', 'n', '', '<C-w>N', ':+tabmove<CR>')
 
-" Fix filetype for Bash files
-autocmd BufNewFile,BufRead .bashrc :set filetype=sh
+" Move curent tab to the left (does not cycle)
+call submode#enter_with('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
+call submode#map('move-tab', 'n', '', 'P', ':-tabmove<CR>')
+call submode#map('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 
-" vim-terraform plugin
-let g:terraform_align=1
-"let g:terraform_fold_sections=1
-"let g:terraform_remap_spacebar=1
-let g:terraform_commentstring='//%s'
-let g:terraform_fmt_on_save=0
+" Go to last active tab and window (toggle)
+nnoremap g<Tab> g<Tab>
+nnoremap <Tab> <C-w>p
 
-"=============================================================================="
-" Status line
-"=============================================================================="
+" Close current tag and window
+nnoremap <C-w>Q :tabclose<CR>
+nnoremap <C-w>q :quit<CR>
 
-" Always display status line (not only in split windows)
-set laststatus=2
+" Create a new window to the right (vertical split) or below (horizontal split)
+nnoremap <C-w>, <C-w>v
+nnoremap <C-w>- <C-w>s
 
-" Left-justified: [+] (modified), file path, [RO] (read-only), [Help] (help)
-" Right-justified: line, column, total lines, percent lines in file
-set statusline=[%{getcwd()}]\ %F\ %m\ %r\ %h%=%l/%c\ %L\ (%p%%)
-" Status line colors of active and inactive windows (see :help cterm-colors,
-" for iTerm use numbers under NR-8, '*' means '+8')
-hi StatusLine ctermfg=white ctermbg=darkgray cterm=bold
-hi StatusLineNC ctermfg=black ctermbg=darkgray cterm=bold
+" This has the effect of moving the cursor the new window after splitting
+set splitbelow
+set splitright
 
-"=============================================================================="
-" Misc
-"=============================================================================="
+" Disable moving of windows to avoid confusion
+nnoremap <C-w>H <Nop>
+nnoremap <C-w>J <Nop>
+nnoremap <C-w>K <Nop>
+nnoremap <C-w>L <Nop>
 
-" Search for all top-level JavaScript functions in a file
-nnoremap <leader>f /^export async function\\|^export function\\|^async function\\|^function<CR>
+" Increase horizontal size of current window
+call submode#enter_with('resize-win', 'n', '', '<C-w>H', '10<C-w>>')
+call submode#map('resize-win', 'n', '', 'H', '10<C-w>>')
 
-set runtimepath+=~/Desktop/hello-plugin/
+" Decrease horizontal size of current window
+call submode#enter_with('resize-win', 'n', '', '<C-w>L', '10<C-w><')
+call submode#map('resize-win', 'n', '', 'L', '10<C-w><')
 
-autocmd BufNewFile,BufRead Jenkinsfile* set syntax=groovy shiftwidth=4 tabstop=4
-autocmd BufNewFile,BufRead *.groovy set shiftwidth=4 tabstop=4
-autocmd BufNewFile,BufRead *.tmpl set syntax=gotexttmpl
+" Increase vertical size of current window
+call submode#enter_with('resize-win', 'n', '', '<C-w>K', '3<C-w>+')
+call submode#map('resize-win', 'n', '', 'K', '3<C-w>+')
 
-" Aliases :w for :wa and :wq for :waq
-" See https://stackoverflow.com/a/3879737/4747193
-cnoreabbrev wq xa
+" Decrease vertical size of current window
+call submode#enter_with('resize-win', 'n', '', '<C-w>J', '3<C-w>-')
+call submode#map('resize-win', 'n', '', 'J', '3<C-w>-')
 
-" For vim-table-mode plugin
-let g:table_mode_corner='|'
-" This is the default for toggling table mode, but it's here for reference
-nnoremap <leader>tm :TableModeToggle<CR>
+" Cycle through buffers (in current window)
+nnoremap <C-n> :bnext<CR>
+nnoremap <C-p> :bprevious<CR>
 
-" Abbreviations
+"------------------------------------------------------------------------------"
+" Functions
+"------------------------------------------------------------------------------"
 
-ab :tick: ✅
-ab :cross: ❌
-ab :black: ⬛
-ab :white: ⬜
-ab :rightarrow: →
+" Custom tabline. This function returns and dynamic tabline string that can be
+" assigned to the 'tabline' option. Each tab label includes the following:
+"   1. Tab index (starting from 1)
+"   2. Number of windows in the tab
+"   3. Modification indicator for each window that has unsaved changes
+"   4. Name of the buffer in the currently active window of the tab
+" References:
+"   [1] :h setting-tabline
+"   [2] https://github.com/mkitt/tabline.vim/blob/master/plugin/tabline.vim
+function! MyTabline()
+  let tabline = ''
+  for tab_id in range(1, tabpagenr('$'))
 
-" Map Ctrl-<dash> to em-dash (U+2014)
-inoremap  —
+    " List of this tab's windows with associated buffer IDs
+    " Note: array indices represent window IDs, values represent buffer IDs
+    let win_buf_list = tabpagebuflist(tab_id)
+
+    " Number of windows in this tab
+    let num_win = len(win_buf_list)
+
+    " Name of the buffer in the currently active window of this tab
+    let cur_buf_id = win_buf_list[tabpagewinnr(tab_id)-1]
+    let cur_buf_name = fnamemodify(bufname(cur_buf_id), ':t')
+    let cur_buf_name = (cur_buf_name == '' ? '[No Name]' : cur_buf_name)
+
+    " Modification indicator for each window that contains unsaved changes
+    let mods = ''
+    for buf_id in uniq(sort(copy(win_buf_list)))
+      if getbufvar(buf_id, "&mod")
+        let mods .= '*'
+      endif
+    endfor
+
+    " Construct tabline string portion for this tab
+    let style = (tab_id  == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
+    let tabline .=  style . ' ' . tab_id . ' [#' . num_win . mods . '] ' . cur_buf_name . ' '
+
+  endfor
+  return tabline . '%#TabLineFill#'
+endfunction
