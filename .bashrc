@@ -271,6 +271,19 @@ __c-echo() {
   else return 1; fi
 }
 
+# Transform a string of text to a kebab case identifier, which means:
+#   - All characters are transformed to lower-case
+#   - Punctuation characters are deleted
+#   - Whitespace characters are replaced by dashes 
+#   - Repeated dashes are squeezed to a single dash
+#   - Dashes at the beginning or end of the resulting identifier are deleted
+str2kebab() {
+  tr '[:upper:]' '[:lower:]' | \
+  sed 's/[[:punct:]]//g;s/[[:space:]]/-/g' | \
+  tr -s - | \
+  sed 's/^-//;s/-$//'
+}
+
 #------------------------------------------------------------------------------#
 # Configure Readline
 # https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
