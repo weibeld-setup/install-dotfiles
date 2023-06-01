@@ -202,6 +202,10 @@ nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
 nnoremap ZZ <Nop>
 
+" Macro recording and replaying
+nnoremap @ q
+nnoremap q <Nop>
+nnoremap + @
 
 " Allow inserting new lines and deleting characters from normal mode
 nnoremap <CR> o<Esc>
