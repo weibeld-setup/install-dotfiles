@@ -271,7 +271,27 @@ nnoremap <C-w>- <C-w>s
 set splitbelow
 set splitright
 
-" Disable moving of windows to avoid confusion
+" Go to window to the left (does not cycle)
+call submode#enter_with('switch-win', 'n', '', '<C-w>h', '<C-w>h')
+call submode#map('switch-win', 'n', '', 'h', '<C-w>h')
+call submode#map('switch-win', 'n', '', '<C-w>h', '<C-w>h')
+
+" Go to window to below (does not cycle)
+call submode#enter_with('switch-win', 'n', '', '<C-w>j', '<C-w>j')
+call submode#map('switch-win', 'n', '', 'j', '<C-w>j')
+call submode#map('switch-win', 'n', '', '<C-w>j', '<C-w>j')
+
+" Go to window to above (does not cycle)
+call submode#enter_with('switch-win', 'n', '', '<C-w>k', '<C-w>k')
+call submode#map('switch-win', 'n', '', 'k', '<C-w>k')
+call submode#map('switch-win', 'n', '', '<C-w>k', '<C-w>k')
+
+" Go to window to the right (does not cycle)
+call submode#enter_with('switch-win', 'n', '', '<C-w>l', '<C-w>l')
+call submode#map('switch-win', 'n', '', 'l', '<C-w>l')
+call submode#map('switch-win', 'n', '', '<C-w>l', '<C-w>l')
+
+" Disable rearranging of windows to avoid confusion
 nnoremap <C-w>H <Nop>
 nnoremap <C-w>J <Nop>
 nnoremap <C-w>K <Nop>
