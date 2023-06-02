@@ -191,6 +191,7 @@ nnoremap <leader>l :ls<CR>
 nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
 nnoremap ZZ <Nop>
+nnoremap P :pwd<CR>
 
 " Macro recording and replaying
 nnoremap @ q
@@ -333,9 +334,10 @@ nnoremap <C-p> :bprevious<CR>
 "   8. Current line and total number of lines
 "   9. Percentage of current line through file
 function! MyStatusLine()
-	let	cwd = getcwd()
+	"let	cwd = getcwd()
 	let num_buf = len(getbufinfo({'buflisted':1}))
-	return '[' . cwd . '] [%f] %r %h %=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%]'
+	return '%f %r %h%=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%]'
+	"return '[' . cwd . '] [%f] %r %h %=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%]'
 endfunction
 
 " Custom tabline. This function returns and dynamic tabline string that can be
