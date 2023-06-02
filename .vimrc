@@ -336,7 +336,7 @@ nnoremap <C-p> :bprevious<CR>
 function! MyStatusLine()
 	"let	cwd = getcwd()
 	let num_buf = len(getbufinfo({'buflisted':1}))
-	return '%f %r %h%=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%]'
+	return ' %f %r %h%=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%] '
 	"return '[' . cwd . '] [%f] %r %h %=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%]'
 endfunction
 
