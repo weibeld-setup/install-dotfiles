@@ -216,9 +216,9 @@ nnoremap <BS> i<BS><Esc>l
 nnoremap q: <Nop>
 nnoremap q/ <Nop>
 nnoremap q? <Nop>
-nnoremap h: q/
-nnoremap h/ q/
-nnoremap h? q?
+nnoremap H: q/
+nnoremap H/ q/
+nnoremap H? q?
 
 " Highlight/replace word under cursor. The difference between s|r and S|R is
 " that s|r defines a word as 'word' and S|R as 'WORD' (e.g. '[foo]-bar' vs.
