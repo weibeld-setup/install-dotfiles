@@ -128,23 +128,13 @@ highlight CursorLine ctermbg=239 cterm=None
 highlight CursorLineNr ctermbg=yellow ctermfg=black cterm=bold 
 
 " Status line
-" Items from left to right:
-"   1. Current working directory
-"   2. File name
-"   3. Buffer number
-"   4. Modified indicator
-"   5. Read-only indicator
-"   6. Help page indicator (whether the buffer is a help page)
-"   7. Current column
-"   8. Current line and total number of lines
-"   9. Percentage of current line through file
-set statusline=[%{getcwd()}]\ [%f]\ [B=%n]\ %m\ %r\ %h\ %=[C\=%c]\ [L\=%l/%L]\ [%p%%]
+set statusline=%!MyStatusLine()
 highlight StatusLine ctermbg=green ctermfg=black cterm=bold
 highlight StatusLineNC ctermbg=254 ctermfg=black cterm=bold
 
-" Tabline
+" Tab line
 set showtabline=2
-set tabline=%!MyTabline()
+set tabline=%!MyTabLine()
 highlight TabLine ctermbg=black ctermfg=white cterm=bold
 highlight TabLineSel ctermbg=green ctermfg=black cterm=bold
 highlight TabLineFill ctermbg=black cterm=none
@@ -311,6 +301,23 @@ nnoremap <C-p> :bprevious<CR>
 " Functions
 "------------------------------------------------------------------------------"
 
+" Custom status line. This function returns a status line string that can be
+" assigned to the 'statusline' option. It includes the following elements:
+"   1. Current working directory
+"   2. File name
+"   5. Read-only indicator
+"   6. Help page indicator (whether the buffer is a help page)
+"   4. Modified indicator
+"   3. Buffer number and total number of buffers
+"   7. Current column
+"   8. Current line and total number of lines
+"   9. Percentage of current line through file
+function! MyStatusLine()
+	let	cwd = getcwd()
+	let num_buf = len(getbufinfo({'buflisted':1}))
+	return '[' . cwd . '] [%f] %r %h %=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%]'
+endfunction
+
 " Custom tabline. This function returns and dynamic tabline string that can be
 " assigned to the 'tabline' option. Each tab label includes the following:
 "   1. Tab index (starting from 1)
@@ -320,7 +327,7 @@ nnoremap <C-p> :bprevious<CR>
 " References:
 "   [1] :h setting-tabline
 "   [2] https://github.com/mkitt/tabline.vim/blob/master/plugin/tabline.vim
-function! MyTabline()
+function! MyTabLine()
   let tabline = ''
   for tab_id in range(1, tabpagenr('$'))
 
