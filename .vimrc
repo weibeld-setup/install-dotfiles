@@ -182,6 +182,7 @@ nnoremap k gk
 
 " Miscellaneous mappings
 nnoremap <leader>w :w<CR>
+nnoremap <leader>W :wa<CR>
 nnoremap <leader>q :q<CR>
 nnoremap <leader>Q :qa<CR>
 nnoremap <leader>Z :qa!<CR>
