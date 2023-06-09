@@ -398,6 +398,8 @@ complete -c comp compr
 
 # Set default options
 alias curl='curl -s'
+alias sed='sed -E'
+alias gsed='gsed -E'
 
 # Coloured diff output (requires diffutils [1] package)
 # [1] https://www.gnu.org/software/diffutils/
