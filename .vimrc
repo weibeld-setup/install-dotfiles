@@ -191,6 +191,7 @@ nnoremap <leader>B :bdelete!<CR>
 nnoremap <leader>l :ls<CR>
 nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
+nnoremap <leader>G :set spell!<CR>
 nnoremap ZZ <Nop>
 nnoremap P :pwd<CR>
 
