@@ -40,17 +40,16 @@ else
 endif
 
 "------------------------------------------------------------------------------"
-" vim-plug (plugins)
+" Plugins (vim-plug)
 "------------------------------------------------------------------------------"
 
-" ~/.vim/plugged as vim-plug dir (Neovim default: ~/.local/share/nvim/plugged)
+" Neovim default for plugin directory is ~/.local/share/nvim/plugged
 call plug#begin('~/.vim/plugged')
 
 "------------------------------------------------------------------------------"
-" Plugin: vim-submode
+" vim-submode (https://github.com/kana/vim-submode)
 "------------------------------------------------------------------------------"
-
-" Create temporary custom modes with their own key mappings
+" Create temporary custom modes with their own key mappings.
 " Notes:
 "   - Due to a current design flaw [1], the concatenation of submode name
 "     and LHS mapping must not exceed a certain limit in the submode#enter_with
@@ -62,15 +61,23 @@ call plug#begin('~/.vim/plugged')
 " References:
 "   [1] https://github.com/kana/vim-submode/issues/33
 "   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
+
 Plug 'kana/vim-submode'
 
 "------------------------------------------------------------------------------"
-" Plugin: vim-table-mode
+" vim-table-mode (https://github.com/dhruvasagar/vim-table-mode)
 "------------------------------------------------------------------------------"
+" Automatically format Markdown tables.
 
-" Automatically format Markdown tables
 Plug 'dhruvasagar/vim-table-mode'
 let g:table_mode_corner='|'
+
+"------------------------------------------------------------------------------"
+" wiki.vim (https://github.com/lervag/wiki.vim)
+"------------------------------------------------------------------------------"
+" Create and maintain links between files, and more.
+
+Plug 'lervag/wiki.vim'
 
 call plug#end()
 

@@ -4,3 +4,6 @@
 [submodule ".vim/plugged/vim-table-mode"]
 	path = .vim/plugged/vim-table-mode
 	url = https://github.com/dhruvasagar/vim-table-mode
+[submodule ".vim/plugged/wiki.vim"]
+	path = .vim/plugged/wiki.vim
+	url = https://github.com/lervag/wiki.vim
