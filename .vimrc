@@ -188,12 +188,16 @@ nnoremap <leader>Q :qa<CR>
 nnoremap <leader>Z :qa!<CR>
 nnoremap <leader>b :bdelete<CR>
 nnoremap <leader>B :bdelete!<CR>
-nnoremap <leader>l :ls<CR>
 nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
 nnoremap <leader>G :set spell!<CR>
+nnoremap <leader>A ggVG
 nnoremap ZZ <Nop>
+nnoremap L :ls<CR>
 nnoremap P :pwd<CR>
+
+" Yank to system clipboard
+vnoremap Y "*y
 
 " Macro recording and replaying
 nnoremap @ q
