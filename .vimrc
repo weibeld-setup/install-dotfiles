@@ -199,9 +199,9 @@ nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
 nnoremap <leader>G :set spell!<CR>
 nnoremap <leader>A ggVG
+nnoremap <leader>l :ls<CR>
+nnoremap <leader>p :pwd<CR>
 nnoremap ZZ <Nop>
-nnoremap L :ls<CR>
-nnoremap P :pwd<CR>
 
 " Yank to system clipboard
 vnoremap Y "*y
