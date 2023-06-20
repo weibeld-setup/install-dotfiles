@@ -49,7 +49,7 @@ call plug#begin('~/.vim/plugged')
 "------------------------------------------------------------------------------"
 " vim-submode (https://github.com/kana/vim-submode)
 "------------------------------------------------------------------------------"
-" Create temporary custom modes with their own key mappings.
+" Create temporary custom modes with their own key mappings
 " Notes:
 "   - Due to a current design flaw [1], the concatenation of submode name
 "     and LHS mapping must not exceed a certain limit in the submode#enter_with
@@ -61,23 +61,28 @@ call plug#begin('~/.vim/plugged')
 " References:
 "   [1] https://github.com/kana/vim-submode/issues/33
 "   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
-
 Plug 'kana/vim-submode'
 
 "------------------------------------------------------------------------------"
 " vim-table-mode (https://github.com/dhruvasagar/vim-table-mode)
 "------------------------------------------------------------------------------"
-" Automatically format Markdown tables.
-
+" Automatically format Markdown tables
 Plug 'dhruvasagar/vim-table-mode'
 let g:table_mode_corner='|'
 
 "------------------------------------------------------------------------------"
 " wiki.vim (https://github.com/lervag/wiki.vim)
 "------------------------------------------------------------------------------"
-" Create and maintain links between files, and more.
-
+" Wiki functionality (alternative to vimwiki)
 Plug 'lervag/wiki.vim'
+" TODO: determine wiki root in a more sophisticated way with a function, e.g.
+" with a flag file such as .wiki (see ':h g:wiki_root').
+let g:wiki_root = '.'
+" TODO: if possible, define mapping only if g:wiki_root is set to an anctual
+" directory (i.e. if wiki.vim is active)
+if exists("g:wiki_root")
+  inoremap <C-n> <C-X><C-O>
+endif
 
 call plug#end()
 
