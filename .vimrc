@@ -6,7 +6,7 @@
 "------------------------------------------------------------------------------"
 
 "------------------------------------------------------------------------------"
-" Vim-only settings
+" Vim and Neovim-only settings
 "------------------------------------------------------------------------------"
 if !has('nvim')
 
@@ -31,13 +31,12 @@ if !has('nvim')
   " Always display the status line
   set laststatus=2
 
-"------------------------------------------------------------------------------"
-" Neovim-only settings
-"------------------------------------------------------------------------------"
+  " Same non-printable characters as in Neovim for ':set list'
+  set listchars=tab:>\ ,trail:-,nbsp:+
 else
   " Use ~/.vim as main config directory (this is the default in Vim)
   set runtimepath+=~/.vim
-endif
+endif 
 
 "------------------------------------------------------------------------------"
 " Plugins (vim-plug)
@@ -78,11 +77,21 @@ Plug 'lervag/wiki.vim'
 " TODO: determine wiki root in a more sophisticated way with a function, e.g.
 " with a flag file such as .wiki (see ':h g:wiki_root').
 let g:wiki_root = '.'
-" TODO: if possible, define mapping only if g:wiki_root is set to an anctual
-" directory (i.e. if wiki.vim is active)
+" TODO: define mappings only when wiki.vim is enabled. It seems that wiki.vim
+" is enabled for all the file types defined in g:wiki_filetypes (i.e. md files)
 if exists("g:wiki_root")
   inoremap <C-n> <C-X><C-O>
 endif
+" Disable automatic link creation
+let g:wiki_link_transform_on_follow = 0
+
+let g:wiki_link_extension = '.md'
+let g:wiki_link_target_type = 'md'
+let g:wiki_filetypes = ['md', 'yaml']
+
+" TODO: made obsolete by g:wiki_link_creation
+" See https://github.com/lervag/wiki.vim/commit/62d63bcaad768717d9b6447e057e4d7a927ced99
+let g:wiki_link_extension = 'md'
 
 call plug#end()
 
@@ -92,6 +101,9 @@ call plug#end()
 
 " Enable line numbers
 set number
+
+" Replace tabs by spaces
+set expandtab
 
 " Ensure line wrapping at word boundaries instead of anywhere in the word
 set linebreak
@@ -147,9 +159,9 @@ highlight StatusLineNC ctermbg=254 ctermfg=black cterm=bold
 " Tab line
 set showtabline=2
 set tabline=%!MyTabLine()
-highlight TabLine ctermbg=black ctermfg=white cterm=bold
-highlight TabLineSel ctermbg=green ctermfg=black cterm=bold
-highlight TabLineFill ctermbg=black cterm=none
+highlight TabLine ctermbg=darkgray ctermfg=white cterm=bold
+highlight TabLineSel ctermbg=lightblue ctermfg=black cterm=bold
+highlight TabLineFill ctermbg=black cterm=none cterm=bold
 
 " Auto-completion popup menu (wildmenu)
 highlight Pmenu ctermfg=white ctermbg=blue
@@ -161,7 +173,7 @@ highlight PmenuSbar ctermbg=grey
 highlight Search ctermbg=5 ctermfg=black
 
 " Visual mode
-highlight Visual ctermbg=lightblue ctermfg=black
+highlight Visual ctermbg=yellow ctermfg=black cterm=none
 
 " Vertical split bar
 set fillchars+=vert:\ 
@@ -196,17 +208,23 @@ nnoremap k gk
 nnoremap <leader>w :w<CR>
 nnoremap <leader>W :wa<CR>
 nnoremap <leader>q :q<CR>
-nnoremap <leader>Q :qa<CR>
+nnoremap <leader>Q :tabclose<CR>
+nnoremap <leader>z :qa<CR>
 nnoremap <leader>Z :qa!<CR>
-nnoremap <leader>b :bdelete<CR>
-nnoremap <leader>B :bdelete!<CR>
 nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
 nnoremap <leader>G :set spell!<CR>
 nnoremap <leader>A ggVG
+nnoremap <leader>b :bdelete<CR>
+nnoremap <leader>B :bdelete!<CR>
 nnoremap <leader>l :ls<CR>
-nnoremap <leader>p :pwd<CR>
-nnoremap ZZ <Nop>
+nnoremap <leader>d :pwd<CR>
+nnoremap <leader>f :echo @%<CR>
+nnoremap <leader>p :echo expand('%:p')<CR>
+nnoremap <leader>j :echo 'B=' . bufnr()<CR>
+nnoremap <leader>i :echo 'W=' . winnr()<CR>
+nnoremap <leader>I :echo 'T=' . tabpagenr()<CR>
+nnoremap <leader>v :source ~/.vimrc<CR>
 
 " Yank to system clipboard
 vnoremap Y "*y
@@ -217,8 +235,9 @@ nnoremap q <Nop>
 nnoremap + @
 
 " Allow inserting new lines and deleting characters from normal mode
-nnoremap <CR> o<Esc>
-nnoremap <BS> i<BS><Esc>l
+" TODO: this interferes with wiki.vim which uses these to follow links
+"nnoremap <CR> o<Esc>
+"nnoremap <BS> i<BS><Esc>l
 
 " Remap q[:/?] commands (to open the command-line window, see ':help q:') to
 " h[:/?] to prevent mistyping ':q' (quit) as 'q:'.
@@ -237,50 +256,81 @@ nnoremap <leader>S :%s/<C-r><C-a>//gn<CR><C-o>
 nnoremap <leader>r :%s/\<<C-r><C-w>\>//g<left><left>
 nnoremap <leader>R :%s/\<<C-r><C-a>\>//g<left><left>
 
+" Disable default mappings
+nnoremap <Left> <Nop>
+inoremap <Left> <Nop>
+vnoremap <Left> <Nop>
+nnoremap <Right> <Nop>
+inoremap <Right> <Nop>
+vnoremap <Right> <Nop>
+nnoremap <Up> <Nop>
+inoremap <Up> <Nop>
+vnoremap <Up> <Nop>
+nnoremap <Down> <Nop>
+inoremap <Down> <Nop>
+vnoremap <Down> <Nop>
+nnoremap ZZ <Nop>
+
 "------------------------------------------------------------------------------"
 " Tabs, windows, and buffers
 "------------------------------------------------------------------------------"
 
-" Notes: a Vim tab contains one or more windows. A window displays exactly one
-" buffer. A buffer may be displayed in zero or more windows at the same time.
-" An instance of Vim may contain one or more tabs. Window IDs are relative to
-" the tab that contains these windows. However, buffer IDs are global across
-" all tabs and windows. Vim tabs are similar to windows in tmux and Vim windows
-" are similar to panes in tmux.
+" Notes:
+" - A tab contains one or more windows
+" - A window displays exactly one buffer
+" - A buffer can be displayed in any number of windows (including zero)
+" - Tabs are enumerated consecutively starting at 1 (tab number)
+"   - The tab number of a tab may change: for example, if there are three tabs
+"     numbered T1, T2, and T3, and T2 is deleted, then T3 becomes T2
+" - Windows of a tab are enumerated consecutively starting at 1 (win number)
+"   - The window number of a window may change: for example, if there are three
+"     windows numbered W1, W2, and W3, and W2 is deleted, then W3 becomes W2
+" - Buffers have global immutable IDs that are the same across all tabs and
+"   windows and never change
 " References:
 "   [1] :h window
 "   [2] :h tab-pages
 
+"------------------------------------------------------------------------------"
+" Tabs
+"------------------------------------------------------------------------------"
+
 " Create a new tab at the end of the tabline
 nnoremap <C-w>c :$tabnew<CR>
 
-" Cycle to next tab
+" Go to next and previous tab (wraps at last and first tab)
 call submode#enter_with('switch-tab', 'n', '', '<C-w>n', 'gt')
 call submode#map('switch-tab', 'n', '', 'n', 'gt')
 call submode#map('switch-tab', 'n', '', '<C-w>n', 'gt')
-
-" Cycle to previous tab
 call submode#enter_with('switch-tab', 'n', '', '<C-w>p', 'gT')
 call submode#map('switch-tab', 'n', '', 'p', 'gT')
 call submode#map('switch-tab', 'n', '', '<C-w>p', 'gT')
 
-" Move current tab to the right (does not cycle)
+" Go to the tab with a specific tab number
+nnoremap <C-w>1 1gt
+nnoremap <C-w>2 2gt
+nnoremap <C-w>3 3gt
+nnoremap <C-w>4 4gt
+nnoremap <C-w>5 5gt
+nnoremap <C-w>6 6gt
+nnoremap <C-w>7 7gt
+nnoremap <C-w>8 8gt
+nnoremap <C-w>9 9gt
+
+" Toggle to the last active tab
+nnoremap <C-w>t g<Tab>
+
+" Move current tab one position to the right or left (does not wrap)
 call submode#enter_with('move-tab', 'n', '', '<C-w>N', ':+tabmove<CR>')
 call submode#map('move-tab', 'n', '', 'N', ':+tabmove<CR>')
 call submode#map('move-tab', 'n', '', '<C-w>N', ':+tabmove<CR>')
-
-" Move curent tab to the left (does not cycle)
 call submode#enter_with('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 call submode#map('move-tab', 'n', '', 'P', ':-tabmove<CR>')
 call submode#map('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 
-" Go to last active tab and window (toggle)
-nnoremap g<Tab> g<Tab>
-nnoremap <Tab> <C-w>p
-
-" Close current tag and window
-nnoremap <C-w>Q :tabclose<CR>
-nnoremap <C-w>q :quit<CR>
+"------------------------------------------------------------------------------"
+" Windows
+"------------------------------------------------------------------------------"
 
 " Create a new window to the right (vertical split) or below (horizontal split)
 nnoremap <C-w>, <C-w>v
@@ -290,47 +340,55 @@ nnoremap <C-w>- <C-w>s
 set splitbelow
 set splitright
 
-" Go to window to the left (does not cycle)
+" Go to window to left/right/below/above (does not wrap)
 call submode#enter_with('switch-win', 'n', '', '<C-w>h', '<C-w>h')
 call submode#map('switch-win', 'n', '', 'h', '<C-w>h')
 call submode#map('switch-win', 'n', '', '<C-w>h', '<C-w>h')
-
-" Go to window to below (does not cycle)
+call submode#enter_with('switch-win', 'n', '', '<C-w>l', '<C-w>l')
+call submode#map('switch-win', 'n', '', 'l', '<C-w>l')
+call submode#map('switch-win', 'n', '', '<C-w>l', '<C-w>l')
 call submode#enter_with('switch-win', 'n', '', '<C-w>j', '<C-w>j')
 call submode#map('switch-win', 'n', '', 'j', '<C-w>j')
 call submode#map('switch-win', 'n', '', '<C-w>j', '<C-w>j')
-
-" Go to window to above (does not cycle)
 call submode#enter_with('switch-win', 'n', '', '<C-w>k', '<C-w>k')
 call submode#map('switch-win', 'n', '', 'k', '<C-w>k')
 call submode#map('switch-win', 'n', '', '<C-w>k', '<C-w>k')
 
-" Go to window to the right (does not cycle)
-call submode#enter_with('switch-win', 'n', '', '<C-w>l', '<C-w>l')
-call submode#map('switch-win', 'n', '', 'l', '<C-w>l')
-call submode#map('switch-win', 'n', '', '<C-w>l', '<C-w>l')
+" Go to the window with a specific window number (local to tab)
+nnoremap <Leader>1 :1wincmd w<CR>
+nnoremap <Leader>2 :2wincmd w<CR>
+nnoremap <Leader>3 :3wincmd w<CR>
+nnoremap <Leader>4 :4wincmd w<CR>
+nnoremap <Leader>5 :5wincmd w<CR>
+nnoremap <Leader>6 :6wincmd w<CR>
+nnoremap <Leader>7 :7wincmd w<CR>
+nnoremap <Leader>8 :8wincmd w<CR>
+nnoremap <Leader>9 :9wincmd w<CR>
 
-" Disable rearranging of windows to avoid confusion
+" Toggle to the last active window
+nnoremap <C-w>w <C-w>p
+
+" Disable moving windows to avoid confusion
 nnoremap <C-w>H <Nop>
 nnoremap <C-w>J <Nop>
 nnoremap <C-w>K <Nop>
 nnoremap <C-w>L <Nop>
 
-" Increase horizontal size of current window
+" Increase/decrease horizontal size of current window
 call submode#enter_with('resize-win', 'n', '', '<C-w>H', '10<C-w>>')
 call submode#map('resize-win', 'n', '', 'H', '10<C-w>>')
-
-" Decrease horizontal size of current window
 call submode#enter_with('resize-win', 'n', '', '<C-w>L', '10<C-w><')
 call submode#map('resize-win', 'n', '', 'L', '10<C-w><')
 
-" Increase vertical size of current window
+" Increase/decrease vertical size of current window
 call submode#enter_with('resize-win', 'n', '', '<C-w>K', '3<C-w>+')
 call submode#map('resize-win', 'n', '', 'K', '3<C-w>+')
-
-" Decrease vertical size of current window
 call submode#enter_with('resize-win', 'n', '', '<C-w>J', '3<C-w>-')
 call submode#map('resize-win', 'n', '', 'J', '3<C-w>-')
+
+"------------------------------------------------------------------------------"
+" Buffers
+"------------------------------------------------------------------------------"
 
 " Cycle through buffers (in current window)
 nnoremap <C-n> :bnext<CR>
@@ -340,30 +398,18 @@ nnoremap <C-p> :bprevious<CR>
 " Functions
 "------------------------------------------------------------------------------"
 
-" Custom status line. This function returns a status line string that can be
-" assigned to the 'statusline' option. It includes the following elements:
-"   1. Current working directory
-"   2. File name
-"   5. Read-only indicator
-"   6. Help page indicator (whether the buffer is a help page)
-"   4. Modified indicator
-"   3. Buffer number and total number of buffers
-"   7. Current column
-"   8. Current line and total number of lines
-"   9. Percentage of current line through file
+" Create statusline string (see ':h statusline')
 function! MyStatusLine()
-	"let	cwd = getcwd()
-	let num_buf = len(getbufinfo({'buflisted':1}))
-	return ' %f %r %h%=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%] '
-	"return '[' . cwd . '] [%f] %r %h %=%m [B=%n/' . num_buf . '] [C=%c] [L=%l/%L] [%p%%]'
+  let num_buf = len(getbufinfo({'buflisted':1}))
+  return ' [W=%{winnr()}]#%{winnr("$")} [B=%n]#' . num_buf . ' %<%f %m %r %= [C=%c] [L=%l]#%L [%p%%] '
 endfunction
 
-" Custom tabline. This function returns and dynamic tabline string that can be
-" assigned to the 'tabline' option. Each tab label includes the following:
-"   1. Tab index (starting from 1)
-"   2. Number of windows in the tab
-"   3. Modification indicator for each window that has unsaved changes
-"   4. Name of the buffer in the currently active window of the tab
+" Create tabline string. Each tab label contains:
+"   1. Tab number (starting from 1)
+"   2. A token for each window in the tab including the following:
+"     1. Window number (relative to tab, starting from 1)
+"     2. Buffer ID of the buffer in the window
+"     3. Modification indicator showing whether the buffer has unsaved changes
 " References:
 "   [1] :h setting-tabline
 "   [2] https://github.com/mkitt/tabline.vim/blob/master/plugin/tabline.vim
@@ -371,30 +417,18 @@ function! MyTabLine()
   let tabline = ''
   for tab_id in range(1, tabpagenr('$'))
 
-    " List of this tab's windows with associated buffer IDs
-    " Note: array indices represent window IDs, values represent buffer IDs
+    " List of buffer IDs in the windows of this tab
     let win_buf_list = tabpagebuflist(tab_id)
 
-    " Number of windows in this tab
-    let num_win = len(win_buf_list)
-
-    " Name of the buffer in the currently active window of this tab
-    let cur_buf_id = win_buf_list[tabpagewinnr(tab_id)-1]
-    let cur_buf_name = fnamemodify(bufname(cur_buf_id), ':t')
-    let cur_buf_name = (cur_buf_name == '' ? '[No Name]' : cur_buf_name)
-
-    " Modification indicator for each window that contains unsaved changes
-    let mods = ''
-    for buf_id in uniq(sort(copy(win_buf_list)))
-      if getbufvar(buf_id, "&mod")
-        let mods .= '*'
-      endif
+    " Token per window containing window number, buffer ID, and mod indicator
+    let win_str = ''
+    for i in range(len(win_buf_list))
+      let buf_id = get(win_buf_list, i)
+      let win_str .= ' ' . (i + 1) . '[B=' . buf_id . (getbufvar(buf_id, "&mod") ? '*' : '') . ']'
     endfor
 
     " Construct tabline string portion for this tab
-    let style = (tab_id  == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
-    let tabline .=  style . ' ' . tab_id . ' [#' . num_win . mods . '] ' . cur_buf_name . ' '
-
+    let tabline .= (tab_id  == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#') . ' T=' . tab_id . '' . win_str . ' %#TabLineFill# '
   endfor
   return tabline . '%#TabLineFill#'
 endfunction
