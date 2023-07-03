@@ -1146,7 +1146,9 @@ sm() {
   smp && smd "$1"
 }
 
-complete -C $(brew --prefix)/bin/aws_completer aws
+if is-mac()
+  complete -C $(brew --prefix)/bin/aws_completer aws
+fi
 
 #------------------------------------------------------------------------------#
 # Azure
@@ -1679,7 +1681,9 @@ prometheus-clean() {
 #------------------------------------------------------------------------------#
 
 # Terraform autocompletion (installed with terraform --install-autocomplete)
-complete -C $(brew --prefix)/bin/terraform terraform
+if is-mac
+  complete -C $(brew --prefix)/bin/terraform terraform
+fi
 
 alias tf=terraform
 #complete -F _complete_alias t
