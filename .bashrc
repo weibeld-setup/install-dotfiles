@@ -1146,7 +1146,7 @@ sm() {
   smp && smd "$1"
 }
 
-if is-mac()
+if is-mac; then
   complete -C $(brew --prefix)/bin/aws_completer aws
 fi
 
@@ -1681,7 +1681,7 @@ prometheus-clean() {
 #------------------------------------------------------------------------------#
 
 # Terraform autocompletion (installed with terraform --install-autocomplete)
-if is-mac
+if is-mac; then
   complete -C $(brew --prefix)/bin/terraform terraform
 fi
 
