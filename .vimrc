@@ -23,7 +23,11 @@ if !has('nvim')
 
   " Enable popup menu for command completion
   set wildmenu
-  set wildoptions=pum,tagfile
+  if v:version >= 900
+    set wildoptions=tagfile,pum
+  else
+    set wildoptions=tagfile
+  endif
 
   " Enable the Backspace key in insert mode
   set backspace=indent,eol,start
