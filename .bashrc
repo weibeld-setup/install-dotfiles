@@ -311,11 +311,7 @@ PROMPT_COMMAND='__set-prompt; __dump_history'
 __set-prompt() {
   #PS1="$ " && return
   local EXIT_CODE=$?
-  if is-mac; then
-    PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
- else
-    PS1='\[\e[1;33m\]\u@\h:\w$ \[\e[0m\]'
-  fi
+  PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
   [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
 }
 
