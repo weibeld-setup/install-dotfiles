@@ -162,8 +162,8 @@ splitargs() {
 }
 
 # Test if an array contains a specific element.
-# Usage example: array-contains "${myarr[@]}" foo
-array-contains() {
+# Usage example: has "${myarr[@]}" foo
+has() {
   local array=("${@:1:$#-1}")
   local element=${@:$#}
   for i in $(seq 0 $(("${#array[@]}"-1))); do
@@ -249,6 +249,59 @@ c() {
   done
   # Print escape sequence
   printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
+}
+
+# Print the 8 base colours of this terminal (black, red, green, yellow, blue,
+# magenta, cyan, white) in normal, bright, and bold variations.
+# Usage:
+#   c8 [c]...
+# Args:
+#   c: ANSI colour code for one of the 8 base colours and their bright versions.
+#      Possible values are: 30-37 (normal colours) and 90-97 (bright versions).
+# Note:
+#   If no arguments are given, all colours are printed.
+c8() {
+  local c=(${@:-30 90 31 91 32 92 33 93 34 94 35 95 36 96 37 97})
+  has "${c[@]}" 30 && printf "\e[47;30mBlack (30):\e[49m          \e[040m   \e[49m  \e[47mNormal\e[49m  \e[47;1mBold\e[0m\n"
+  has "${c[@]}" 90 && printf "\e[90mBright black (90):   \e[100m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 31 && printf "\e[31mRed (31):            \e[041m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 91 && printf "\e[91mBright red (91):     \e[101m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 32 && printf "\e[32mGreen (32):          \e[042m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 92 && printf "\e[92mBright green (92):   \e[102m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 33 && printf "\e[33mYellow (33):         \e[043m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 93 && printf "\e[93mBright yellow (93):  \e[103m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 34 && printf "\e[34mBlue (34):           \e[044m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 94 && printf "\e[94mBright blue (94):    \e[104m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 35 && printf "\e[35mMagenta (35):        \e[045m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 95 && printf "\e[95mBright magenta (95): \e[105m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 36 && printf "\e[36mCyan (36):           \e[046m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 96 && printf "\e[96mBright cyan (96):    \e[106m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 37 && printf "\e[37mWhite (37):          \e[047m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  has "${c[@]}" 97 && printf "\e[97mBright white (97):   \e[107m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  return 0
+}
+
+# Print all 256 colours if this is a 256-colour terminal.
+# Usage:
+#   c256 [columns] [string]
+# Args:
+#   columns: number of columns in the output (default: 6)
+#   string:  string to print for each colour (default: "colour-")
+# Example:
+#  c256 6 ABCDEF
+c256() {
+  local n=$(tput colors)
+  if [[ "$n" != 256 ]]; then
+    echo "Not a 256 colour terminal (only $n colours)"
+    return 1
+  fi
+  columns=${1:-6}
+  string=${2:-colour-}
+  for i in {0..255} ; do
+    printf "\e[38;5;${i}m${string}$(pad 3 "$i") "
+    [[ $((($i + 1) % $columns)) = 0 && "$i" -lt 255 ]] && echo
+  done
+  printf "\e[0m\n"
 }
 
 # Print coloured message to stdout/stderr if connected to terminal and omit the
@@ -486,18 +539,6 @@ __dotx() { find "$1" -name '.*' -maxdepth 1 -type "$2" | xargs -Ix basename x; }
 
 # Change the extension of a filename
 chext() { echo "${1%.*}.$2"; }
-
-# Print colours of this 256 colour terminal.
-# Usage:
-#   show-colors [delimiter] [#columns]
-colors() {
-  delim=${1:- }
-  cols=$2
-  for i in {0..255} ; do
-    printf "\x1b[38;5;${i}mcolour${i}${delim}"
-    if is-set "$cols" && [[ $((($i + 1) % $cols)) = 0 ]]; then echo; fi
-  done
-}
 
 # Dump the hexadecimal code of the provided string (output depends on the char
 # encoding used by the terminal).
@@ -1476,7 +1517,7 @@ kget() {
   local regex=${@:$#}
   local field=1
   # With --all-namespaces, the resource name is in the second field
-  array-contains "${args[@]}" --all-namespaces && field=2 
+  has "${args[@]}" --all-namespaces && field=2 
   kubectl get "${args[@]}" --no-headers | awk "\$$field~/$regex/"
 }
 
@@ -1558,7 +1599,7 @@ kncond() {
 #   lines are not supported.
 kf() {
   local kubectl_args grep_args regex
-  if array-contains "$@" --; then
+  if has "$@" --; then
     local tmp
     splitargs tmp grep_args -- "$@"
     # Overwrite $@ with args before '--'
@@ -1574,7 +1615,7 @@ kf() {
     local result
     if result=$(kubectl get "$kind" "$name" -n "$namespace" -o yaml | grep -n --color=always "${grep_args[@]}" "$regex"); then
       resource="$kind/$name"
-      array-contains "${kubectl_args[@]}" --all-namespaces && resource="$namespace/$resource"
+      has "${kubectl_args[@]}" --all-namespaces && resource="$namespace/$resource"
       echo "$(c b)$resource$(c)"
       echo "$result" | sed 's/^/  /'
     fi
