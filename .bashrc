@@ -95,7 +95,7 @@ pad() {
   (($# == 0)) && return 1
   (($# == 1)) && __pad "$1" $(</dev/stdin) || __pad $@
 }
-__pad() { printf "%0$1s\n" ${@:2}; }
+__pad() { printf "%0$1d\n" ${@:2}; }
 
 # Insert string ($2) into filename ($1), just before filename extension.
 insert() {
