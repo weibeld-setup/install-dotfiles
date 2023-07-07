@@ -64,9 +64,14 @@ is-unset() { [[ -z "$1" ]]; }
 is-nonblank() { [[ "$1" = *[^[:space:]]* ]]; }
 is-blank() { ! is-nonblank "$1"; }
 
-# Test whether an executable is installed, and print error message if it isn't.
+# Check whether a given command is installed
+is-installed() {
+  which "$1" &>/dev/null
+}
+
+# Ensure that a given command is installed or print an error message otherwise
 ensure() {
-  which -s "$1" || { echo "Error: '$1' not installed."; return 1; } 
+  is-installed "$1" || { echo "Error: '$1' not installed."; return 1; } 
 }
 
 # Test whether a Homebrew formula or cask, respectively, is installed.
@@ -1770,12 +1775,10 @@ prometheus-clean() {
 # Terraform
 #------------------------------------------------------------------------------#
 
-# TODO: check whether Terraform is installed
-# Terraform autocompletion (installed with terraform --install-autocomplete)
-if is-mac; then
+if is-mac && is-installed terraform; then
   complete -C $(brew --prefix)/bin/terraform terraform
 fi
-if is-linux; then
+if is-linux && is-installed terraform; then
   complete -C /usr/bin/terraform terraform
 fi
 
@@ -2001,11 +2004,10 @@ jpterm() {
 alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
 
 #------------------------------------------------------------------------------#
-# Ensure exit code 0
+# Ensure exit code 0 at this point
 #------------------------------------------------------------------------------#
 :
 
 #------------------------------------------------------------------------------#
 # Auto-added code
 #------------------------------------------------------------------------------#
-
