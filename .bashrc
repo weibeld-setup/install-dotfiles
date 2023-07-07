@@ -1981,3 +1981,4 @@ gif-trim() {
 # Auto-added code
 #------------------------------------------------------------------------------#
 
+complete -C /usr/bin/terraform terraform
