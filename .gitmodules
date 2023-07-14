@@ -7,3 +7,6 @@
 [submodule ".vim/plugged/wiki.vim"]
 	path = .vim/plugged/wiki.vim
 	url = https://github.com/lervag/wiki.vim
+[submodule ".vim/plugged/vim-terraform"]
+	path = .vim/plugged/vim-terraform
+	url = https://github.com/hashivim/vim-terraform

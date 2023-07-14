@@ -74,7 +74,7 @@ endfunction
 " Neovim default for plugin directory is ~/.local/share/nvim/plugged
 call plug#begin('~/.vim/plugged')
 
-" vim-submode (https://github.com/kana/vim-submode)
+" Submode
 " Notes:
 "   - Due to a current design flaw [1], the concatenation of submode name
 "     and LHS mapping must not exceed a certain limit in the submode#enter_with
@@ -88,14 +88,17 @@ call plug#begin('~/.vim/plugged')
 "   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
 Plug 'kana/vim-submode'
 
-" vim-table-mode (https://github.com/dhruvasagar/vim-table-mode)
+" Table mode
 Plug 'dhruvasagar/vim-table-mode'
 call SourceConfig('vim-table-mode.vim')
 
 
-"wiki.vim (https://github.com/lervag/wiki.vim)
+" Wiki.vim
 Plug 'lervag/wiki.vim'
 call SourceConfig('wiki.vim')
+
+" Terraform syntax highlighting
+Plug 'hashivim/vim-terraform'
 
 call plug#end()
 
