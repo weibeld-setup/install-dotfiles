@@ -10,3 +10,6 @@
 [submodule ".vim/plugged/vim-terraform"]
 	path = .vim/plugged/vim-terraform
 	url = https://github.com/hashivim/vim-terraform
+[submodule ".vim/plugged/vim-bicep"]
+	path = .vim/plugged/vim-bicep
+	url = https://github.com/carlsmedstad/vim-bicep

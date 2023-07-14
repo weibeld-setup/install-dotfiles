@@ -100,6 +100,9 @@ call SourceConfig('wiki.vim')
 " Terraform syntax highlighting
 Plug 'hashivim/vim-terraform'
 
+" Bicep syntax highlighting
+Plug 'carlsmedstad/vim-bicep'
+
 call plug#end()
 
 
