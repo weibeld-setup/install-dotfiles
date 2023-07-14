@@ -434,6 +434,7 @@ alias x='chmod +x'
 alias X='chmod -x'
 alias which='which -a'
 alias watch='watch -n 1'
+alias di='date -Iseconds'
 
 # File sizes
 alias dh='du -h'
