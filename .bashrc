@@ -1718,9 +1718,13 @@ prometheus-clean() {
 # Terraform
 #------------------------------------------------------------------------------#
 
+# TODO: check whether Terraform is installed
 # Terraform autocompletion (installed with terraform --install-autocomplete)
 if is-mac; then
   complete -C $(brew --prefix)/bin/terraform terraform
+fi
+if is-linux; then
+  complete -C /usr/bin/terraform terraform
 fi
 
 alias tf=terraform
@@ -1982,4 +1986,3 @@ gif-trim() {
 # Auto-added code
 #------------------------------------------------------------------------------#
 
-complete -C /usr/bin/terraform terraform
