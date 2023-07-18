@@ -882,6 +882,27 @@ img-date() {
   identify -format %[exif:DateTimeOriginal] "$1"
 }
 
+# Convert all files in the current directory matching the given input file
+# extension to the format represented by the given output file extension.
+# Example:
+#   Convert all PNG files to PDF
+#   $ convert-format png pdf
+# Notes:
+#   - The file names of the output files match those of the input files with
+#     only the extension changed.
+#   - The output files are newly created, the input files are not modified.
+convert-format() {
+  ensure convert || return 1
+  if [[ "$#" -lt 2 ]]; then
+    echo "Usage: convert-format <input-ext> <output-ext>"
+    return 1
+  fi
+  for f in *."$1"; do
+    local f_out=${f%.*}"."$2
+    echo "Creating $f_out..."
+    convert "$f" "$f_out"
+  done
+}
 
 #------------------------------------------------------------------------------#
 # Git
