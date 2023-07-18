@@ -92,6 +92,9 @@ Plug 'kana/vim-submode'
 Plug 'dhruvasagar/vim-table-mode'
 call SourceConfig('vim-table-mode.vim')
 
+" Markdown table of contents
+Plug 'mzlogin/vim-markdown-toc'
+call SourceConfig('vim-markdown-toc.vim')
 
 " Wiki.vim
 Plug 'lervag/wiki.vim'
