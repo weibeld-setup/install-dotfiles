@@ -54,6 +54,8 @@ else
   " Use ~/.vim as main config directory (this is the default in Vim)
   set runtimepath+=~/.vim
 
+  " Disable displaying of normal mode command below status line
+  set noshowcmd
 endif 
 
 
