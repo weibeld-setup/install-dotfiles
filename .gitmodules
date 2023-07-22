@@ -16,3 +16,6 @@
 [submodule ".vim/plugged/vim-markdown-toc"]
 	path = .vim/plugged/vim-markdown-toc
 	url = https://github.com/mzlogin/vim-markdown-toc
+[submodule ".vim/plugged/tabular"]
+	path = .vim/plugged/tabular
+	url = https://github.com/godlygeek/tabular

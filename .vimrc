@@ -76,7 +76,9 @@ endfunction
 " Neovim default for plugin directory is ~/.local/share/nvim/plugged
 call plug#begin('~/.vim/plugged')
 
-" Submode
+"------------------------------------------------------------------------------"
+" vim-submode (https://github.com/kana/vim-submode)
+"------------------------------------------------------------------------------"
 " Notes:
 "   - Due to a current design flaw [1], the concatenation of submode name
 "     and LHS mapping must not exceed a certain limit in the submode#enter_with
@@ -90,22 +92,37 @@ call plug#begin('~/.vim/plugged')
 "   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
 Plug 'kana/vim-submode'
 
-" Table mode
+"------------------------------------------------------------------------------"
+" vim-table-mode (https://github.com/dhruvasagar/vim-table-mode)
+"------------------------------------------------------------------------------"
 Plug 'dhruvasagar/vim-table-mode'
 call SourceConfig('vim-table-mode.vim')
 
-" Markdown table of contents
+"------------------------------------------------------------------------------"
+" tabular (https://github.com/godlygeek/tabular)
+"------------------------------------------------------------------------------"
+Plug 'godlygeek/tabular'
+
+"------------------------------------------------------------------------------"
+" vim-markdown-toc (https://github.com/mzlogin/vim-markdown-toc)
+"------------------------------------------------------------------------------"
 Plug 'mzlogin/vim-markdown-toc'
 call SourceConfig('vim-markdown-toc.vim')
 
-" Wiki.vim
+"------------------------------------------------------------------------------"
+" wiki.vim (https://github.com/lervag/wiki.vim)
+"------------------------------------------------------------------------------"
 Plug 'lervag/wiki.vim'
 call SourceConfig('wiki.vim')
 
-" Terraform syntax highlighting
+"------------------------------------------------------------------------------"
+" vim-terraform (https://github.com/hashivim/vim-terraform)
+"------------------------------------------------------------------------------"
 Plug 'hashivim/vim-terraform'
 
-" Bicep syntax highlighting
+"------------------------------------------------------------------------------"
+" vim-bicep (https://github.com/carlsmedstad/vim-bicep)
+"------------------------------------------------------------------------------"
 Plug 'carlsmedstad/vim-bicep'
 
 call plug#end()
