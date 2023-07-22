@@ -841,6 +841,37 @@ to-mp3() {
   ffmpeg -i "$1" -acodec libmp3lame "${1/.*/.mp3}"
 }
 
+# Split a GIF file into its individual frames. Each frame is saved as an
+# individual GIF file in a directory named after the input file.
+# Usage:
+#   gif-split <file.gif>
+# Notes:
+#   - Requires gifsicle [1]. Install with 'brew install gifsicle'.
+# [1] https://www.lcdf.org/gifsicle/
+gif-split() {
+  ensure gifsicle
+  local name=${1%.gif}
+  local dir=$name.gif.split
+  mkdir "$dir"
+  gifsicle --unoptimize --explode --output "$dir/$name" "$1"
+  # Rename files from '<name>.<i>' to '<name>.<i+1>.gif'. The increment by 1
+  # is because gifsicle labels the frames starting from 0 rather than 1.
+  for f in "$dir"/*; do
+    local i=${f##*.}
+    mv "$f" "${f%.*}.$(pad "${#i}" $(bc <<<"$i+1")).gif"
+  done
+  echo "$(($(ls "$dir" | wc -l))) frames saved in $dir"
+}
+
+# Trim a GIF file from a given start frame number to a given end frame number.
+# The counting of the frame numbers starts at 1.
+# Usage:
+#   gif-trim <file.gif> <start> <end>
+gif-trim() {
+  ensure gifsicle
+  gifsicle --unoptimize "$1" "#$(("$2"-1))-$(("$3"-1))" -O2 -o "${1%.gif}"-trimmed.gif
+}
+
 #------------------------------------------------------------------------------#
 # ImageMagick
 #------------------------------------------------------------------------------#
@@ -1967,36 +1998,7 @@ jpterm() {
   python /Users/dw/Library/Python/2.7/lib/python/site-packages/jpterm.py
 }
 
-# Split a GIF file into its individual frames. Each frame is saved as an
-# individual GIF file in a directory named after the input file.
-# Usage:
-#   gif-split <file.gif>
-# Notes:
-#   - Requires gifsicle [1]. Install with 'brew install gifsicle'.
-# [1] https://www.lcdf.org/gifsicle/
-gif-split() {
-  ensure gifsicle
-  local name=${1%.gif}
-  local dir=$name.gif.split
-  mkdir "$dir"
-  gifsicle --unoptimize --explode --output "$dir/$name" "$1"
-  # Rename files from '<name>.<i>' to '<name>.<i+1>.gif'. The increment by 1
-  # is because gifsicle labels the frames starting from 0 rather than 1.
-  for f in "$dir"/*; do
-    local i=${f##*.}
-    mv "$f" "${f%.*}.$(pad "${#i}" $(bc <<<"$i+1")).gif"
-  done
-  echo "$(($(ls "$dir" | wc -l))) frames saved in $dir"
-}
-
-# Trim a GIF file from a given start frame number to a given end frame number.
-# The counting of the frame numbers starts at 1.
-# Usage:
-#   gif-trim <file.gif> <start> <end>
-gif-trim() {
-  ensure gifsicle
-  gifsicle --unoptimize "$1" "#$(("$2"-1))-$(("$3"-1))" -O2 -o "${1%.gif}"-trimmed.gif
-}
+alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
 
 #------------------------------------------------------------------------------#
 # Ensure exit code 0
