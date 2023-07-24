@@ -4,7 +4,10 @@ path_prepend() { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$1:$PATH"; }
 export -f path_append
 export -f path_prepend
 
-if [[ "$OSTYPE" =~ darwin ]]; then
+
+if [[ "$OSTYPE" =~ linux ]]; then
+  export LS_COLORS="di=1;31:ln=36:so=31:pi=5:ex=32:bd=37;44:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=34;42"
+elif [[ "$OSTYPE" =~ darwin ]]; then
 
   # Default colors (https://gist.github.com/thomd/7667642#lscolors)
   #export LSCOLORS=exgxHxHxcxHxHxcxcxexex
