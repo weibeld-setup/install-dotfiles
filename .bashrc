@@ -959,6 +959,17 @@ gco() {
   git checkout $(git branch | fzf --tac | sed 's/^[^a-zA-Z0-9]*//')
 }
 
+# Symlink env-specific included .gitconfig sections depending on the OS
+if is-linux; then
+  if [[ -n "$WSL_DISTRO_NAME" ]]; then
+    ln -s ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
+  else
+    ln -s ~/.gitconfig.credential.linux ~/.gitconfig.credential
+  fi
+fi
+if is-mac; then
+  ln -s ~/.gitconfig.credential.mac ~/.gitconfig.credential
+fi
 
 #------------------------------------------------------------------------------#
 # Docker

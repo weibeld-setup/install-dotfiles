@@ -9,8 +9,6 @@
 [alias]
 [push]
 	default = simple
-[credential]
-	helper = osxkeychain
 [alias]
   a = add
 	c = commit
@@ -28,4 +26,6 @@
 	process = git-lfs filter-process
 	required = true
 [init]
-	defaultBranch = main
+        defaultBranch = main
+[include]
+        path = ~/.gitconfig.credential
