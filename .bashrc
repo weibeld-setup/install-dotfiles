@@ -961,7 +961,7 @@ gco() {
   git checkout $(git branch | fzf --tac | sed 's/^[^a-zA-Z0-9]*//')
 }
 
-# Symlink env-specific included .gitconfig sections depending on the OS
+# Symlink env-specific config file to be included into .gitconfig
 if is-linux; then
   if [[ -n "$WSL_DISTRO_NAME" ]]; then
     ln -sf ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
@@ -971,6 +971,21 @@ if is-linux; then
 fi
 if is-mac; then
   ln -sf ~/.gitconfig.credential.mac ~/.gitconfig.credential
+fi
+
+#------------------------------------------------------------------------------#
+# Vim/Neovim
+#------------------------------------------------------------------------------#
+
+# If Neovim is installed, use it by default instead of Vim
+if is-installed nvim; then
+  alias vim=nvim
+  export GIT_EDITOR=nvim
+else
+  # On macOS, if no Neovim but Homebrew Vim, use Homebrew Vim
+  if is-mac && is-homebrew-formula-installed vim; then
+    alias vim=$(brew --prefix)/bin/vim
+  fi
 fi
 
 #------------------------------------------------------------------------------#
@@ -1808,16 +1823,6 @@ alias tfdd='terraform destroy --auto-approve'
 #------------------------------------------------------------------------------#
 if is-mac; then
 
-  # If Vim is installed from Homebrew Vim, use it instead of default Vim
-  if is-homebrew-formula-installed vim; then
-    alias vim=$(brew --prefix)/bin/vim
-  fi
-
-  # If Neovim is installed, use it instead of Vim
-  if is-homebrew-formula-installed neovim; then
-    alias vim=nvim
-  fi
-
   # Recursively delete all .DS_Store files in the current directory
   alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
 
@@ -1907,10 +1912,6 @@ elif is-linux; then
   alias grep='grep --color=auto'
   alias fgrep='fgrep --color=auto'
   alias egrep='egrep --color=auto'
-
-  if is-installed nvim; then
-    alias vim=nvim
-  fi
 
   # Customise keyboard layout with setxkbmap:
   #   - Add Swiss German keyboard layout
