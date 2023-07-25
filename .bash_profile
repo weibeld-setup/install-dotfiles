@@ -9,10 +9,14 @@ if [[ "$OSTYPE" =~ linux ]]; then
   export LS_COLORS="di=1;31:ln=36:so=31:pi=5:ex=32:bd=37;44:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=34;42"
 elif [[ "$OSTYPE" =~ darwin ]]; then
 
-  # Default colors (https://gist.github.com/thomd/7667642#lscolors)
-  #export LSCOLORS=exgxHxHxcxHxHxcxcxexex
-  # Directories cyan, symlinks blue (may be more readable on some screens)
-  export LSCOLORS=GxExHxHxcxHxHxcxcxGxGx
+  # See LSCOLORS documentation in 'man ls' (LSCOLORS is BSD-specific)
+  # Colours: a=black, b=red, c=green, d=yellow, e=blue, f=magenta, g=cyan,
+  #   h=white, x=default (use upper-case letters for bold)
+  # Positions: 1=dir, 2=symlink, 3=socket, 4=pipe, 5=exec, 6=block special,
+  #   7=char special, 8=exec w. setuid, 9=exec wo. setgid, 10=dir w. sticky bit,
+  #   11=dir wo. sticky bit
+  # Format: [foreground][background]... (e.g. Gx)
+  export LSCOLORS=GxFxHxHxCxHxHxCxCxGxGx
   export CLICOLOR=1
 
   # System
