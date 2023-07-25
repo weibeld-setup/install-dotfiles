@@ -1908,6 +1908,10 @@ elif is-linux; then
   alias fgrep='fgrep --color=auto'
   alias egrep='egrep --color=auto'
 
+  if is-installed nvim; then
+    alias vim=nvim
+  fi
+
   # Customise keyboard layout with setxkbmap:
   #   - Add Swiss German keyboard layout
   #   - Swap Caps-Lock and Ctrl keys
@@ -1968,6 +1972,8 @@ elif is-linux; then
       fi
     done
   }
+
+  
 fi
 
 #------------------------------------------------------------------------------#
