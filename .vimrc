@@ -208,14 +208,20 @@ nnoremap <leader>R :redir END<CR>
 " Navigation by multiple lines/columns in normal and visual mode
 nnoremap <C-j> 5j
 nnoremap <C-k> 5k
-nnoremap <C-h> 20h
-nnoremap <C-l> 20l
+nnoremap <C-h> 5h
+nnoremap <C-l> 5l
 nnoremap J 10j
 nnoremap K 10k
+nnoremap H 20h
+nnoremap L 20l
 vnoremap <C-j> 5j
 vnoremap <C-k> 5k
+vnoremap <C-h> 5h
+vnoremap <C-l> 5l
 vnoremap J 10j
 vnoremap K 10k
+vnoremap H 20h
+vnoremap L 20l
 
 " Treat wrapped lines like hard lines when navigating up/down
 nnoremap j gj
