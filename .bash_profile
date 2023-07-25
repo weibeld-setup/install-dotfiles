@@ -6,15 +6,20 @@ export -f path_prepend
 
 
 if [[ "$OSTYPE" =~ linux ]]; then
-  export LS_COLORS="di=1;31:ln=36:so=31:pi=5:ex=32:bd=37;44:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=34;42"
+  # See 'man ls', 'man dircolors', 'dircolors' (LS_COLORS is GNU-specific)
+  # Fields: di=dir, ln=symlink, so=socket, pi=pipe, ex=exec, bc=block special,
+  #  cd=char special, su=exec w. setuid, sg=exec w. setgid, tw=other-writable
+  #  dir w. sticky bit, ow=other-writable dir wo. sticky bit
+  export LS_COLORS="di=1;36:ln=1;35:so=0:pi=0:ex=1;32:bd=0:cd=0:su=1;32:sg=1;32:tw=1;36:ow=1;36"
+
 elif [[ "$OSTYPE" =~ darwin ]]; then
 
   # See LSCOLORS documentation in 'man ls' (LSCOLORS is BSD-specific)
   # Colours: a=black, b=red, c=green, d=yellow, e=blue, f=magenta, g=cyan,
   #   h=white, x=default (use upper-case letters for bold)
   # Positions: 1=dir, 2=symlink, 3=socket, 4=pipe, 5=exec, 6=block special,
-  #   7=char special, 8=exec w. setuid, 9=exec wo. setgid, 10=dir w. sticky bit,
-  #   11=dir wo. sticky bit
+  #   7=char special, 8=exec w. setuid, 9=exec w. setgid, 10=other-writable
+  #   dir w. sticky bit, 11=other-writable dir wo. sticky bit
   # Format: [foreground][background]... (e.g. Gx)
   export LSCOLORS=GxFxHxHxCxHxHxCxCxGxGx
   export CLICOLOR=1
