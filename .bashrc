@@ -431,7 +431,9 @@ alias ll="ls -al"
 alias ld="ls -d */"
 alias wl='wc -l'
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-complete -F _complete_alias f
+alias d=dotfiles
+complete -F _complete_alias dotfiles
+complete -F _complete_alias d
 alias ssh='TERM=xterm-256color ssh'
 alias torsocks='TERM=xterm-256color torsocks'
 alias pgrep='pgrep -fl'
@@ -962,13 +964,13 @@ gco() {
 # Symlink env-specific included .gitconfig sections depending on the OS
 if is-linux; then
   if [[ -n "$WSL_DISTRO_NAME" ]]; then
-    ln -s ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
+    ln -sf ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
   else
-    ln -s ~/.gitconfig.credential.linux ~/.gitconfig.credential
+    ln -sf ~/.gitconfig.credential.linux ~/.gitconfig.credential
   fi
 fi
 if is-mac; then
-  ln -s ~/.gitconfig.credential.mac ~/.gitconfig.credential
+  ln -sf ~/.gitconfig.credential.mac ~/.gitconfig.credential
 fi
 
 #------------------------------------------------------------------------------#
