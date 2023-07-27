@@ -382,15 +382,25 @@ __dump_history() {
 }
 
 #------------------------------------------------------------------------------#
-# bash-completion (installed with Homebrew)
+# bash-completion
 #------------------------------------------------------------------------------#
 
 if is-mac ; then
   source $(brew --prefix)/etc/profile.d/bash_completion.sh
-  # Source completion scripts of Homebrew formulas
+  # Homebrew formulas drop completion scripts here
   for f in $(brew --prefix)/etc/bash_completion.d/*; do
     source "$f"
   done
+fi
+
+# Only execute if bash-completion isn't activated yet
+if is-linux && ! type _init_completion &>/dev/null; then
+  # Code from /etc/bash.bashrc which by default is outcommented
+  if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [[ -f /etc/bash_completion ]]; then
+    . /etc/bash_completion
+  fi
 fi
 
 #------------------------------------------------------------------------------#
