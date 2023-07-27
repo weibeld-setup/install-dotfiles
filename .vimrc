@@ -245,9 +245,6 @@ nnoremap E gQ
 " Omni-completion trigger (https://vim.fandom.com/wiki/Omni_completion)
 inoremap <C-n> <C-X><C-O>
 
-" Alias for block-select to prevent conflift with Ctrl-V (paste) on Windows
-nnoremap <C-s> <C-v>
-
 " Yank to system clipboard
 vnoremap Y "*y
 
