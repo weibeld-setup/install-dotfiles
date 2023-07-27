@@ -1817,20 +1817,21 @@ prometheus-clean() {
 # Terraform
 #------------------------------------------------------------------------------#
 
-if is-mac && is-installed terraform; then
-  complete -C $(brew --prefix)/bin/terraform terraform
-fi
-if is-linux && is-installed terraform; then
-  complete -C /usr/bin/terraform terraform
-fi
+if is-installed terraform; then
+  alias tf=terraform
 
-alias tf=terraform
-#complete -F _complete_alias t
+  alias tfa='terraform apply'
+  alias tfd='terraform destroy'
+  alias tfaa='terraform apply --auto-approve'
+  alias tfdd='terraform destroy --auto-approve'
 
-alias tfa='terraform apply'
-alias tfd='terraform destroy'
-alias tfaa='terraform apply --auto-approve'
-alias tfdd='terraform destroy --auto-approve'
+  # Command completion
+  if is-mac; then
+    complete -C $(brew --prefix)/bin/terraform terraform
+  elif is-linux; then
+    complete -C /usr/bin/terraform terraform
+  fi
+fi
 
 #------------------------------------------------------------------------------#
 # macOS and Linux specific functions
