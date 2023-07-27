@@ -1279,8 +1279,12 @@ sm() {
   smp && smd "$1"
 }
 
+# Command completion
 if is-mac; then
   complete -C $(brew --prefix)/bin/aws_completer aws
+fi
+if is-linux; then
+  complete -C aws_completer aws
 fi
 
 #------------------------------------------------------------------------------#
