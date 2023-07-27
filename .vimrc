@@ -426,11 +426,11 @@ nnoremap <leader>x :terminal<CR>
 
 " Make Neovim terminal mode behave like Vim defaults
 if has('nvim')
-  " Open a terminal in a horizontal split window
+  " Open a terminal in a horizontal split window instead of in same window
   nnoremap <leader>x :split \| :terminal<CR>
   " Enter insert mode after opening terminal
   autocmd TermOpen * startinsert
-  " Remove line numbers in insert mode and restore them when existing
+  " Remove line numbers in insert mode and restore them when exiting
   autocmd TermEnter * setlocal nonumber
   autocmd TermLeave * setlocal number
   " Delete the terminal buffer when exiting the shell
