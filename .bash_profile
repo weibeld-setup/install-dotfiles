@@ -6,11 +6,15 @@ export -f path_prepend
 
 
 if [[ "$OSTYPE" =~ linux ]]; then
+
   # See 'man ls', 'man dircolors', 'dircolors' (LS_COLORS is GNU-specific)
   # Fields: di=dir, ln=symlink, so=socket, pi=pipe, ex=exec, bc=block special,
   #  cd=char special, su=exec w. setuid, sg=exec w. setgid, tw=other-writable
   #  dir w. sticky bit, ow=other-writable dir wo. sticky bit
   export LS_COLORS="di=1;36:ln=1;35:so=0:pi=0:ex=1;32:bd=0:cd=0:su=1;32:sg=1;32:tw=1;36:ow=1;36"
+
+  # PATH
+  path_prepend "$HOME"/.local/bin
 
 elif [[ "$OSTYPE" =~ darwin ]]; then
 
