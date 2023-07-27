@@ -4,7 +4,6 @@ path_prepend() { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$1:$PATH"; }
 export -f path_append
 export -f path_prepend
 
-
 if [[ "$OSTYPE" =~ linux ]]; then
 
   # See 'man ls', 'man dircolors', 'dircolors' (LS_COLORS is GNU-specific)
@@ -65,7 +64,6 @@ elif [[ "$OSTYPE" =~ darwin ]]; then
   #path_append "/usr/local/sbin"
   #path_append "$HOME/.krew/bin"
   #path_append "$HOME/.kubectl-plugins"
-  #path_append "$HOME/google-cloud-sdk/bin"
   #path_append "$HOME/platform-tools"
   #path_append "$(go env GOPATH)/bin"
   #path_prepend /usr/local/opt/ruby/bin
@@ -82,6 +80,10 @@ elif [[ "$OSTYPE" =~ darwin ]]; then
   # Command completion
   #complete -C /usr/local/bin/packer packer
 
+fi
+
+if [[ -d "$HOME"/google-cloud-sdk ]]; then
+  path_append "$HOME"/google-cloud-sdk/bin
 fi
 
 . ~/.bashrc
