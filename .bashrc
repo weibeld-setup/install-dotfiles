@@ -52,9 +52,10 @@ shopt -s histappend
 # Base functions (used by other functions in this file)
 #------------------------------------------------------------------------------#
 
-# Is OS Mac or Linux?
+# Check for macOS, Linux, or WSL2
 is-mac()   { [[ "$OSTYPE" =~ darwin ]]; }
 is-linux() { [[ "$OSTYPE" =~ linux  ]]; }
+is-wsl2() { [[ -n "$WSL_DISTRO_NAME" ]]; }
 
 # Is variable set (non-empty) or unset (empty)?
 is-set()   { [[ -n "$1" ]]; }
@@ -973,13 +974,12 @@ gco() {
 
 # Symlink env-specific config file to be included into .gitconfig
 if is-linux; then
-  if [[ -n "$WSL_DISTRO_NAME" ]]; then
+  if is-wsl2; then
     ln -sf ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
   else
     ln -sf ~/.gitconfig.credential.linux ~/.gitconfig.credential
   fi
-fi
-if is-mac; then
+elif is-mac; then
   ln -sf ~/.gitconfig.credential.mac ~/.gitconfig.credential
 fi
 
