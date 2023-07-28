@@ -55,7 +55,7 @@ shopt -s histappend
 # Check for macOS, Linux, or WSL2
 is-mac()   { [[ "$OSTYPE" =~ darwin ]]; }
 is-linux() { [[ "$OSTYPE" =~ linux  ]]; }
-is-wsl2() { [[ -n "$WSL_DISTRO_NAME" ]]; }
+is-wsl2() { is-linux && [[ -n "$WSL_DISTRO_NAME" ]]; }
 
 # Is variable set (non-empty) or unset (empty)?
 is-set()   { [[ -n "$1" ]]; }
@@ -727,6 +727,23 @@ infolookup() {
       echo "  $(echo "$result" | cut -d $'\t' -f 3)"
       echo "  $(echo "$result" | cut -d $'\t' -f 4 | sed 's/^./\U&/;/[^\.]$/s/$/\./')"
     done
+  fi
+}
+
+# Copy to system clipboard
+# Usage:
+#   clip [file]
+# If a file is provided, its content is copied to the clipboard. If no file is
+# provided, then stdin is copied to the clipboard.
+clip() {
+  local cmd
+  is-mac && cmd=pbcopy
+  is-linux && cmd=xclip
+  is-wsl2 && cmd=clip.exe
+  if [[ "$#" -eq 0 ]]; then
+    eval "$cmd"
+  else
+    cat "$1" | eval "$cmd"
   fi
 }
 
@@ -1898,11 +1915,6 @@ if is-mac; then
     fi
   }
 
-  # Copy the content of the supplied file to the clipboard
-  clip() {
-    cat "$1" | pbcopy
-  }
-
   # Remove application support files after uninstalling Docker Desktop on macOS
   post-uninstall-docker-desktop() {
     sudo rm -rf /usr/local/lib/docker/
@@ -1988,8 +2000,6 @@ elif is-linux; then
       fi
     done
   }
-
-  
 fi
 
 #------------------------------------------------------------------------------#
