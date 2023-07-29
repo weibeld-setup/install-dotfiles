@@ -368,9 +368,22 @@ vi-mode-off() {
 
 PROMPT_COMMAND='__set-prompt; __dump_history'
 __set-prompt() {
+  # Exit code of previous command (must be first statement)
   local exit_code=$?
-  PS1="\[$(c green b)\]$$|\w\$ \[$(c)\]"
-  [[ "$exit_code" -ne 0 ]] && PS1="\[$(c red b)\]$exit_code|$(c)$PS1"
+  # Different colours for root and non-root users
+  if [[ "$USER" = root ]]; then
+    local colour=$(c red b)
+    local user=root:
+  else
+    local colour=$(c green b)
+    local user=
+  fi
+  # Prompt
+  PS1="\[$colour\]$$|$user\w\$ \[$(c)\]"
+  # Prepend exit code of previous command if it was non-zero
+  if [[ "$exit_code" -ne 0 ]]; then
+    PS1="\[$(c red b)\]$exit_code|$(c)$PS1"
+  fi
 }
 
 # Append the last command to the $HISTFILE history file (for aggregating the
