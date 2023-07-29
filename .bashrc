@@ -368,9 +368,8 @@ vi-mode-off() {
 
 PROMPT_COMMAND='__set-prompt; __dump_history'
 __set-prompt() {
-  #PS1="$ " && return
   local EXIT_CODE=$?
-  PS1='\[\e[1;32m\]\v|\w$ \[\e[0m\]'
+  PS1='\[\e[1;32m\]'$$'|\w$ \[\e[0m\]'
   [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
 }
 
