@@ -368,9 +368,9 @@ vi-mode-off() {
 
 PROMPT_COMMAND='__set-prompt; __dump_history'
 __set-prompt() {
-  local EXIT_CODE=$?
-  PS1='\[\e[1;32m\]'$$'|\w$ \[\e[0m\]'
-  [[ "$EXIT_CODE" -ne 0 ]] && PS1="\[\e[1;31m\]$EXIT_CODE|$PS1"
+  local exit_code=$?
+  PS1="\[$(c green b)\]$$|\w\$ \[$(c)\]"
+  [[ "$exit_code" -ne 0 ]] && PS1="\[$(c red b)\]$exit_code|$(c)$PS1"
 }
 
 # Append the last command to the $HISTFILE history file (for aggregating the
