@@ -30,6 +30,7 @@
 # A: See https://google.github.io/styleguide/shellguide.html#s7.6-use-local-variables
 #------------------------------------------------------------------------------#
 
+
 #------------------------------------------------------------------------------#
 # Shell options
 #------------------------------------------------------------------------------#
@@ -45,7 +46,7 @@ set -o pipefail
 shopt -s histappend
 
 #------------------------------------------------------------------------------#
-# Base functions (used by other functions in this file)
+# Base functions
 #------------------------------------------------------------------------------#
 
 # Check for macOS, Linux, or WSL2
@@ -60,6 +61,78 @@ is-unset() { [[ -z "$1" ]]; }
 # Does variable contain only whitespace characters?
 is-nonblank() { [[ "$1" = *[^[:space:]]* ]]; }
 is-blank() { ! is-nonblank "$1"; }
+
+# Append/prepend an entry to the PATH if it doesn't exist yet
+path-append()  { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$PATH:$1"; }
+path-prepend() { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$1:$PATH"; }
+
+#------------------------------------------------------------------------------#
+# PATH and other variables
+#------------------------------------------------------------------------------#
+
+if is-linux; then
+
+  # LS_COLORS (GNU-specific)
+  # Fields:
+  #   di=dir, ln=symlink, so=socket, pi=pipe, ex=executable, bd=block special,
+  #   cd=char special, su=executble with setuid, sg=executable with setgid,
+  #   tw=other-writable dir w. sticky bit, ow=other-writable dir wo. sticky bit
+  # Colours:
+  #   ANSI colour codes
+  # Documentation:
+  #   'man ls', 'man dircolors', 'dircolors'
+  export LS_COLORS="di=1;36:ln=1;35:so=0:pi=0:ex=1;32:bd=0:cd=0:su=1;32:sg=1;32:tw=1;36:ow=1;36"
+
+  # PATH
+  path-prepend "$HOME"/.local/bin
+
+elif is-mac; then
+
+  # LSCOLORS (BSD-specific)
+  # Positions:
+  #   1=dir, 2=symlink, 3=socket, 4=pipe, 5=executable, 6=block special,
+  #   7=char special, 8=executable with setuid, 9=executable with setgid,
+  #   10=other-writable dir w. sticky bit, 11=other-writable dir wo. sticky bit
+  # Colours (lower-case means normal, upper-case means bold):
+  #   a=black, b=red, c=green, d=yellow, e=blue, f=magenta, g=cyan, h=white,
+  #   x=default
+  # Format:
+  #   <foreground><background>...
+  # Example:
+  #   Gx: bold cyan foreground and default background
+  # Documentation:
+  #   man ls (search for 'LSCOLORS')
+  export LSCOLORS=GxFxHxHxCxHxHxCxCxGxGx
+  export CLICOLOR=1
+
+  # System
+  export LANG=en_US.UTF-8
+  export LC_ALL=en_US.UTF-8
+  export EDITOR=vim
+  export TERM=xterm-256color # Works across multiple macOS systems and terminals
+  # Increase history size (default 500)
+  export HISTSIZE=5000
+  export HISTFILESIZE=5000
+
+  # Homebrew
+  # Correct prefix depends on chip architecture (Intel or Apple).
+  # See https://docs.brew.sh/FAQ#why-should-i-install-homebrew-in-the-default-location
+  eval $(/opt/homebrew/bin/brew shellenv)
+  #eval $(/usr/local/bin/brew shellenv)
+  export HOMEBREW_NO_AUTO_UPDATE=1
+
+  # Misc
+  export d=~/Desktop
+  export fonts_user=~/Library/Fonts
+  export fonts_local=/Library/Fonts
+  export fonts_system=/System/Library/Fonts
+  #alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+
+fi
+
+#------------------------------------------------------------------------------#
+# Base functions
+#------------------------------------------------------------------------------#
 
 # Check whether a given command is installed
 is-installed() {
@@ -1819,14 +1892,19 @@ alias k9s='k9s --readonly'
 # Google Cloud Platform (GCP)
 #------------------------------------------------------------------------------#
 
-# SSH into a GCP compute instance.
-gssh() {
-  # Prevents "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!"
-  ssh-keygen -R "${1##*@}"
-  ssh -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no "$@"
-}
+if [[ -d ~/google-cloud-sdk ]]; then
 
-alias gcil='gcloud compute instances list'
+  path-append "$HOME"/google-cloud-sdk/bin
+
+  # SSH into a GCP compute instance.
+  gssh() {
+    # Prevents "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!"
+    ssh-keygen -R "${1##*@}"
+    ssh -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no "$@"
+  }
+
+  alias gcil='gcloud compute instances list'
+fi
 
 #------------------------------------------------------------------------------#
 # Prometheus
