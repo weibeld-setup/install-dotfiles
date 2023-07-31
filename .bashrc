@@ -481,6 +481,17 @@ alias curl='curl -s'
 alias sed='sed -E'
 alias gsed='gsed -E'
 
+# Make Bash resolve the word after 'sudo' as an alias [1,2], which makes it
+# possible to execute aliases with sudo. Note that the replacement is done by
+# the shell before invoking sudo and it works only with aliases, not with Bash
+# functions (sudo itself works only with executables, it doesn't resolve aliases
+# or shell functions, nor does it source .bashrc or .bash_profile). For full
+# access to the environment, start an interactive shell with 'sudo -s' which
+# in turn sources the .bashrc file found in $HOME.
+# [1] https://linuxhandbook.com/run-alias-as-sudo/
+# [2] https://www.gnu.org/software/bash/manual/bash.html#Aliases
+alias sudo='sudo '
+
 # Coloured diff output (requires diffutils [1] package)
 # [1] https://www.gnu.org/software/diffutils/
 alias diff='diff --color'
