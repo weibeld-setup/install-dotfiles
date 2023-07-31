@@ -4,7 +4,6 @@
 	useConfigOnly = true
 [core]
 	excludesfile = ~/.gitignore_global
-	editor = vim
 	autocrlf = input
 [push]
 	default = simple
