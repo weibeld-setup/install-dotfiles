@@ -66,6 +66,17 @@ is-blank() { ! is-nonblank "$1"; }
 path-append()  { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$PATH:$1"; }
 path-prepend() { [[ ":$PATH:" =~ ":$1:" ]] || PATH="$1:$PATH"; }
 
+# Check whether a given command is installed
+is-installed() { which "$1" &>/dev/null; }
+
+# Ensure that a given command is installed or print an error message otherwise
+ensure() { is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }; }
+
+if is-mac; then
+  is-homebrew-formula-installed() { brew ls --versions "$1" >/dev/null; }
+  is-homebrew-cask-installed() { brew ls --cask --versions "$1" >/dev/null; }
+fi
+
 #------------------------------------------------------------------------------#
 # PATH and other variables
 #------------------------------------------------------------------------------#
@@ -108,7 +119,6 @@ elif is-mac; then
   # System
   export LANG=en_US.UTF-8
   export LC_ALL=en_US.UTF-8
-  export EDITOR=vim
   export TERM=xterm-256color # Works across multiple macOS systems and terminals
   # Increase history size (default 500)
   export HISTSIZE=5000
@@ -127,30 +137,20 @@ elif is-mac; then
   export fonts_local=/Library/Fonts
   export fonts_system=/System/Library/Fonts
   #alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+fi
 
+# EDITOR
+if is-installed nvim; then
+  export EDITOR=nvim
+elif is-installed vim; then
+  export EDITOR=vim
+else
+  unset EDITOR
 fi
 
 #------------------------------------------------------------------------------#
 # Base functions
 #------------------------------------------------------------------------------#
-
-# Check whether a given command is installed
-is-installed() {
-  which "$1" &>/dev/null
-}
-
-# Ensure that a given command is installed or print an error message otherwise
-ensure() {
-  is-installed "$1" || { echo "Error: '$1' not installed."; return 1; } 
-}
-
-# Test whether a Homebrew formula or cask, respectively, is installed.
-is-homebrew-formula-installed() {
-  brew ls --versions "$1" >/dev/null
-}
-is-homebrew-cask-installed() {
-  brew ls --cask --versions "$1" >/dev/null
-}
 
 # Capitalise the first letter of a string
 capitalize () {
@@ -1099,7 +1099,6 @@ fi
 # If Neovim is installed, use it by default instead of Vim
 if is-installed nvim; then
   alias vim=nvim
-  export GIT_EDITOR=nvim
 else
   # On macOS, if no Neovim but Homebrew Vim, use Homebrew Vim
   if is-mac && is-homebrew-formula-installed vim; then
