@@ -72,6 +72,19 @@ is-installed() { which "$1" &>/dev/null; }
 # Ensure that a given command is installed or print an error message otherwise
 ensure() { is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }; }
 
+# Print operating system name and version
+os() {
+  if is-linux; then
+    if [[ -f /etc/os-release ]]; then
+      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
+    else
+      echo unknown
+    fi
+  elif is-mac; then
+    echo "$(sw_vers --productName)-$(sw-vers --productVersion)"
+  fi
+}
+
 if is-mac; then
   is-homebrew-formula-installed() { brew ls --versions "$1" >/dev/null; }
   is-homebrew-cask-installed() { brew ls --cask --versions "$1" >/dev/null; }
