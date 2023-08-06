@@ -231,9 +231,9 @@ nnoremap k gk
 nnoremap q: <Nop>
 nnoremap q/ <Nop>
 nnoremap q? <Nop>
-nnoremap H: q:
-nnoremap H/ q/
-nnoremap H? q?
+nnoremap C: q:
+nnoremap C/ q/
+nnoremap C? q?
 
 " Entering Ex mode
 nnoremap E gQ
