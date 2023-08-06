@@ -455,13 +455,16 @@ __set-prompt() {
   # Different colours for root and non-root users
   if [[ "$USER" = root ]]; then
     local colour=$(c red b)
-    local user=root:
+    local user="root|"
   else
     local colour=$(c green b)
-    local user=
+  fi
+  # Include OS name and version on Linux
+  if is-linux; then
+    local os="$(os)|"
   fi
   # Prompt
-  PS1="\[$colour\]$$|$user\w\$ \[$(c)\]"
+  PS1="\[$colour\]$$|$os$user\w\$ \[$(c)\]"
   # Prepend exit code of previous command if it was non-zero
   if [[ "$exit_code" -ne 0 ]]; then
     PS1="\[$(c red b)\]$exit_code|$(c)$PS1"
