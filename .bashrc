@@ -937,12 +937,24 @@ sec2min() {
 # Documents
 #------------------------------------------------------------------------------#
 
-# Merge PDF files with pdftk. Requires pdftk.
+# Merge multiple PDF files to a single PDF file.
 pdf-merge() {
   ensure pdftk
   local out=out-pdf-merge.pdf
   pdftk "$@" cat output "$out"
   echo "$out"
+}
+
+# Split a PDF file into individual pages and save each page as a separate PDF
+# file in a subdirectory of the current working directory.
+pdf-split() {
+  ensure pdftk
+  [[ -f "$1" ]] || { echo "Error: $1 not found"; return 1; }
+  local basename=$(basename ${1%.*})
+  mkdir -p "$basename-split"
+  pdftk "$1" burst output "$basename-split/$basename-%02d.pdf"
+  rm -f "$basename"-split/doc_data.txt
+  echo "Pages saved in ./$basename-split"
 }
 
 # Extract the table of contents from a PDF file
