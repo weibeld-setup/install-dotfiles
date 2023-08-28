@@ -621,7 +621,7 @@ complete -A function funcfile
 # TODO: add option for just pasting the selected command to the prompt without
 # executing it
 hist() {
-  ensure fzf || return 1
+  ensure fzf
   # Directly execute the command
   if [[ "$1" = -x ]]; then
     eval $(cat "$HISTFILE" | fzf -e --tac)
@@ -939,7 +939,7 @@ sec2min() {
 
 # Merge PDF files with pdftk. Requires pdftk.
 pdf-merge() {
-  ensure pdftk || return 1
+  ensure pdftk
   local out=out-pdf-merge.pdf
   pdftk "$@" cat output "$out"
   echo "$out"
@@ -947,7 +947,7 @@ pdf-merge() {
 
 # Extract the table of contents from a PDF file
 pdf-toc() {
-  ensure mutool || return 1
+  ensure mutool
   local tab=$(printf '\t')
   # Extract TOC and delete page numbers separated from section titles by a tab
   mutool show "$1" outline | sed -E "s/${tab}[0-9]+\$//"
@@ -980,7 +980,7 @@ pdf-scale() {
 
 # Convert an audio file to the MP3 format. Requires ffmpeg.
 to-mp3() {
-  ensure ffmpeg || return 1
+  ensure ffmpeg
   ffmpeg -i "$1" -acodec libmp3lame "${1/.*/.mp3}"
 }
 
@@ -1021,13 +1021,13 @@ gif-trim() {
 
 # Get the size of an image in pixels
 img-size() {
-  ensure identify || return 1
+  ensure identify
   identify "$1"
 }
 
 # Crop an image to a specific size, optionally defining the upper left corner.
 img-crop() {
-  ensure convert || return 1
+  ensure convert
   if [[ $# -lt 3 ]]; then
     echo -e "${FUNCNAME[0]} file width height [top-offset] [left-offset] [out-file]"
     return
@@ -1044,7 +1044,7 @@ img-crop() {
 
 # Resize image. Usage: img-resize <file> <format> [<out_file>].
 img-resize() {
-  ensure convert || return 1
+  ensure convert
   local file=$1; local format=$2  # Format "50%" or "512x512"
   out_file=${3:-$(insert "$file" _resized)}
   convert "$file" -resize "$format" "$out_file"
@@ -1052,7 +1052,7 @@ img-resize() {
 
 # Read date a photo was taken from the photo's EXIF data.
 img-date() {
-  ensure identify || return 1
+  ensure identify
   identify -format %[exif:DateTimeOriginal] "$1"
 }
 
@@ -1066,7 +1066,7 @@ img-date() {
 #     only the extension changed.
 #   - The output files are newly created, the input files are not modified.
 convert-format() {
-  ensure convert || return 1
+  ensure convert
   if [[ "$#" -lt 2 ]]; then
     echo "Usage: convert-format <input-ext> <output-ext>"
     return 1
