@@ -27,3 +27,5 @@
 	defaultBranch = main
 [include]
 	path = ~/.gitconfig.credential
+[pull]
+	rebase = false
