@@ -73,6 +73,12 @@ function! SourceConfig(name)
   execute 'source ~/.vim/config/'..a:name
 endfunction
 
+"------------------------------------------------------------------------------"
+" Install plugins:
+"   :source ~/.vimrc
+"   :PlugInstall
+"------------------------------------------------------------------------------"
+
 " Neovim default for plugin directory is ~/.local/share/nvim/plugged
 call plug#begin('~/.vim/plugged')
 
@@ -124,6 +130,11 @@ Plug 'hashivim/vim-terraform'
 " vim-bicep (https://github.com/carlsmedstad/vim-bicep)
 "------------------------------------------------------------------------------"
 Plug 'carlsmedstad/vim-bicep'
+
+"------------------------------------------------------------------------------"
+" Codeium (https://github.com/Exafunction/codeium.vim)
+"------------------------------------------------------------------------------"
+Plug 'Exafunction/codeium.vim'
 
 call plug#end()
 

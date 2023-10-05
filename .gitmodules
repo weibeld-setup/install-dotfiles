@@ -19,3 +19,6 @@
 [submodule ".vim/plugged/tabular"]
 	path = .vim/plugged/tabular
 	url = https://github.com/godlygeek/tabular
+[submodule ".vim/plugged/codeium.vim"]
+	path = .vim/plugged/codeium.vim
+	url = https://github.com/Exafunction/codeium.vim
