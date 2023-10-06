@@ -69,14 +69,13 @@ endif
 "=============================================================================="
 " Plugins
 
-function! SourceConfig(name)
-  execute 'source ~/.vim/config/'..a:name
-endfunction
-
 "------------------------------------------------------------------------------"
-" Install plugins:
-"   :source ~/.vimrc
-"   :PlugInstall
+" Installing a new plugin: 
+" 1. Declare plugin:  Plug '<plugin>'
+" 1. Reload .vimrc:   :source ~/.vimrc
+" 2. Install plugin:  :PlugInstall
+" 3. Add submodule:   $ dotfiles submodule add <url> .vim/plugged/<plugin>
+" 4. Commit:          $ dotfiles add ~/.vimrc && dotfiles commit
 "------------------------------------------------------------------------------"
 
 " Neovim default for plugin directory is ~/.local/share/nvim/plugged
@@ -111,7 +110,8 @@ Plug 'kana/vim-submode'
 " vim-table-mode (https://github.com/dhruvasagar/vim-table-mode)
 "------------------------------------------------------------------------------"
 Plug 'dhruvasagar/vim-table-mode'
-call SourceConfig('vim-table-mode.vim')
+let g:table_mode_map_prefix = '<leader>m'
+let g:table_mode_corner='|'
 
 "------------------------------------------------------------------------------"
 " tabular (https://github.com/godlygeek/tabular)
@@ -122,13 +122,35 @@ Plug 'godlygeek/tabular'
 " vim-markdown-toc (https://github.com/mzlogin/vim-markdown-toc)
 "------------------------------------------------------------------------------"
 Plug 'mzlogin/vim-markdown-toc'
-call SourceConfig('vim-markdown-toc.vim')
+" Caution: don't use multi-char strings (e.g. '1.'), otherwise, nested lists
+" will be broken (see https://github.com/mzlogin/vim-markdown-toc/issues/23)
+let g:vmt_list_item_char = '-'
 
 "------------------------------------------------------------------------------"
 " wiki.vim (https://github.com/lervag/wiki.vim)
 "------------------------------------------------------------------------------"
 Plug 'lervag/wiki.vim'
-call SourceConfig('wiki.vim')
+" Enable wiki.vim for all Markdown and YAML files
+let g:wiki_filetypes = ['md', 'yaml']
+
+" TODO: set this to the directory of the file
+let g:wiki_root = '.'
+
+" Disable automatic link creation
+let g:wiki_link_transform_on_follow = 0
+
+" Define custom mappings (disable defaults)
+let g:wiki_mappings_use_defaults = 'none'
+let g:wiki_mappings_local = {
+  \ '<plug>(wiki-link-next)' : '<Tab>',
+  \ '<plug>(wiki-link-prev)' : '<S-Tab>',
+  \ '<plug>(wiki-link-follow)' : '<C-]>',
+  \ '<plug>(wiki-link-return)' : '<BS>',
+  \ }
+
+" TODO: made obsolete by g:wiki_link_creation
+" See https://github.com/lervag/wiki.vim/commit/62d63bcaad768717d9b6447e057e4d7a927ced99
+"let g:wiki_link_extension = 'md'
 
 "------------------------------------------------------------------------------"
 " vim-terraform (https://github.com/hashivim/vim-terraform)
