@@ -22,3 +22,6 @@
 [submodule ".vim/plugged/codeium.vim"]
 	path = .vim/plugged/codeium.vim
 	url = https://github.com/Exafunction/codeium.vim
+[submodule ".vim/plugged/CamelCaseMotion"]
+	path = .vim/plugged/CamelCaseMotion
+	url = https://github.com/bkad/CamelCaseMotion

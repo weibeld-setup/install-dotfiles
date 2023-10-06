@@ -83,6 +83,15 @@ endfunction
 call plug#begin('~/.vim/plugged')
 
 "------------------------------------------------------------------------------"
+" CamelCaseMotion (https://github.com/bkad/CamelCaseMotion)
+"------------------------------------------------------------------------------"
+Plug 'bkad/CamelCaseMotion'
+" Make 'w', 'b', and 'e' consider CamelCase and snake_case as word boundaries
+map <silent> w <Plug>CamelCaseMotion_w
+map <silent> b <Plug>CamelCaseMotion_b
+map <silent> e <Plug>CamelCaseMotion_e
+
+"------------------------------------------------------------------------------"
 " vim-submode (https://github.com/kana/vim-submode)
 "------------------------------------------------------------------------------"
 " Notes:
@@ -247,7 +256,7 @@ nnoremap C/ q/
 nnoremap C? q?
 
 " Entering Ex mode
-nnoremap E gQ
+nnoremap X gQ
 
 " Allow inserting new lines from normal mode
 "nnoremap <CR> o<Esc>
