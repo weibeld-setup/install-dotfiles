@@ -167,6 +167,12 @@ Plug 'carlsmedstad/vim-bicep'
 "------------------------------------------------------------------------------"
 Plug 'Exafunction/codeium.vim'
 
+"------------------------------------------------------------------------------"
+" NeoAI (https://github.com/Bryley/neoai.nvim)
+"------------------------------------------------------------------------------"
+Plug 'MunifTanjim/nui.nvim'
+Plug 'Bryley/neoai.nvim'
+
 call plug#end()
 
 

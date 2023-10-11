@@ -25,3 +25,9 @@
 [submodule ".vim/plugged/CamelCaseMotion"]
 	path = .vim/plugged/CamelCaseMotion
 	url = https://github.com/bkad/CamelCaseMotion
+[submodule ".vim/plugged/neoai.nvim"]
+	path = .vim/plugged/neoai.nvim
+	url = https://github.com/Bryley/neoai.nvim
+[submodule ".vim/plugged/nui.nvim"]
+	path = .vim/plugged/nui.nvim
+	url = https://github.com/MunifTanjim/nui.nvim
