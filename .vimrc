@@ -292,6 +292,7 @@ nnoremap X gQ
 
 " Omni-completion trigger (https://vim.fandom.com/wiki/Omni_completion)
 inoremap <C-n> <C-X><C-O>
+inoremap <C-e> <C-X><C-F>
 
 " Yank to system clipboard
 vnoremap Y "*y
