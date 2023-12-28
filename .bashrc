@@ -30,6 +30,15 @@
 # A: See https://google.github.io/styleguide/shellguide.html#s7.6-use-local-variables
 #------------------------------------------------------------------------------#
 
+# Source common options and function definitions
+if [[ -f ~/.bashrc.commons ]]; then
+  . ~/.bashrc.commons
+fi
+
+# Source all other .bashrc files
+for f in ~/.bashrc.!(commons); do
+  [[ -f "$f" ]] && . "$f"
+done
 
 #------------------------------------------------------------------------------#
 # Shell options
@@ -140,8 +149,8 @@ elif is-mac; then
   # Homebrew
   # Correct prefix depends on chip architecture (Intel or Apple).
   # See https://docs.brew.sh/FAQ#why-should-i-install-homebrew-in-the-default-location
-  eval $(/opt/homebrew/bin/brew shellenv)
-  #eval $(/usr/local/bin/brew shellenv)
+  #eval $(/opt/homebrew/bin/brew shellenv)
+  eval $(/usr/local/bin/brew shellenv)
   export HOMEBREW_NO_AUTO_UPDATE=1
 
   # Misc
