@@ -1,5 +1,9 @@
 # ~/.bashrc.lib
 
+#------------------------------------------------------------------------------#
+# Library of shell functions that can be used in other .bashrc files.
+# Functions intended to be "exported" start with a single underline (_).
+#------------------------------------------------------------------------------#
 
 # Check for macOS, Linux, or WSL2
 _is-mac()   { [[ "$OSTYPE" =~ darwin ]]; }
