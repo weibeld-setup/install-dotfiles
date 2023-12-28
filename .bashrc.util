@@ -37,22 +37,22 @@ random() {
 #   If no arguments are given, all colours are printed.
 c8() {
   local c=(${@:-30 90 31 91 32 92 33 93 34 94 35 95 36 96 37 97})
-  has "${c[@]}" 30 && printf "\e[47;30mBlack (30):\e[49m          \e[040m   \e[49m  \e[47mNormal\e[49m  \e[47;1mBold\e[0m\n"
-  has "${c[@]}" 90 && printf "\e[90mBright black (90):   \e[100m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 31 && printf "\e[31mRed (31):            \e[041m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 91 && printf "\e[91mBright red (91):     \e[101m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 32 && printf "\e[32mGreen (32):          \e[042m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 92 && printf "\e[92mBright green (92):   \e[102m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 33 && printf "\e[33mYellow (33):         \e[043m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 93 && printf "\e[93mBright yellow (93):  \e[103m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 34 && printf "\e[34mBlue (34):           \e[044m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 94 && printf "\e[94mBright blue (94):    \e[104m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 35 && printf "\e[35mMagenta (35):        \e[045m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 95 && printf "\e[95mBright magenta (95): \e[105m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 36 && printf "\e[36mCyan (36):           \e[046m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 96 && printf "\e[96mBright cyan (96):    \e[106m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 37 && printf "\e[37mWhite (37):          \e[047m   \e[49m  Normal  \e[1mBold\e[0m\n"
-  has "${c[@]}" 97 && printf "\e[97mBright white (97):   \e[107m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 30 && printf "\e[47;30mBlack (30):\e[49m          \e[040m   \e[49m  \e[47mNormal\e[49m  \e[47;1mBold\e[0m\n"
+  _has "${c[@]}" 90 && printf "\e[90mBright black (90):   \e[100m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 31 && printf "\e[31mRed (31):            \e[041m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 91 && printf "\e[91mBright red (91):     \e[101m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 32 && printf "\e[32mGreen (32):          \e[042m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 92 && printf "\e[92mBright green (92):   \e[102m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 33 && printf "\e[33mYellow (33):         \e[043m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 93 && printf "\e[93mBright yellow (93):  \e[103m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 34 && printf "\e[34mBlue (34):           \e[044m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 94 && printf "\e[94mBright blue (94):    \e[104m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 35 && printf "\e[35mMagenta (35):        \e[045m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 95 && printf "\e[95mBright magenta (95): \e[105m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 36 && printf "\e[36mCyan (36):           \e[046m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 96 && printf "\e[96mBright cyan (96):    \e[106m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 37 && printf "\e[37mWhite (37):          \e[047m   \e[49m  Normal  \e[1mBold\e[0m\n"
+  _has "${c[@]}" 97 && printf "\e[97mBright white (97):   \e[107m   \e[49m  Normal  \e[1mBold\e[0m\n"
   return 0
 }
 
@@ -73,7 +73,7 @@ c256() {
   columns=${1:-6}
   string=${2:-colour-}
   for i in {0..255} ; do
-    printf "\e[38;5;${i}m${string}$(pad 3 "$i") "
+    printf "\e[38;5;${i}m${string}$(_pad 3 "$i") "
     [[ $((($i + 1) % $columns)) = 0 && "$i" -lt 255 ]] && echo
   done
   printf "\e[0m\n"
@@ -93,7 +93,7 @@ __c-echo() {
   fd=$1
   c_args=(${@:2:$#-2})
   msg=${@:$#}
-  [[ -t "$fd" ]] && msg=$(c "${c_args[@]}")$msg$(c)
+  [[ -t "$fd" ]] && msg=$(_c "${c_args[@]}")$msg$(_c)
   if [[ "$fd" -eq 1 ]]; then echo "$msg"
   elif [[ "$fd" -eq 2 ]]; then echo "$msg" >/dev/stderr
   else return 1; fi
@@ -200,7 +200,7 @@ complete -A function funcfile
 # TODO: add option for just pasting the selected command to the prompt without
 # executing it
 hist() {
-  ensure fzf
+  _ensure-installed fzf
   # Directly execute the command
   if [[ "$1" = -x ]]; then
     eval $(cat "$HISTFILE" | fzf -e --tac)
@@ -310,7 +310,7 @@ __x2x() {
 ____x2x() {
   local tok
   for tok in $(_to-upper ${@:4}); do
-    bc <<< "obase=$2; ibase=$1; $tok" | pad $(bc <<<"(${#tok}*$3)/1")
+    bc <<< "obase=$2; ibase=$1; $tok" | _pad $(bc <<<"(${#tok}*$3)/1")
   done
 }
 

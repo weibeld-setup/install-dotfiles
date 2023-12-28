@@ -80,11 +80,11 @@ areg() {
       sort -t $'\t' -k3,3r -k1,1 |
       column -t -s $'\t' |
       sed "
-        /May be enabled$/s/^/$(c d)/;s/$/$(c)/;
-        s/Manually enabled/$(c d)\0$(c)/" |
+        /May be enabled$/s/^/$(_c d)/;s/$/$(_c)/;
+        s/Manually enabled/$(_c d)\0$(_c)/" |
       sed "
-        s/ enabled /$(c green)\0$(c)/;
-        s/ disabled /$(c)$(c red)\0$(c)$(c d)/"
+        s/ enabled /$(_c green)\0$(_c)/;
+        s/ disabled /$(_c)$(_c red)\0$(_c)$(_c d)/"
   fi
 }
 
@@ -156,7 +156,7 @@ ai() {
     --no-cli-auto-prompt \
     --query 'Reservations[].Instances[].{id:InstanceId,type:InstanceType,image:ImageId,public_ip:PublicIpAddress,key:KeyName,launch_date:LaunchTime,state:State.Name} | sort_by([],&launch_date)' \
     "$@" |
-    if [[ -t 1 ]]; then sed -E "s/\"(running)\"/\"$(c green)\1$(c)\"/;s/\"(pending|shutting-down|terminated|stopping|stopped)\"/\"$(c red)\1$(c)\"/"; else cat; fi
+    if [[ -t 1 ]]; then sed -E "s/\"(running)\"/\"$(_c green)\1$(_c)\"/;s/\"(pending|shutting-down|terminated|stopping|stopped)\"/\"$(_c red)\1$(_c)\"/"; else cat; fi
 }
 
 # Get a secret from AWS Secrets Manager

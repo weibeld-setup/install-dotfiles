@@ -14,7 +14,7 @@ _is-unset() { [[ -z "$1" ]]; }
 _is-installed() { which "$1" &>/dev/null; }
 
 # Ensure that a given command is installed or print an error message otherwise
-ensure() { _is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }; }
+_ensure-installed() { _is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }; }
 
 
 # Convert lower-case to upper-case. Read input from arg list or stdin.
@@ -27,25 +27,21 @@ __to-lower() { tr '[:upper:]' '[:lower:]'; }
 
 
 # Pad args ($2...) with 0s to number of digits ($1). Read from arg list or stdin.
-pad() {
+_pad() {
   (($# == 0)) && return 1
   (($# == 1)) && __pad "$1" $(</dev/stdin) || __pad $@
 }
 __pad() { printf "%0$1d\n" ${@:2}; }
 
 # Insert string ($2) into filename ($1), just before filename extension.
-insert() {
+_insert() {
   local file=$1; local str=$2
   echo "${file%.*}${str}.${file##*.}"
 }
 
-# Source file if exists.
-s() { [[ -f "$1" ]] && . "$1"; }
-
-
 # Read text from stdin and format it to width of terminal with word wrapping.
 # This function is similar to the 'fmt' command, but it preserves all newlines.
-format() {
+_format() {
   awk -v c=$(tput cols) 'BEGIN{printf ".pl 1\n.ll %d\n.na\n.hy 0\n", c}{print}' |
     nroff |
     sed 's/\xE2\x80\x90/-/g'
@@ -92,8 +88,8 @@ _splitargs() {
 }
 
 # Test if an array contains a specific element.
-# Usage example: has "${myarr[@]}" foo
-has() {
+# Usage example: _has "${myarr[@]}" foo
+_has() {
   local array=("${@:1:$#-1}")
   local element=${@:$#}
   for i in $(seq 0 $(("${#array[@]}"-1))); do
@@ -106,7 +102,7 @@ has() {
 # Print an ANSI Select Graphic Rendition (SGR) escape sequence (see [1])
 #
 # Usage:
-#   c [<arg>]...
+#   _c [<arg>]...
 # Where <arg> is either a colour, or one or multiple modifiers.
 #
 # Colours:
@@ -131,20 +127,20 @@ has() {
 # (colours and modifiers). Multiple modifiers can be combined in a single arg.
 #
 # Example usage:
-#   c red        // Red 
-#   c red+       // Bright red 
-#   c red b      // Red, bold
-#   c red biu    // Red, bold, italic, and underlined
-#   c red b i u  // Equivalent to above command
-#   c            // Reset all previously set colours and modifiers
-#   c x          // Equivalent to above command
-#   c bu         // Bold and underlined (don't change colour)
+#   -c red        // Red 
+#   -c red+       // Bright red 
+#   -c red b      // Red, bold
+#   -c red biu    // Red, bold, italic, and underlined
+#   -c red b i u  // Equivalent to above command
+#   -c            // Reset all previously set colours and modifiers
+#   -c x          // Equivalent to above command
+#   -c bu         // Bold and underlined (don't change colour)
 #
 # Application:
 #   echo "$(c red bi)red $(c x blue+ u)blue$(c) normal"
 #
 # [1] https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-c() {
+_c() {
   local p
   for a in "$@"; do
     # Parse colour
