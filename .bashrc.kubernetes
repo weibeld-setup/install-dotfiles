@@ -220,7 +220,7 @@ ksec() {
 #   kann pods -- '[0-9]$'     // All Pods whose name ends with a number
 kann() {
   local args regex=.*
-  splitargs args regex -- "$@"
+  _splitargs args regex -- "$@"
   kubectl get "${args[@]}" -o json | jq -r '
     if .items then
       .items[]
@@ -254,7 +254,7 @@ kann() {
 # TODO: fix output when there is only a single (or no) label
 klab() {
   local args regex=.*
-  splitargs args regex -- "$@"
+  _splitargs args regex -- "$@"
   kubectl get "${args[@]}" --no-headers -o custom-columns=':metadata.name,:metadata.labels' \
     | awk "\$1~/$regex/" \
     | sed 's/map\[//;s/\]//' \
@@ -296,7 +296,7 @@ kget() {
 #   - Include init containers in the output?
 kim() {
   local args1 args2
-  splitargs args1 args2 -- "$@"
+  _splitargs args1 args2 -- "$@"
   local out=$(kubectl get pods "${args1[@]}" --no-headers -o custom-columns=':metadata.namespace,:metadata.name,:spec.containers[*].image' | tr -s ' ' | tr ' ' ,)
   [[ -z "$out" ]] && { echo "No pods found"; return; }
   # Make first two columns bold, if stdout is terminal or pipe (i.e. not file)
@@ -327,7 +327,7 @@ kim() {
 #   kcon -n foo -- init    # Number of init containers instead of normal containers
 kcon() {
   local kubectl_args args
-  splitargs kubectl_args args -- "$@"
+  _splitargs kubectl_args args -- "$@"
   [[ "$args" = init ]] && c=initContainers || c=containers
   kubectl get pods "${kubectl_args[@]}" -o json | jq -r "[.items[].spec.$c | length] | add"
 }
@@ -364,7 +364,7 @@ kf() {
   local kubectl_args grep_args regex
   if has "$@" --; then
     local tmp
-    splitargs tmp grep_args -- "$@"
+    _splitargs tmp grep_args -- "$@"
     # Overwrite $@ with args before '--'
     set -- "${tmp[@]}"
   fi

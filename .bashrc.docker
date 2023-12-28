@@ -23,25 +23,25 @@ alias dki='docker image ls'
 # Remove ALL images
 dkri() {
   local i=$(docker images -q)
-  is-set "$i" && docker rmi -f $i || echo "No images"
+  _is-set "$i" && docker rmi -f $i || echo "No images"
 }
 
 # Remove only those images with a <none> name or tag
 dkci() {
   local i=$(docker images | grep '<none>' | awk '{print $3}')
-  is-set "$i" && docker rmi $i || echo "No unnamed/untagged images"
+  _is-set "$i" && docker rmi $i || echo "No unnamed/untagged images"
 }
 
 # Remove all containers
 dkrc() {
   local c=$(docker ps -aq)
-  is-set "$c" && docker rm $c || echo "No containers"
+  _is-set "$c" && docker rm $c || echo "No containers"
 }
 
 # Stop all running containers
 dks() {
   local c=$(docker ps -q)
-  is-set "$c" && docker stop $c || echo "No running containers"
+  _is-set "$c" && docker stop $c || echo "No running containers"
 }
 
 # Run a container in the host namespaces (allows to enter Docker Desktop VM)

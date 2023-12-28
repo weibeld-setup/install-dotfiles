@@ -2,32 +2,27 @@
 
 
 # Check for macOS, Linux, or WSL2
-is-mac()   { [[ "$OSTYPE" =~ darwin ]]; }
-is-linux() { [[ "$OSTYPE" =~ linux  ]]; }
-is-wsl() { is-linux && [[ -n "$WSL_DISTRO_NAME" ]]; }
+_is-mac()   { [[ "$OSTYPE" =~ darwin ]]; }
+_is-linux() { [[ "$OSTYPE" =~ linux  ]]; }
+_is-wsl() { _is-linux && [[ -n "$WSL_DISTRO_NAME" ]]; }
 
 # Is variable set (non-empty) or unset (empty)?
-is-set()   { [[ -n "$1" ]]; }
-is-unset() { [[ -z "$1" ]]; }
-
-# Does variable contain only whitespace characters?
-is-nonblank() { [[ "$1" = *[^[:space:]]* ]]; }
-is-blank() { ! is-nonblank "$1"; }
-
+_is-set()   { [[ -n "$1" ]]; }
+_is-unset() { [[ -z "$1" ]]; }
 
 # Check whether a given command is installed
-is-installed() { which "$1" &>/dev/null; }
+_is-installed() { which "$1" &>/dev/null; }
 
 # Ensure that a given command is installed or print an error message otherwise
-ensure() { is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }; }
+ensure() { _is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }; }
 
 
 # Convert lower-case to upper-case. Read input from arg list or stdin.
-to-upper() { (($# == 0)) && __to-upper || __to-upper <<<"$@"; }
+_to-upper() { (($# == 0)) && __to-upper || __to-upper <<<"$@"; }
 __to-upper() { tr '[:lower:]' '[:upper:]'; }
 
 # Convert upper-case to lower-case. Read input from arg list or stdin.
-to-lower() { (($# == 0)) && __to-lower || __to-lower <<<"$@"; }
+_to-lower() { (($# == 0)) && __to-lower || __to-lower <<<"$@"; }
 __to-lower() { tr '[:upper:]' '[:lower:]'; }
 
 
@@ -65,14 +60,14 @@ format() {
 # Split an args sequence at a custom delimiter into two arrays, one containing
 # the args before the delimiter and one containing the args after the delimiter.
 # Usage:
-#   splitargs <arr_a> <arr_b> <delim> <args>...
+#   _splitargs <arr_a> <arr_b> <delim> <args>...
 # Args:
 #   <arr_a>  Name of an array to which to assign the args before the delimiter
 #   <arr_b>  Name of an array to which to assign the args after the delimiter
 #   <delim>  The delimiter (e.g. --)
 #   <args>   Sequence of arguments (possibly containing)
 # Example usage:
-#   splitargs arr1 arr2 -- before1 before2 -- after1 after2
+#   _splitargs arr1 arr2 -- before1 before2 -- after1 after2
 # The above results in the following assignments to arr1 and arr2:
 #   - arr1["before1", "before2"]
 #   - arr2["after1", "after2"]
@@ -80,7 +75,7 @@ format() {
 # assigned to the first array (<arr_a>).
 # CAUTION: the passed in array names must not be __a and __b as these are the
 # locally used array names (causes a "circular name reference" error).
-splitargs() {
+_splitargs() {
   # Nameref variables, see [1]
   # [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
   local -n __a=$1 __b=$2
@@ -188,8 +183,8 @@ c() {
 }
 
 
-if is-installed brew; then
-  is-installed-homebrew() {
+if _is-installed brew; then
+  _is-installed-homebrew() {
     brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
   }
 fi

@@ -20,13 +20,13 @@ gco() {
 }
 
 # Symlink env-specific config file to be included into .gitconfig
-if is-linux; then
-  if is-wsl; then
+if _is-linux; then
+  if _is-wsl; then
     ln -sf ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
   else
     ln -sf ~/.gitconfig.credential.linux ~/.gitconfig.credential
   fi
-elif is-mac; then
+elif _is-mac; then
   ln -sf ~/.gitconfig.credential.mac ~/.gitconfig.credential
 fi
 

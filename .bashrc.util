@@ -2,13 +2,13 @@
 # Print operating system name and version
 
 os() {
-  if is-linux; then
+  if _is-linux; then
     if [[ -f /etc/os-release ]]; then
       (. /etc/os-release; echo "$ID-$VERSION_ID"; )
     else
       echo unknown
     fi
-  elif is-mac; then
+  elif _is-mac; then
     echo "$(sw_vers --productName)-$(sw-vers --productVersion)"
   fi
 }
@@ -261,9 +261,9 @@ enc-type() { echo $LC_CTYPE; }
 # provided, then stdin is copied to the clipboard.
 clip() {
   local cmd
-  is-mac && cmd=pbcopy
-  is-linux && cmd=xclip
-  is-wsl && cmd=clip.exe
+  _is-mac && cmd=pbcopy
+  _is-linux && cmd=xclip
+  _is-wsl && cmd=clip.exe
   if [[ "$#" -eq 0 ]]; then
     eval "$cmd"
   else
@@ -309,7 +309,7 @@ __x2x() {
 # Convert numbers and zero-pad based on number of digits and value of arg 3
 ____x2x() {
   local tok
-  for tok in $(to-upper ${@:4}); do
+  for tok in $(_to-upper ${@:4}); do
     bc <<< "obase=$2; ibase=$1; $tok" | pad $(bc <<<"(${#tok}*$3)/1")
   done
 }
@@ -354,7 +354,7 @@ sec2min() {
 #------------------------------------------------------------------------------#
 # macOS and Linux specific functions
 #------------------------------------------------------------------------------#
-if is-mac; then
+if _is-mac; then
 
   # Recursively delete all .DS_Store files in the current directory
   alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
@@ -434,7 +434,7 @@ if is-mac; then
   }
 
 
-elif is-linux; then
+elif _is-linux; then
 
   alias ls='ls --color=auto'
   alias grep='grep --color=auto'
