@@ -1,0 +1,52 @@
+# ~/.bashrc.init
+
+#------------------------------------------------------------------------------#
+# PATH manipulation functions
+#------------------------------------------------------------------------------#
+
+# Check whether a specific PATH entry exists
+has-path() {
+  [[ ":$PATH:" =~ ":$1:" ]]
+}
+
+# Prepend entry to PATH if it's a valid directory and isn't already in the PATH
+prepend-to-path() {
+  if [[ -d "$1" ]] && ! has-path "$1"; then
+    PATH="$1:$PATH"
+  fi
+}
+
+# Append entry to PATH if it's a valid directory and isn't already in the PATH
+append-to-path()  {
+  if [[ -d "$1" ]] && ! has-path "$1"; then
+    PATH="$PATH:$1"
+  fi
+}
+
+# Remove duplicated entries and non-existing directories from the PATH
+# Usage: PATH=$(clean-path)
+clean-path() {
+  declare -A a
+  echo "$PATH" | tr : '\n' | while read e; do
+    if [[ -z "${a[$e]}" && -d "$e" ]]; then
+      echo "$e"
+      a["$e"]=1
+    else
+      echo "Duplicate or invalid PATH entry: $e" 1>&2
+    fi
+  done | tr '\n' : | sed 's/:$/\n/'
+}
+
+#------------------------------------------------------------------------------#
+# PATH entries
+#------------------------------------------------------------------------------#
+
+prepend-to-path "$HOME"/.local/bin
+prepend-to-path /opt/homebrew/bin
+append-to-path "$HOME"/google-cloud-sdk/bin
+
+#------------------------------------------------------------------------------#
+# Clean PATH
+#------------------------------------------------------------------------------#
+
+PATH=$(clean-path)

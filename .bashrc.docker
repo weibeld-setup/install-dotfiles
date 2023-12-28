@@ -1,0 +1,74 @@
+# ~/.bashrc.docker
+
+#------------------------------------------------------------------------------#
+# Docker
+#------------------------------------------------------------------------------#
+
+# Automatically set '--rm' flag when 'docker [container] run' is run
+docker() {
+  local args=("$@")
+  if [[ "$1" = run ]]; then
+    args=(run --rm "${args[@]:1}")
+  elif [[ "$1" = container && "$2" = run ]]; then
+    args=(container run --rm "${args[@]:2}")
+  fi
+  command docker "${args[@]}"
+}
+
+alias dk=docker
+complete -F _complete_alias dk
+alias dki='docker image ls'
+#alias dkc='docker container ps -a'
+
+# Remove ALL images
+dkri() {
+  local i=$(docker images -q)
+  is-set "$i" && docker rmi -f $i || echo "No images"
+}
+
+# Remove only those images with a <none> name or tag
+dkci() {
+  local i=$(docker images | grep '<none>' | awk '{print $3}')
+  is-set "$i" && docker rmi $i || echo "No unnamed/untagged images"
+}
+
+# Remove all containers
+dkrc() {
+  local c=$(docker ps -aq)
+  is-set "$c" && docker rm $c || echo "No containers"
+}
+
+# Stop all running containers
+dks() {
+  local c=$(docker ps -q)
+  is-set "$c" && docker stop $c || echo "No running containers"
+}
+
+# Run a container in the host namespaces (allows to enter Docker Desktop VM)
+docker-vm() {
+  # The --pid=host flag starts the container in the same PID namespace as the
+  # Docker Desktop VM. The nsenter -t 1 command then enters the specified name-
+  # spaces of the process with PID 1 (root process on the Docker Desktop VM).
+  # The entered namespaces are: mount (-m), UTS (-u), network (-n), IPC (-i).
+  # (use the -a flag to enter all namespaces). All Linux namespaces: mount,
+  # UTS, network, IPC, PID, cgroup, user.
+  docker run -it --pid=host --privileged weibeld/ubuntu-networking nsenter -t 1 -m -u -n -i bash
+}
+
+# List the most recent tags of an image on Docker Hub.
+# Usage:
+#   dktags name [number]
+# Args:
+#   name      Name of the image (e.g. 'ubuntu', 'weibeld/ubuntu-networking')
+#   [number]  Number of tags to list (default: 15)
+dktags() {
+  name=$1
+  number=${2:-15}
+  # Expand the names of official images (where the repository is omitted)
+  [[ ! "$name" =~ .*/.* ]] && name=library/"$name"
+  curl -L "https://registry.hub.docker.com/v2/repositories/$name/tags?page_size=$number" \
+    | jq -r '.results[] | [.name, .last_updated] | @tsv' \
+    | awk '{gsub("T", " ", $2); gsub("\\..*$", "", $2); print $1"\t"$2}' \
+    | sed 's/^\([a-zA-Z0-9._-]*\)/'$(echo -e '\e')'[33m\1'$(echo -e '\e')'[0m/' \
+    | column -t -s $'\t' 
+}

@@ -1,0 +1,32 @@
+# ~/.bashrc.git
+
+#------------------------------------------------------------------------------#
+# Git
+#------------------------------------------------------------------------------#
+
+alias gl='git log --decorate --graph' 
+alias gr='git remote -v'
+alias gs='git status -u'
+alias ga='git add -A'
+alias gc='git commit'
+alias gca='git commit --amend'
+alias gp='git push'
+alias gpf='git push -f'
+alias gb="git branch"
+alias gd="git diff"
+alias gpu="git pull"
+gco() {
+  git checkout $(git branch | fzf --tac | sed 's/^[^a-zA-Z0-9]*//')
+}
+
+# Symlink env-specific config file to be included into .gitconfig
+if is-linux; then
+  if is-wsl; then
+    ln -sf ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
+  else
+    ln -sf ~/.gitconfig.credential.linux ~/.gitconfig.credential
+  fi
+elif is-mac; then
+  ln -sf ~/.gitconfig.credential.mac ~/.gitconfig.credential
+fi
+

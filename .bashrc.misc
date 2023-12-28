@@ -1,0 +1,10 @@
+# ~/.bashrc.misc
+
+# JMESPath Terminal
+# https://github.com/jmespath/jmespath.terminal
+jpterm() {
+  python /Users/dw/Library/Python/2.7/lib/python/site-packages/jpterm.py
+}
+
+alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
+

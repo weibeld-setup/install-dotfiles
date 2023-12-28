@@ -1,1 +1,3 @@
+# ~/.bash_profile
+
 . ~/.bashrc

@@ -1,0 +1,228 @@
+# ~/.bashrc.aws
+
+#------------------------------------------------------------------------------#
+# AWS CLI
+#------------------------------------------------------------------------------#
+
+
+pw() {
+  if ! which -s aws; then
+    echo "You must install the AWS CLI to use this command"
+    return 1
+  fi
+  LENGTH=${1:-32}
+  aws secretsmanager get-random-password --exclude-punctuation --password-length "$LENGTH" --query RandomPassword --output text
+}
+
+alias a=aws
+alias ae="aws ec2"
+alias ac="vim ~/.aws/config"
+alias acr="vim ~/.aws/credentials"
+
+# List enabled (or all) AWS regions.
+# Usage:
+#   areg [-a|--all]
+# Without any arguments, only the IDs of the enabled regions are listed (since
+# 2019, new regions have to be explicitly enabled [1]). With -a|--all, all
+# regions (including disabled ones) are listed, including additional info.
+# [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
+# TODO: add support for additional arguments to aws CLI (e.g. --profile)
+areg() {
+  if [[ "$#" = 0 ]]; then
+    aws ec2 describe-regions \
+      --no-cli-auto-prompt \
+      --query 'Regions[].RegionName' |
+      jq -r '.[]' |
+      sort
+  # sed expression for inserting region name column can be created from a file
+  # containing region IDs and names in tab-separated columns as in [1]. A full
+  # list of regions, including human-readable names, can be found in [2].
+  # [1] sed 's|^|        s/^|;s|\t|\\t/\\0|;s|$|\\t/;|'
+  # [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+  elif [[ "$1" =~ --all|-a ]]; then
+    aws ec2 describe-regions \
+      --no-cli-auto-prompt \
+      --all-regions \
+      --query 'Regions[].[RegionName,OptInStatus]' |
+      jq -r '.[] | join("\t")' |
+      sed "
+        s/\topted-in/\tenabled\tManually enabled/;
+        s/\topt-in-not-required/\tenabled\tEnabled by default/;
+        s/\tnot-opted-in/\tdisabled\tMay be enabled/" |
+      sed '
+        s/^af-south-1\t/\0Cape Town\t/;
+        s/^ap-east-1\t/\0Hong Kong\t/;
+        s/^ap-northeast-1\t/\0Tokyo\t/;
+        s/^ap-northeast-2\t/\0Seoul\t/;
+        s/^ap-northeast-3\t/\0Osaka\t/;
+        s/^ap-south-1\t/\0Mumbai\t/;
+        s/^ap-south-2\t/\0Hyderabad\t/;
+        s/^ap-southeast-1\t/\0Singapore\t/;
+        s/^ap-southeast-2\t/\0Sydney\t/;
+        s/^ap-southeast-3\t/\0Jakarta\t/;
+        s/^ap-southeast-4\t/\0Melbourne\t/;
+        s/^ca-central-1\t/\0Central\t/;
+        s/^eu-central-1\t/\0Frankfurt\t/;
+        s/^eu-central-2\t/\0Zurich\t/;
+        s/^eu-north-1\t/\0Stockholm\t/;
+        s/^eu-south-1\t/\0Milan\t/;
+        s/^eu-south-2\t/\0Spain\t/;
+        s/^eu-west-1\t/\0Ireland\t/;
+        s/^eu-west-2\t/\0London\t/;
+        s/^eu-west-3\t/\0Paris\t/;
+        s/^me-central-1\t/\0UAE\t/;
+        s/^me-south-1\t/\0Bahrain\t/;
+        s/^sa-east-1\t/\0São Paulo\t/;
+        s/^us-east-1\t/\0N. Virginia\t/;
+        s/^us-east-2\t/\0Ohio\t/;
+        s/^us-west-1\t/\0N. California\t/;
+        s/^us-west-2\t/\0Oregon\t/' |
+      sort -t $'\t' -k3,3r -k1,1 |
+      column -t -s $'\t' |
+      sed "
+        /May be enabled$/s/^/$(c d)/;s/$/$(c)/;
+        s/Manually enabled/$(c d)\0$(c)/" |
+      sed "
+        s/ enabled /$(c green)\0$(c)/;
+        s/ disabled /$(c)$(c red)\0$(c)$(c d)/"
+  fi
+}
+
+# List the availability zones of a specific region. Additional arguments for
+# the 'describe-availability-zones' command may be supplied (e.g. --region).
+aaz() {
+  aws ec2 describe-availability-zones \
+    --no-cli-auto-prompt \
+    --query 'AvailabilityZones[].ZoneName' \
+    "$@" |
+    jq -r '.[]' |
+    sort
+}
+
+# List AMIs that match a given name pattern in the current region. Pattern
+# matching may be skipped by using '-' as the pattern. This allows to either
+# list all AMIs or look up specific AMIs by their IDs (with --image-ids). The
+# AMIs are sorted by creation date with the newest at the bottom. Additional
+# arguments for the 'describe-images' command may be supplied (e.g. --region,
+# --owner, --image-ids).
+# Usage:
+#   aami <pattern>|- [args...]
+# Examples:
+#   aami '*ubuntu*22.10*'
+#   aami '*ubuntu*22.10*' --region eu-central-1
+#   aami '*ubuntu*22.10*' --owner 099720109477
+#   aami - --image-ids ami-07ba2051dbeeac4b7 ami-024dbc4111461f2f9
+#   aami -
+# Notes:
+#   - For server-side (--filters) and client-side (--query) filtering, see [1].
+#   - Client-side filtering uses JMESPath [2]. For sort_by(), see [3].
+#   - 099720109477 is Canonical's owner ID. Owner IDs are stable across regions.
+# [1] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
+# [2] https://jmespath.org/
+# [3] https://jmespath.org/specification.html#sort-by
+aami() {
+  local filter=$1
+  [[ "$filter" = - ]] && filter=*
+  shift 1
+  aws ec2 describe-images \
+    --no-cli-auto-prompt \
+    --filters "Name=name,Values=$filter" \
+    --query 'sort_by(Images,&CreationDate)[].{id:ImageId,name:Name,description:Description,owner:OwnerId,creation_date:CreationDate}' \
+    "$@"
+}
+
+# List all security groups in the current region. Additional arguments for the
+# 'describe-security-groups' command may be supplied (e.g. --region).
+asg() {
+  aws ec2 describe-security-groups \
+    --no-cli-auto-prompt \
+    --query 'SecurityGroups[].{id:GroupId,name:GroupName,description:Description}' \
+    "$@"
+}
+
+# List all key pairs in the current region. Additional arguments for the
+# 'describe-key-pairs' command may be supplied (e.g. --region).
+akey() {
+   aws ec2 describe-key-pairs \
+    --no-cli-auto-prompt \
+    --query 'KeyPairs[].{id:KeyPairId,name:KeyName,description:Description}' \
+    "$@"
+}
+
+# List all EC2 instances in the current region. Additional arguments for the
+# 'describe-instances' command may be supplied (e.g. --region, --filters).
+ai() {
+  aws ec2 describe-instances \
+    --no-cli-auto-prompt \
+    --query 'Reservations[].Instances[].{id:InstanceId,type:InstanceType,image:ImageId,public_ip:PublicIpAddress,key:KeyName,launch_date:LaunchTime,state:State.Name} | sort_by([],&launch_date)' \
+    "$@" |
+    if [[ -t 1 ]]; then sed -E "s/\"(running)\"/\"$(c green)\1$(c)\"/;s/\"(pending|shutting-down|terminated|stopping|stopped)\"/\"$(c red)\1$(c)\"/"; else cat; fi
+}
+
+# Get a secret from AWS Secrets Manager
+aws-get-secret() {
+  local NAME_OR_ARN=$1
+  aws secretsmanager get-secret-value --secret-id "$NAME_OR_ARN" --query SecretString --output text 
+}
+
+# Create a secret in AWS Secrets Manager
+aws-create-secret() {
+  local NAME=$1
+  local VALUE=$2
+  local DESCRIPTION=$3  # Optional
+  aws secretsmanager create-secret --name "$NAME" --secret-string "$VALUE" --description "$DESCRIPTION" --output json
+}
+
+# List all secrets in AWS Secrets Manager
+aws-list-secrets() {
+  RAW=$1
+  if [[ "$RAW" = -r ]]; then
+    aws secretsmanager list-secrets --query 'SecretList[*].{Name: Name, ARN: ARN, Description: Description}' --output json
+  else
+    aws secretsmanager list-secrets --query 'SecretList[*].[Name, Description]' --output table
+  fi
+}
+
+# Delete a secret from AWS Secrets Manager
+aws-delete-secret() {
+  local NAME_OR_ARN=$1
+  aws secretsmanager delete-secret --secret-id "$NAME_OR_ARN" --output json
+}
+
+alias cfn="aws cloudformation"
+
+# List all CloudFormation export values in the default region
+cfn-exports() {
+  aws cloudformation list-exports --output json --query 'Exports[*].Name'
+  #aws cloudformation list-exports --output json | jq -r '.Exports|.[]|.Name'
+}
+
+# Validate a template
+cfn-validate() {
+  aws cloudformation validate-template --template-body "$(cat  $1)"
+}
+
+# SAM package
+smp() {
+  sam package --template-file template.yml --output-template-file package.yml --s3-bucket quantumsense-sam
+}
+
+# SAM deploy
+smd() {
+  [[ -z "$1" ]] && { echo "Usage: smd STACK_NAME"; return 1; }
+  sam deploy --template-file package.yml --capabilities CAPABILITY_IAM --stack-name "$1"
+}
+# SAM package and deploy
+sm() {
+  [[ -z "$1" ]] && { echo "Usage: smd STACK_NAME"; return 1; }
+  smp && smd "$1"
+}
+
+# Command completion
+if is-mac; then
+  complete -C $(brew --prefix)/bin/aws_completer aws
+fi
+if is-linux; then
+  complete -C aws_completer aws
+fi
+

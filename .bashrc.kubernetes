@@ -1,0 +1,444 @@
+# ~/.bashrc.kubernetes
+
+#------------------------------------------------------------------------------#
+# Kubernetes
+#------------------------------------------------------------------------------#
+
+# Display outputs of certain commands in terminal pager (less)
+kubectl() {
+  if
+    [[ "$1" = explain || "$1" = describe ]] ||
+    [[ "$*" =~ -o\ yaml|--output[=\ ]yaml ]]
+  then
+    command kubectl "$@" | less
+  elif
+    [[ "$*" =~ -h$|--help$ ]]
+  then
+    command kubectl "$@" | format | less
+  else
+    command kubectl "$@"
+  fi
+}
+
+# Get current context
+alias krc='kubectl config current-context'
+# List all contexts
+alias klc='kubectl config get-contexts -o name | sed "s/^/  /;\|^  $(krc)$|s/ /*/"'
+# Change current context
+alias kcc='kubectl config use-context "$(klc | fzf -e | sed "s/^..//")"'
+
+# Get current namespace
+alias krn='kubectl config get-contexts --no-headers "$(krc)" | awk "{print \$5}" | sed "s/^$/default/"'
+# List all namespaces
+alias kln='kubectl get -o name ns | sed "s|^.*/|  |;\|^  $(krn)$|s/ /*/"'
+# Change current namespace
+alias kcn='kubectl config set-context --current --namespace "$(kln | fzf -e | sed "s/^..//")"'
+
+# Run a busybox container in the cluster 
+alias kbb='kubectl run busybox --image=busybox:1.28 --rm -it --command --restart=Never --'
+
+alias kga='kubectl get all'
+
+# kubectl explain
+alias ke='kubectl explain'
+complete -F _complete_alias ke
+
+
+# Show information about a specific API resource
+alias kr='kubectl api-resources | grep '
+
+# Set, unset, and print the KUBECONFIG environment variable
+skc() { export KUBECONFIG=$1; }
+dkc() { unset KUBECONFIG; }
+pkc() { echo "$KUBECONFIG"; }
+
+# Open kubeconfig file for editing
+alias kc='vim ~/.kube/config'
+
+# Get a specific field from a kubeconfig file
+# Usage examples:
+#   // Get server URL of cluster "mycluster"
+#   kcg clusters.mycluster.cluster.server
+#   // Get entire entry of user "myuser"
+#   kcg users.myuser
+#   // Get entries of all users
+#   kcg users
+#   // Use a different kubeconfig file (default: ~/.kube/config)
+#   kcg users.myuser my-kubeconfig
+kcg() {
+  local file=${2:-~/.kube/config}
+  if [[ "$1" =~ \. ]]; then
+    local list=$(cut -d . -f 1 <<<"$1")
+    local name=$(cut -d . -f 2 <<<"$1")
+    local field=$(cut -d . -f 3- <<<"$1")
+    yq eval ".$list[] | select(.name == \"$name\") | .$field" "$file"
+  else
+    yq eval ".$1" "$file"
+  fi
+}
+
+# Delete similarly-named context, cluster, and user entries from kubeconfig file
+kc-delete() {
+  kubectl config unset contexts."$1"
+  kubectl config unset clusters."$1"
+  kubectl config unset users."$1"
+}
+
+# Show events for a resource specified by name
+kge() {
+  name=$1 && shift
+  kubectl get events \
+    --field-selector=involvedObject.name="$name" \
+    --sort-by=lastTimestamp \
+    -o custom-columns='KIND:involvedObject.kind,TIME:lastTimestamp,EMITTED BY:source.component,REASON:reason,MESSAGE:message' \
+    "$@"
+}
+
+# List names of Pods in current namespace
+kgpn() {
+  kubectl get pods --no-headers -o custom-columns=:.metadata.name
+}
+
+# Show the availability zone of each node
+kaz() {
+  kubectl get nodes -o custom-columns='NODE:metadata.name,ZONE:metadata.labels.failure-domain\.beta\.kubernetes\.io/zone'
+}
+
+# Show the node each pod is scheduled to
+kno() {
+  kubectl get pods -o custom-columns='POD:.metadata.name,NODE:.spec.nodeName' "$@"
+}
+
+# Show volume ID and availability zone of all awsElasticBlockStore volume
+kpv-aws() {
+  kubectl get pv -o custom-columns='PERSISTENT VOLUME:.metadata.name,VOLUME ID:.spec.awsElasticBlockStore.volumeID,AVAILABILITY ZONE:.metadata.labels.failure-domain\.beta\.kubernetes\.io/zone'
+}
+
+# Display information about the authorisation mode of the current cluster
+kauthz() {
+  kubectl cluster-info dump | grep authorization-mode | sed 's/^ *"//;s/",$//' ||
+    kubectl api-versions | grep authorization
+}
+
+# List all (Cluster)RoleBindings with their role and subjects
+kbindings() {
+  local spec=NAME:metadata.name,ROLE:roleRef.name,SUBJECTS:subjects[*].name
+  local preamble=KIND:kind,NAMESPACE:metadata.namespace
+  [[ "$1" = -l ]] && spec=$preamble,$spec
+  kubectl get rolebindings,clusterrolebindings --all-namespaces -o custom-columns="$spec"
+}
+
+kbindings2() {
+  kubectl get rolebindings,clusterrolebindings \
+    --all-namespaces \
+    -o custom-columns='KIND:kind,NAMESPACE:metadata.namespace,NAME:metadata.name,SERVICE ACCOUNTS:subjects[?(@.kind=="ServiceAccount")].name'
+}
+
+# Run a one-off Pod with a shell in the cluster
+kru() {
+  local sa=${1:-default}
+  kubectl run --serviceaccount="$sa" --image=weibeld/alpine-curl --generator=run-pod/v1 -ti --rm alpine
+}
+
+# Deploy a jump Pod to the current namespace of the cluster
+kjump() {
+  kubectl apply -f https://bit.ly/jump-pod
+}
+
+# Create temporary ServiceAccount in default namespace with cluster-admin rights
+ksa() {
+  if [[ "$1" = -d ]]; then
+    kubectl delete -n default sa/tmp-admin clusterrolebinding/tmp-admin
+  else
+    kubectl create sa -n default tmp-admin
+    kubectl create clusterrolebinding --clusterrole=cluster-admin --serviceaccount=default:tmp-admin tmp-admin 
+  fi
+}
+
+# Test permissions of a ServiceAccount
+kauthsa() {
+  serviceaccount=$1
+  namespace=$2
+  shift 2
+  kubectl auth can-i --as system:serviceaccount:$namespace:$serviceaccount "$@"
+}
+
+# Create port-forwarding to a Service
+kpf() {
+  service=$1
+  port=$2
+  shift 2
+  kubectl port-forward svc/"$service" "$port" "$@"
+}
+
+# Read a field from a ConfigMap
+# Usage:
+#   kcm <configmap> [<key>]
+# If <key> is omitted, then all keys of the ConfigMap are listed.
+# TODO: support specifying namespace for ConfigMap
+kcm() {
+  local cm=$1
+  local key=${2}
+  if [[ -z "$key" ]]; then
+    kubectl get cm "$cm" -o jsonpath='{.data}' | jq -r 'keys | join("\n")'
+  else
+    key=$(sed 's/\./\\\./' <<<"$key")
+    kubectl get cm "$cm" -o jsonpath="{.data.$key}"
+  fi
+}
+
+# Read and decode a field from a Secret
+# Usage:
+#   ksec <secret> [<key>]
+# If <key> is omitted, then all keys of the Secret are listed.
+# TODO: support specifying namespace for Secret
+ksec() {
+  local secret=$1
+  local key=${2}
+  if [[ -z "$key" ]]; then
+    kubectl get secret "$secret" -o jsonpath='{.data}' | jq -r 'keys | join("\n")'
+  else
+    key=$(sed 's/\./\\\./' <<<"$key")
+    local value=$(kubectl get secret "$secret" -o jsonpath="{.data.$key}")
+    # In Secrets, null values may be returned as <nil> (in ConfigMaps, "")
+    if [[ "$value" != '<nil>' ]]; then
+      echo "$value" | base64 -d
+    fi
+  fi
+}
+
+# Pretty-print the annotations of the specified resources
+# Usage:
+#   kann <args>... [-- <regex>]
+# Parameters:
+#   <args>   Arguments for 'kubectl get' (e.g. 'pods' or 'pods -n foo')
+#   --       Delimiter between 'kubectl get' arguments and an optional regex
+#   <regex>  A regex to filter resources by name
+# Usage examples:
+#   kann svc                  // All Services in the current namespace
+#   kann svc mysvc -n myns    // A specific Service in a specific namespace
+#   kann pods -- '[0-9]$'     // All Pods whose name ends with a number
+kann() {
+  local args regex=.*
+  splitargs args regex -- "$@"
+  kubectl get "${args[@]}" -o json | jq -r '
+    if .items then
+      .items[]
+    else
+      .
+    end
+    | .metadata
+    | if (.name | test("'"$regex"'")) then
+        "'$(c yellow+ b)'\(.name)'$(c)'",
+        if .annotations then
+          .annotations | to_entries[] | "  '$(c b)'\(.key)'$(c)'\n    \(.value)"
+        else
+          "  '$(c d)'<none>'$(c)'"
+        end
+      else
+        empty
+      end'
+}
+
+# Pretty-print the labels of the specified resources
+# Usage:
+#   klab <args>... [-- <regex>]
+# Parameters:
+#   <args>   Arguments for 'kubectl get' (e.g. 'pods' or 'pods -n foo')
+#   --       Delimiter between 'kubectl get' arguments and an optional regex
+#   <regex>  A regex to filter resources by name
+# Usage examples:
+#   klab svc                  // All Services in the current namespace
+#   klab svc mysvc -n myns    // A specific Service in a specific namespace
+#   klab pods -- '[0-9]$'     // All Pods whose name ends with a number
+# TODO: fix output when there is only a single (or no) label
+klab() {
+  local args regex=.*
+  splitargs args regex -- "$@"
+  kubectl get "${args[@]}" --no-headers -o custom-columns=':metadata.name,:metadata.labels' \
+    | awk "\$1~/$regex/" \
+    | sed 's/map\[//;s/\]//' \
+    | tr -s ' ' \
+    | tr ' ' '\n' \
+    | sed '/:/s/^/  /' \
+    | awk -F : '!/^ / {print "'$(c b)'"$0"'$(c)'"} /^ / {print "'$(c)'"$1":'$(c)'"$2"'$(c)'"}' \
+    | column -s : -t 
+    # Fill space between name and value with dots. Note that this prevents
+    # selection of name or value by double-clicking in iTerm2.
+    #| sed '/^[^a-z0-9]/s/ /\./g;/^[^a-z0-9]/s/^\([^\.]*\)\.\.\([^\.]*\)/\1  \2/'
+}
+
+
+# List resources whose name matches a regex.
+# Usage:
+#   kget <args>... <regex>
+# Parameters:
+#   <args>   Arguments for 'kubectl get'
+#   <regex>  Regex to match against resource names
+kget() {
+  local args=(${@:1:$#-1})
+  local regex=${@:$#}
+  local field=1
+  # With --all-namespaces, the resource name is in the second field
+  has "${args[@]}" --all-namespaces && field=2 
+  kubectl get "${args[@]}" --no-headers | awk "\$$field~/$regex/"
+}
+
+# Print container images of specified pods.
+# Usage:
+#   kim [<pods>] [-- [-c]]
+# Args:
+#   <pods>: Arguments for 'kubectl get pods', e.g. '--all-namespaces'
+#   -c:     Print the output as a CSV file (default is table)
+# Example:
+#   kim -n kube-system -- -c
+# TODO:
+#   - Include init containers in the output?
+kim() {
+  local args1 args2
+  splitargs args1 args2 -- "$@"
+  local out=$(kubectl get pods "${args1[@]}" --no-headers -o custom-columns=':metadata.namespace,:metadata.name,:spec.containers[*].image' | tr -s ' ' | tr ' ' ,)
+  [[ -z "$out" ]] && { echo "No pods found"; return; }
+  # Make first two columns bold, if stdout is terminal or pipe (i.e. not file)
+  if [[ ! -f /dev/stdout ]]; then
+    out=$(echo "$out" | sed "s/^\([^,]*,[^,]*\)/\1$(c)/;s/^\([^,]*,\)/\1$(c b)/;s/^\([^,]*\)/\1$(c)/;s/^/$(c b)/")
+  fi
+  # Remove first column, if pods are only from single namespace
+  if [[ ! "${args1[@]}" =~ --all-namespaces|-A ]]; then
+    out=$(echo "$out" | sed 's/^[^,]*,//')
+  fi
+  # Format output as table, if -c is not specified
+  if [[ ! "${args2[@]}" =~ -c ]]; then
+    out=$(echo "$out" | column -t -s ,)
+  fi
+  echo "$out"
+}
+
+# Get the number of containers or init containers in the specified Pods
+# Usage:
+#   kcon <kubectl_args>... [-- <args>]
+# Args:
+#   <kubectl_args>  Arguments for 'kubectl get pods'
+#   <args>          Arguments for command (currently, only 'init' is supported)
+# Examples:
+#   kcon                   # Number of containers of Pods in current namespace
+#   kcon --all-namespaces  # Number of containers of Pods across all namespaces
+#   kcon -n foo            # Number of containers of Pods in namespace 'foo'
+#   kcon -n foo -- init    # Number of init containers instead of normal containers
+kcon() {
+  local kubectl_args args
+  splitargs kubectl_args args -- "$@"
+  [[ "$args" = init ]] && c=initContainers || c=containers
+  kubectl get pods "${kubectl_args[@]}" -o json | jq -r "[.items[].spec.$c | length] | add"
+}
+
+# List the conditions of all the nodes
+# Note: requires GNU sed as gsed
+kncond() {
+  for n in $(kubectl get nodes -o name | cut -d / -f 2); do
+    echo "$(c b)$n$(c)";
+    command kubectl describe node "$n" \
+      | gsed -n '/Conditions:/{:a;N;/Addresses:/!ba;p}' \
+      | sed '1d;$d';
+  done
+}
+
+# Find resources that match a regex in their YAML definition
+# Usage:
+#   kf  <kubectl_args>... <regex> [ -- <grep_args>... ]
+# Args:
+#   <kubectl_args> Args as supplied to 'kubectl get' (e.g. 'pods' '-n' 'foo')
+#   <regex>        Regex as supplied to grep (e.g. 'name: foo-[xyz].*')
+#   <grep_args>    Args as supplied to grep (e.g. '-A2')
+# Examples:
+#   # Find all CronJobs in the cluster that have an imagePullPolicy field
+#   kf cronjobs --all-namespaces ' imagePullPolicy:'
+#   # Find all Pods in the 'foo' namespace that have an imagePullSecrets field
+#   kf pods -n foo ' imagePullSecrets:'
+#   # As above, but also print one line after each matching line (grep option)
+#   kf pods -n foo ' imagePullSecrets:' -- -A1
+# Notes:
+# - Only line-based matching is supported, i.e. regexes spanning multiple
+#   lines are not supported.
+kf() {
+  local kubectl_args grep_args regex
+  if has "$@" --; then
+    local tmp
+    splitargs tmp grep_args -- "$@"
+    # Overwrite $@ with args before '--'
+    set -- "${tmp[@]}"
+  fi
+  kubectl_args=("${@:1:$#-1}")
+  regex="${@:$#}"
+  local line
+  kubectl get "${kubectl_args[@]}" -o custom-columns=:.metadata.namespace,:.kind,:.metadata.name --no-headers | while read line; do
+    local namespace=$(awk '{print $1}' <<<"$line")
+    local kind=$(awk '{print tolower($2)}' <<<"$line")
+    local name=$(awk '{print $3}' <<<"$line")
+    local result
+    if result=$(kubectl get "$kind" "$name" -n "$namespace" -o yaml | grep -n --color=always "${grep_args[@]}" "$regex"); then
+      resource="$kind/$name"
+      has "${kubectl_args[@]}" --all-namespaces && resource="$namespace/$resource"
+      echo "$(c b)$resource$(c)"
+      echo "$result" | sed 's/^/  /'
+    fi
+  done
+}
+
+# Print all the volumes of a Pod in the current namespace
+# Usage:
+#   kvol <pod>
+# Notes:
+# - Only a few selected volume types are currently supported (see below). For
+#   other volume types, emptyDir is assumed. This is because emptyDir is the
+#   only volume type where the volume type field can either be omitted or empty
+#   (it can be omitted because emptyDir is the default volume type and it can
+#   be empty because there are no mandatory settings required for emptyDir).
+#   For example, the following is a valid emptyDir volume specification:
+#     - name: foo
+#   As is the following:
+#     - name: foo
+#       emptyDir: {}
+#   The easiest way to handle this in Go templates is to assume emptyDir when
+#   the volume can't be recognised as any other type. That's because it's not
+#   possible to create an 'if' condition yielding true for a missing map field
+#   (the first case) or for a map field with an empty value (the second case).
+#   The caveat of this is that volume types which are currently not supported
+#   would be displayed as emptyDir.
+# - Currently supported volume types: configMap, secret, persistentVolumeclaim,
+#   hostPath, emptyDir
+# - See all existing volume types in [1]
+# [1] https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#volume-v1-core
+# TODO:
+# - Allow specifying multiple Pods
+# - Sort the volumes according to volume type and name
+kvol() {
+  local pod=$1
+  shift
+  kubectl get pod "$pod" "$@" -o go-template='
+    {{- range .spec.volumes }}
+      {{- if .configMap }}{{ printf "ConfigMap: %s\n  ConfigMap: %s\n" .name .configMap.name }}
+      {{- else if .secret }}{{ printf "Secret: %s\n  Secret: %s\n" .name .secret.secretName }}
+      {{- else if .persistentVolumeClaim }}{{ printf "PVC: %s\n  PVC: %s\n" .name .persistentVolumeClaim.claimName }}
+      {{- else if .hostPath }}{{ printf "HostPath: %s\n  Path: %s\n" .name .hostPath.path }}
+      {{- else if .emptyDir }}{{ printf "EmptyDir: %s\n" .name }}
+      {{- else }}{{ printf "EmptyDir: %s\n" .name }}{{ end }}
+    {{- end }}' \
+    | sed -E 's/^([^ ].*)/'$(c b)'\1'$(c)'/'
+} 
+
+# kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
+if [[ -f ~/.kubectl_aliases ]]; then
+  source ~/.kubectl_aliases
+  # Enable completion for aliases (depends on complete-alias)
+  for _a in $(sed '/^alias /!d;s/^alias //;s/=.*$//' ~/.kubectl_aliases); do
+    complete -F _complete_alias "$_a"
+  done
+fi
+
+
+# https://github.com/kubermatic/fubectl
+#[ -f ~/.fubectl ] && source ~/.fubectl
+
+alias k9s='k9s --readonly'
+

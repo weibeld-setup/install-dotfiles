@@ -1,0 +1,22 @@
+# ~/.bashrc.terraform
+
+#------------------------------------------------------------------------------#
+# Terraform
+#------------------------------------------------------------------------------#
+
+if is-installed terraform; then
+  alias tf=terraform
+
+  alias tfa='terraform apply'
+  alias tfd='terraform destroy'
+  alias tfaa='terraform apply --auto-approve'
+  alias tfdd='terraform destroy --auto-approve'
+
+  # Command completion
+  if is-mac; then
+    complete -C $(brew --prefix)/bin/terraform terraform
+  elif is-linux; then
+    complete -C /usr/bin/terraform terraform
+  fi
+fi
+

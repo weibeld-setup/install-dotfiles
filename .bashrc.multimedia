@@ -1,0 +1,158 @@
+# ~/.bashrc.multimedia
+
+#------------------------------------------------------------------------------#
+# Documents
+#------------------------------------------------------------------------------#
+
+# Merge multiple PDF files to a single PDF file.
+pdf-merge() {
+  ensure pdftk
+  local out=out-pdf-merge.pdf
+  pdftk "$@" cat output "$out"
+  echo "$out"
+}
+
+# Split a PDF file into individual pages and save each page as a separate PDF
+# file in a subdirectory of the current working directory.
+pdf-split() {
+  ensure pdftk
+  [[ -f "$1" ]] || { echo "Error: $1 not found"; return 1; }
+  local basename=$(basename ${1%.*})
+  mkdir -p "$basename-split"
+  pdftk "$1" burst output "$basename-split/$basename-%02d.pdf"
+  rm -f "$basename"-split/doc_data.txt
+  echo "Pages saved in ./$basename-split"
+}
+
+# Extract the table of contents from a PDF file
+pdf-toc() {
+  ensure mutool
+  local tab=$(printf '\t')
+  # Extract TOC and delete page numbers separated from section titles by a tab
+  mutool show "$1" outline | sed -E "s/${tab}[0-9]+\$//"
+}
+
+# Scale PDF files, i.e. shrink or enlarge them by maintaining the aspect ratio.
+# Requires pdfScale.sh (https://github.com/tavinus/pdfScale).
+# Usage: scale-pdf RATIO FILE...
+pdf-scale() {
+  local factor=$1
+  shift
+  # Output directory
+  local dir="SCALED_$factor"
+  mkdir -p "$dir"
+  for f in "$@"; do
+    # Original width and height of the PDF file in pts
+    local tmp=$(pdfScale.sh -i "$f" | grep Points | cut -d '|' -f 2)
+    local w=$(echo "$tmp" | cut -d x -f 1 | xargs)
+    local h=$(echo "$tmp" | cut -d x -f 2 | xargs)
+    # Target width and height
+    local scaled_w=$(bc <<<"$factor * $w")
+    local scaled_w=$(printf %.f $scaled_w)
+    local scaled_h=$(bc <<<"$factor * $h")
+    local scaled_h=$(printf %.f $scaled_h)
+    # Scale
+    echo "$f: ${w}x${h} pts ==> ${scaled_w}x${scaled_h} pts"
+    pdfScale.sh -r "custom pt $(printf %.f $scaled_w) $(printf %.f $scaled_h)" "$f" "$dir/$(basename $f)"
+  done
+}
+
+# Convert an audio file to the MP3 format. Requires ffmpeg.
+to-mp3() {
+  ensure ffmpeg
+  ffmpeg -i "$1" -acodec libmp3lame "${1/.*/.mp3}"
+}
+
+# Split a GIF file into its individual frames. Each frame is saved as an
+# individual GIF file in a directory named after the input file.
+# Usage:
+#   gif-split <file.gif>
+# Notes:
+#   - Requires gifsicle [1]. Install with 'brew install gifsicle'.
+# [1] https://www.lcdf.org/gifsicle/
+gif-split() {
+  ensure gifsicle
+  local name=${1%.gif}
+  local dir=$name.gif.split
+  mkdir "$dir"
+  gifsicle --unoptimize --explode --output "$dir/$name" "$1"
+  # Rename files from '<name>.<i>' to '<name>.<i+1>.gif'. The increment by 1
+  # is because gifsicle labels the frames starting from 0 rather than 1.
+  for f in "$dir"/*; do
+    local i=${f##*.}
+    mv "$f" "${f%.*}.$(pad "${#i}" $(bc <<<"$i+1")).gif"
+  done
+  echo "$(($(ls "$dir" | wc -l))) frames saved in $dir"
+}
+
+# Trim a GIF file from a given start frame number to a given end frame number.
+# The counting of the frame numbers starts at 1.
+# Usage:
+#   gif-trim <file.gif> <start> <end>
+gif-trim() {
+  ensure gifsicle
+  gifsicle --unoptimize "$1" "#$(("$2"-1))-$(("$3"-1))" -O2 -o "${1%.gif}"-trimmed.gif
+}
+
+#------------------------------------------------------------------------------#
+# ImageMagick
+#------------------------------------------------------------------------------#
+
+# Get the size of an image in pixels
+img-size() {
+  ensure identify
+  identify "$1"
+}
+
+# Crop an image to a specific size, optionally defining the upper left corner.
+img-crop() {
+  ensure convert
+  if [[ $# -lt 3 ]]; then
+    echo -e "${FUNCNAME[0]} file width height [top-offset] [left-offset] [out-file]"
+    return
+  fi
+  file=$1
+  w=$2
+  h=$3
+  x=${4:-0}
+  y=${5:-0}
+  out=${6:-$(insert "$file" "_cropped${w}x${h}")}
+  convert -crop "${w}x${h}+${x}+${y}" "$file" "$out"
+  echo "$out"
+}
+
+# Resize image. Usage: img-resize <file> <format> [<out_file>].
+img-resize() {
+  ensure convert
+  local file=$1; local format=$2  # Format "50%" or "512x512"
+  out_file=${3:-$(insert "$file" _resized)}
+  convert "$file" -resize "$format" "$out_file"
+}
+
+# Read date a photo was taken from the photo's EXIF data.
+img-date() {
+  ensure identify
+  identify -format %[exif:DateTimeOriginal] "$1"
+}
+
+# Convert all files in the current directory matching the given input file
+# extension to the format represented by the given output file extension.
+# Example:
+#   Convert all PNG files to PDF
+#   $ convert-format png pdf
+# Notes:
+#   - The file names of the output files match those of the input files with
+#     only the extension changed.
+#   - The output files are newly created, the input files are not modified.
+convert-format() {
+  ensure convert
+  if [[ "$#" -lt 2 ]]; then
+    echo "Usage: convert-format <input-ext> <output-ext>"
+    return 1
+  fi
+  for f in *."$1"; do
+    local f_out=${f%.*}"."$2
+    echo "Creating $f_out..."
+    convert "$f" "$f_out"
+  done
+}
