@@ -13,8 +13,8 @@ if [[ -f ~/.bashrc.path ]]; then
 fi
 
 # Source common shell functions
-if [[ -f ~/.bashrc.commons ]]; then
-  . ~/.bashrc.commons
+if [[ -f ~/.bashrc.lib ]]; then
+  . ~/.bashrc.lib
 fi
 
 # Source extended shell configuration
