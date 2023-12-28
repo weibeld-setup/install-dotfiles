@@ -52,7 +52,7 @@ shopt -s histappend
 # Check for macOS, Linux, or WSL2
 is-mac()   { [[ "$OSTYPE" =~ darwin ]]; }
 is-linux() { [[ "$OSTYPE" =~ linux  ]]; }
-is-wsl2() { is-linux && [[ -n "$WSL_DISTRO_NAME" ]]; }
+is-wsl() { is-linux && [[ -n "$WSL_DISTRO_NAME" ]]; }
 
 # Is variable set (non-empty) or unset (empty)?
 is-set()   { [[ -n "$1" ]]; }
@@ -540,6 +540,11 @@ alias ld="ls -d */"
 alias wl='wc -l'
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias d=dotfiles
+alias ds='dotfiles status'
+alias da='dotfiles add'
+alias dco='dotfiles commit'
+alias dp='dotfiles push'
+alias ddi='dotfiles diff'
 complete -F _complete_alias dotfiles
 complete -F _complete_alias d
 alias ssh='TERM=xterm-256color ssh'
@@ -553,7 +558,7 @@ alias di='date -Iseconds'
 
 # File sizes
 alias dh='du -h'
-alias ds='du | sort -k 1 -n -r'
+# alias ds='du | sort -k 1 -n -r'
 alias dhm='du -h | grep M$"\t" | sort -k 1 -n -r'
 
 # Print or remove completion specification of a command
@@ -847,7 +852,7 @@ clip() {
   local cmd
   is-mac && cmd=pbcopy
   is-linux && cmd=xclip
-  is-wsl2 && cmd=clip.exe
+  is-wsl && cmd=clip.exe
   if [[ "$#" -eq 0 ]]; then
     eval "$cmd"
   else
@@ -1111,7 +1116,7 @@ gco() {
 
 # Symlink env-specific config file to be included into .gitconfig
 if is-linux; then
-  if is-wsl2; then
+  if is-wsl; then
     ln -sf ~/.gitconfig.credential.wsl2 ~/.gitconfig.credential
   else
     ln -sf ~/.gitconfig.credential.linux ~/.gitconfig.credential
@@ -2172,21 +2177,15 @@ jpterm() {
 
 alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
 
-#------------------------------------------------------------------------------#
-# Source scripts in ~/.bashrc.d
-#------------------------------------------------------------------------------#
-
+# Source custom shell scripts in ~/.bashrc.d
 if [[ -d ~/.bashrc.d ]]; then
   for f in ~/.bashrc.d/*.sh; do
     s "$f"
   done
 fi
 
-#------------------------------------------------------------------------------#
-# Ensure exit code 0 at this point
-#------------------------------------------------------------------------------#
+# Ensure exit code 0 (assuming that no auto-added code is present)
 :
 
-#------------------------------------------------------------------------------#
-# Auto-added code
-#------------------------------------------------------------------------------#
+# Auto-added code below this line
+
