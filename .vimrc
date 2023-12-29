@@ -1064,3 +1064,16 @@ endfunction
 function! MakePluralisedMessage(msg, n, singular, plural)
   return substitute(substitute(a:msg, '%w', (a:n == 1 ? a:singular : a:plural), 'g'), '%n', a:n, 'g')
 endfunction
+
+
+"=============================================================================="
+"   __  __ ___ ____   ____ 
+"  |  \/  |_ _/ ___| / ___|
+"  | |\/| || |\___ \| |    
+"  | |  | || | ___) | |___ 
+"  |_|  |_|___|____/ \____|
+"                          
+"=============================================================================="
+
+" Explicitly setting file types for specific file name patterns
+autocmd BufNewFile,BufRead .bashrc* set filetype=sh
