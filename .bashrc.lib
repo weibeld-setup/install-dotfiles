@@ -1,36 +1,58 @@
 # ~/.bashrc.lib
-
+#
+# Library of functions intended to be used in other scripts. All user-facing
+# functions start with a single underline (_).
 #------------------------------------------------------------------------------#
-# Library of shell functions that can be used in other .bashrc files.
-# Functions intended to be "exported" start with a single underline (_).
-#------------------------------------------------------------------------------#
 
-# Check for macOS, Linux, or WSL2
-_is-mac()   { [[ "$OSTYPE" =~ darwin ]]; }
-_is-linux() { [[ "$OSTYPE" =~ linux  ]]; }
-_is-wsl() { _is-linux && [[ -n "$WSL_DISTRO_NAME" ]]; }
+# Check if running on macOS, Linux, or WSL2 (special case of Linux)
+_is-mac() {
+  [[ "$OSTYPE" =~ darwin ]]
+}
+_is-linux() {
+  [[ "$OSTYPE" =~ linux  ]]
+}
+_is-wsl() {
+  _is-linux && [[ -n "$WSL_DISTRO_NAME" ]]
+}
 
-# Is variable set (non-empty) or unset (empty)?
-_is-set()   { [[ -n "$1" ]]; }
-_is-unset() { [[ -z "$1" ]]; }
+# Check if variable is set (i.e. non-empty) or unset (i.e. empty)?
+_is-set() {
+  [[ -n "$1" ]]
+}
+_is-unset() {
+  [[ -z "$1" ]]
+}
 
-# Check whether a given command is installed
+# Check whether a given command is installed and in the PATH
 _is-installed() { which "$1" &>/dev/null; }
 
-# Ensure that a given command is installed or print an error message otherwise
-_ensure-installed() { _is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }; }
+# Check whether a given Homebrew formula or cask is installed (macOS only)
+if _is-installed brew; then
+  _is-poured() {
+    brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
+  }
+fi
 
+# Ensure that a given command is installed and in the PATH, or return error
+_ensure-installed() {
+  _is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }
+}
 
-# Convert lower-case to upper-case. Read input from arg list or stdin.
-_to-upper() { (($# == 0)) && __to-upper || __to-upper <<<"$@"; }
+# Convert args or stdin to upper-case or lower-case
+_to-upper() {
+  (($# == 0)) && __to-upper || __to-upper <<<"$@"
+}
+_to-lower() {
+  (($# == 0)) && __to-lower || __to-lower <<<"$@"
+}
 __to-upper() { tr '[:lower:]' '[:upper:]'; }
-
-# Convert upper-case to lower-case. Read input from arg list or stdin.
-_to-lower() { (($# == 0)) && __to-lower || __to-lower <<<"$@"; }
 __to-lower() { tr '[:upper:]' '[:lower:]'; }
 
-
-# Pad args ($2...) with 0s to number of digits ($1). Read from arg list or stdin.
+# Pad a list of numbers with 0s up to the provided total number of digits.
+# Usage:
+#   _pad <digits> <number>...
+# Example:
+#   _pad 4 21 22 23  ==>  0021 0022 0023
 _pad() {
   (($# == 0)) && return 1
   (($# == 1)) && __pad "$1" $(</dev/stdin) || __pad $@
@@ -38,27 +60,35 @@ _pad() {
 __pad() { printf "%0$1d\n" ${@:2}; }
 
 # Insert string ($2) into filename ($1), just before filename extension.
-_insert() {
-  local file=$1; local str=$2
-  echo "${file%.*}${str}.${file##*.}"
+# Add a suffix to a file basename, just before the extension
+# Usage:
+#   _insert-basename-suffix <suffix> <file>
+# Example:
+#   _insert-basename-suffix -foo test.txt  ==>  test-foo.txt
+_insert-basename-suffix() {
+  local suffix=$1
+  local file=$2
+  echo "${file%.*}${suffix}.${file##*.}"
 }
 
 # Read text from stdin and format it to width of terminal with word wrapping.
 # This function is similar to the 'fmt' command, but it preserves all newlines.
-_format() {
-  awk -v c=$(tput cols) 'BEGIN{printf ".pl 1\n.ll %d\n.na\n.hy 0\n", c}{print}' |
+# Notes:
+#   - awk adds nroff commands to beginning of input (.pl = page length,
+#     .ll = line length, .na=disable justification, hy 0 = disable hyphenation)
+#   - nroff formats the text
+#   - sed reverts the conversion of - to U+2010 (UTF-8 0xE28090) done by nroff
+# See https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
+_wrap() {
+  awk -v c=$(tput cols) '
+    BEGIN {printf ".pl 1\n.ll %d\n.na\n.hy 0\n", c}
+    {print}' |
     nroff |
     sed 's/\xE2\x80\x90/-/g'
-  # - awk adds nroff commands to beginning of input (.pl = page length,
-  #   .ll = line length, .na=disable justification, hy 0 = disable hyphenation)
-  # - nroff formats the text
-  # - sed reverts the conversion of - to U+2010 (UTF-8 0xE28090) done by nroff
-  # https://docstore.mik.ua/orelly/unix3/upt/ch21_03.htm
 }
 
-
-# Split an args sequence at a custom delimiter into two arrays, one containing
-# the args before the delimiter and one containing the args after the delimiter.
+# Split an argument sequence into an array containing the args before a custom
+# delimiter and another array containing the args after the delimiter.
 # Usage:
 #   _splitargs <arr_a> <arr_b> <delim> <args>...
 # Args:
@@ -66,18 +96,19 @@ _format() {
 #   <arr_b>  Name of an array to which to assign the args after the delimiter
 #   <delim>  The delimiter (e.g. --)
 #   <args>   Sequence of arguments (possibly containing)
-# Example usage:
+# Example:
 #   _splitargs arr1 arr2 -- before1 before2 -- after1 after2
 # The above results in the following assignments to arr1 and arr2:
 #   - arr1["before1", "before2"]
 #   - arr2["after1", "after2"]
 # If the args sequence does not contain the delimiter, then all the args are
 # assigned to the first array (<arr_a>).
-# CAUTION: the passed in array names must not be __a and __b as these are the
-# locally used array names (causes a "circular name reference" error).
+# Notes:
+#   - The passed in array names must not be __a and __b as these are the
+#     locally used array names (causes a "circular name reference" error).
+#   - Nameref variables, see [1]
+# [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
 _splitargs() {
-  # Nameref variables, see [1]
-  # [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
   local -n __a=$1 __b=$2
   local delim=$3
   shift 3
@@ -92,8 +123,11 @@ _splitargs() {
 }
 
 # Test if an array contains a specific element.
-# Usage example: _has "${myarr[@]}" foo
-_has() {
+# Usage:
+#   _array-has <array> <element>
+# Example:
+#   _array-has "${myarr[@]}" foo
+_array-has() {
   local array=("${@:1:$#-1}")
   local element=${@:$#}
   for i in $(seq 0 $(("${#array[@]}"-1))); do
@@ -102,49 +136,31 @@ _has() {
   return 1
 }
 
-
-# Print an ANSI Select Graphic Rendition (SGR) escape sequence (see [1])
-#
+# Print an Select Graphic Rendition (SGR) [1] to set display attributes.
 # Usage:
-#   _c [<arg>]...
-# Where <arg> is either a colour, or one or multiple modifiers.
-#
-# Colours:
-#   - black
-#   - red
-#   - green
-#   - yellow
-#   - blue
-#   - magenta
-#   - cyan
-#   - white
-# A plus sign may be appended to each colour (e.g. 'red+'), in which case the
-# bright version of the colour is used.
-#
-# Modifiers:
-#   - x: reset
-#   - b: bold
-#   - d: dim
-#   - i: italic
-#   - u: underline
-# The x modifier is special as it resets all the previously set attributes
-# (colours and modifiers). Multiple modifiers can be combined in a single arg.
-#
-# Example usage:
-#   -c red        // Red 
-#   -c red+       // Bright red 
-#   -c red b      // Red, bold
-#   -c red biu    // Red, bold, italic, and underlined
-#   -c red b i u  // Equivalent to above command
-#   -c            // Reset all previously set colours and modifiers
-#   -c x          // Equivalent to above command
-#   -c bu         // Bold and underlined (don't change colour)
-#
-# Application:
-#   echo "$(c red bi)red $(c x blue+ u)blue$(c) normal"
-#
+#   _sgr [<colour/modifier>...]
+# Available colours:
+#   black, black+, red, red+, green, green+, yellow, yellow+, blue, blue+,
+#   magenta, magenta+, cyan, cyan+, white, white+
+# Available modifiers:
+#   x (reset), b (bold), d (dim), i (italic), u (underline)
+# Notes:
+#   - Colours with a + are the bright versions of the corresponding colours
+#   - The x modifier resets all set attributes (colours and modifiers). The
+#     same effect can be achieved by omitting any arguments.
+#   - Modifiers may be combined into a single argument
+# Examples:
+#   _sgr red        // Red 
+#   _sgr red+       // Bright red 
+#   _sgr red b      // Bold red
+#   _sgr red biu    // Bold, italic, and underlined red
+#   _sgr red b i u  // Same as above
+#   _sgr bu         // Bold and underlined (colour isn't changed)
+#   _sgr x          // Reset all previously set attributes
+#   _sgr            // Same as above
+#   echo "$(_sgr red bi)red $(_sgr x blue+ u)blue$(_sgr) normal"
 # [1] https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-_c() {
+_sgr() {
   local p
   for a in "$@"; do
     # Parse colour
@@ -181,10 +197,3 @@ _c() {
   # Print escape sequence
   printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
 }
-
-
-if _is-installed brew; then
-  _is-installed-homebrew() {
-    brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
-  }
-fi

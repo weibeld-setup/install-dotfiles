@@ -116,7 +116,7 @@ img-crop() {
   h=$3
   x=${4:-0}
   y=${5:-0}
-  out=${6:-$(_insert "$file" "_cropped${w}x${h}")}
+  out=${6:-$(_insert-basename-suffix "_cropped${w}x${h}" "$file")}
   convert -crop "${w}x${h}+${x}+${y}" "$file" "$out"
   echo "$out"
 }
@@ -125,7 +125,7 @@ img-crop() {
 img-resize() {
   _ensure-installed convert
   local file=$1; local format=$2  # Format "50%" or "512x512"
-  out_file=${3:-$(_insert "$file" _resized)}
+  out_file=${3:-$(_insert-basename-suffix _resized "$file")}
   convert "$file" -resize "$format" "$out_file"
 }
 

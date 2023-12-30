@@ -14,7 +14,7 @@ kubectl() {
   elif
     [[ "$*" =~ -h$|--help$ ]]
   then
-    command kubectl "$@" | _format | less
+    command kubectl "$@" | _wrap | less
   else
     command kubectl "$@"
   fi
@@ -229,11 +229,11 @@ kann() {
     end
     | .metadata
     | if (.name | test("'"$regex"'")) then
-        "'$(_c yellow+ b)'\(.name)'$(_c)'",
+        "'$(_sgr yellow+ b)'\(.name)'$(_sgr)'",
         if .annotations then
-          .annotations | to_entries[] | "  '$(_c b)'\(.key)'$(_c)'\n    \(.value)"
+          .annotations | to_entries[] | "  '$(_sgr b)'\(.key)'$(_sgr)'\n    \(.value)"
         else
-          "  '$(_c d)'<none>'$(_c)'"
+          "  '$(_sgr d)'<none>'$(_sgr)'"
         end
       else
         empty
@@ -261,7 +261,7 @@ klab() {
     | tr -s ' ' \
     | tr ' ' '\n' \
     | sed '/:/s/^/  /' \
-    | awk -F : '!/^ / {print "'$(_c b)'"$0"'$(_c)'"} /^ / {print "'$(_c)'"$1":'$(_c)'"$2"'$(_c)'"}' \
+    | awk -F : '!/^ / {print "'$(_sgr b)'"$0"'$(_sgr)'"} /^ / {print "'$(_sgr)'"$1":'$(_sgr)'"$2"'$(_sgr)'"}' \
     | column -s : -t 
     # Fill space between name and value with dots. Note that this prevents
     # selection of name or value by double-clicking in iTerm2.
@@ -280,7 +280,7 @@ kget() {
   local regex=${@:$#}
   local field=1
   # With --all-namespaces, the resource name is in the second field
-  _has "${args[@]}" --all-namespaces && field=2 
+  _array-has "${args[@]}" --all-namespaces && field=2 
   kubectl get "${args[@]}" --no-headers | awk "\$$field~/$regex/"
 }
 
@@ -301,7 +301,7 @@ kim() {
   [[ -z "$out" ]] && { echo "No pods found"; return; }
   # Make first two columns bold, if stdout is terminal or pipe (i.e. not file)
   if [[ ! -f /dev/stdout ]]; then
-    out=$(echo "$out" | sed "s/^\([^,]*,[^,]*\)/\1$(_c)/;s/^\([^,]*,\)/\1$(_c b)/;s/^\([^,]*\)/\1$(_c)/;s/^/$(_c b)/")
+    out=$(echo "$out" | sed "s/^\([^,]*,[^,]*\)/\1$(_sgr)/;s/^\([^,]*,\)/\1$(_sgr b)/;s/^\([^,]*\)/\1$(_sgr)/;s/^/$(_sgr b)/")
   fi
   # Remove first column, if pods are only from single namespace
   if [[ ! "${args1[@]}" =~ --all-namespaces|-A ]]; then
@@ -336,7 +336,7 @@ kcon() {
 # Note: requires GNU sed as gsed
 kncond() {
   for n in $(kubectl get nodes -o name | cut -d / -f 2); do
-    echo "$(_c b)$n$(_c)";
+    echo "$(_sgr b)$n$(_sgr)";
     command kubectl describe node "$n" \
       | gsed -n '/Conditions:/{:a;N;/Addresses:/!ba;p}' \
       | sed '1d;$d';
@@ -362,7 +362,7 @@ kncond() {
 #   lines are not supported.
 kf() {
   local kubectl_args grep_args regex
-  if _has "$@" --; then
+  if _array-has "$@" --; then
     local tmp
     _splitargs tmp grep_args -- "$@"
     # Overwrite $@ with args before '--'
@@ -378,8 +378,8 @@ kf() {
     local result
     if result=$(kubectl get "$kind" "$name" -n "$namespace" -o yaml | grep -n --color=always "${grep_args[@]}" "$regex"); then
       resource="$kind/$name"
-      _has "${kubectl_args[@]}" --all-namespaces && resource="$namespace/$resource"
-      echo "$(_c b)$resource$(_c)"
+      _array-has "${kubectl_args[@]}" --all-namespaces && resource="$namespace/$resource"
+      echo "$(_sgr b)$resource$(_sgr)"
       echo "$result" | sed 's/^/  /'
     fi
   done
@@ -424,7 +424,7 @@ kvol() {
       {{- else if .emptyDir }}{{ printf "EmptyDir: %s\n" .name }}
       {{- else }}{{ printf "EmptyDir: %s\n" .name }}{{ end }}
     {{- end }}' \
-    | sed -E 's/^([^ ].*)/'$(_c b)'\1'$(_c)'/'
+    | sed -E 's/^([^ ].*)/'$(_sgr b)'\1'$(_sgr)'/'
 } 
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)

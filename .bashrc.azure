@@ -20,7 +20,7 @@ az-tenants() {
   local user=${1:-$(az-users | fzf)}
   local json=$(az account list --all --query "[?user.name=='$user']" -o json)
   for t in $(echo "$json" | jq -r '.[] | .tenantId' | sort |  uniq); do
-    [[ -t 1 ]] && echo "$(_c b)$t$(_c)" || echo "$t"
+    [[ -t 1 ]] && echo "$(_sgr b)$t$(_sgr)" || echo "$t"
     echo "$json" | jq -r '.[] | select(.tenantId == "'$t'") | "  \(if .isDefault then "*" else "-" end) \(.name)\n    \(.id)"'
   done
 }
