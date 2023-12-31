@@ -1,22 +1,182 @@
 # ~/.bashrc.util
 #
-# Useful user-facing functions.
+# General-purpose end-user functions.
 #------------------------------------------------------------------------------#
 
-# Print operating system name and version
-os() {
-  if _is-linux; then
-    if [[ -f /etc/os-release ]]; then
-      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
-    else
-      echo unknown
-    fi
-  elif _is-mac; then
-    echo "$(sw_vers --productName)-$(sw-vers --productVersion)"
-  fi
+#------------------------------------------------------------------------------#
+# Text processing
+#------------------------------------------------------------------------------#
+
+# Capitalise the first letter of a string
+capitalize () {
+  echo $(echo "${1:0:1}" | tr '[:lower:]' '[:upper:]')"${1:1}"
 }
 
-# Enable/disable vi line-editing mode in Readline (default is emacs mode)
+# Transform a string of text to a kebab case identifier, which means:
+#   - All characters are transformed to lower-case
+#   - Punctuation characters are deleted
+#   - Whitespace characters are replaced by dashes 
+#   - Repeated dashes are squeezed to a single dash
+#   - Dashes at the beginning or end of the resulting identifier are deleted
+str2kebab() {
+  tr '[:upper:]' '[:lower:]' | \
+  sed 's/[[:punct:]]//g;s/[[:space:]]/-/g' | \
+  tr -s - | \
+  sed 's/^-//;s/-$//'
+}
+
+# Create random alphanumeric lower-case string of the specified length
+random() {
+  length=${1:-16}
+  [[ "$length" =~ ^[1-9][0-9]*$ ]] || { echo "Argument must be positive integer"; return 1; }
+  cat /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c "$length"
+  echo
+}
+
+# Generate a random hexadecimal string of the specified length
+random-hex(){
+  digits=$1
+  cat /dev/urandom | head -c $((("$digits"/2)+1)) | hexdump -e '"%x"' | head -c "$digits"
+  echo
+}
+
+#------------------------------------------------------------------------------#
+# Number processing
+#------------------------------------------------------------------------------#
+
+log2()  { bc -l <<<"l($1) / l(2)" ; }
+log10() { bc -l <<<"l($1) / l(10)"; }
+
+# Round number ($1) to specific number of digits ($2) after decimal point
+round() { printf "%.$2f\n" "$1"; }
+
+# Round number down to nearest integer
+floor() { bc <<<"$1/1"; }
+
+# Test if number is even or odd
+even() { (($1 % 2 == 0)); }
+odd()  { (($1 % 2 != 0)); }
+
+# Convert numbers between numeral systems. Input read from stdin or arg list.
+d2b() { __x2x 10  2 0    "$@"; }
+d2o() { __x2x 10  8 0    "$@"; }
+d2h() { __x2x 10 16 0    "$@"; }
+b2d() { __x2x  2 10 0    "$@"; }
+o2d() { __x2x  8 10 0    "$@"; }
+h2d() { __x2x 16 10 0    "$@"; }
+h2b() { __x2x 16  2 4    "$@"; }
+h2o() { __x2x 16  8 0    "$@"; }
+b2h() { __x2x  2 16 0.25 "$@"; }
+o2h() { __x2x  8 16 0    "$@"; }
+b2o() { __x2x  2  8 0.33 "$@"; }
+o2b() { __x2x  8  2 3    "$@"; }
+# Read input from stdin or arg list
+__x2x() {
+  (($# == 3)) && ____x2x "$@" $(</dev/stdin) || ____x2x "$@"
+}
+# Convert numbers and zero-pad based on number of digits and value of arg 3
+____x2x() {
+  local tok
+  for tok in $(_to-upper ${@:4}); do
+    bc <<< "obase=$2; ibase=$1; $tok" | _pad $(bc <<<"(${#tok}*$3)/1")
+  done
+}
+
+# Print a number in binary, octal, decimal, and hexadecmial formats. The number
+# can be provided as binary (0b...), octal (0...), decimal, or hexadecimal (0x...)
+n() {
+  local PAT_BIN='^0b([01]+)$'
+  local PAT_OCT='^0([0-7]+)$'
+  local PAT_DEC='^([1-9][0-9]*)$'
+  local PAT_HEX='^0x([0-9a-fA-F]+)$'
+  local PAT_0='^(0)$'
+  local n
+  # Convert number to decimal as an intermediary format
+  if   [[ $1 =~ $PAT_HEX ]]; then n=$(h2d ${BASH_REMATCH[1]})
+  elif [[ $1 =~ $PAT_BIN ]]; then n=$(b2d ${BASH_REMATCH[1]})
+  elif [[ $1 =~ $PAT_OCT ]]; then n=$(o2d ${BASH_REMATCH[1]})
+  elif [[ $1 =~ $PAT_DEC || $1 =~ $PAT_0 ]]; then n=${BASH_REMATCH[1]}
+  else
+    echo "Invalid number: $1" && return 1
+  fi
+  # Convert from decimal to other systems
+  echo "Binary: $(d2b $n)"
+  echo "Octal: $(d2o $n)"
+  echo "Decimal: $n"
+  echo "Hexadecimal: $(d2h $n)"
+}
+
+#------------------------------------------------------------------------------#
+# Date and time processing
+#------------------------------------------------------------------------------#
+
+# Convert a number of seconds to a "<X>m <Y>s" representation.
+sec2min() {
+  echo "$(("$1"/60))m $(("$1"%60))s"
+}
+
+if _is-mac; then
+  # Convert a date string in a specific format to a UNIX timestamp in seconds.
+  # If the date string doesn't include a time, the current time is assumed.
+  #   Usage:   date2ts <date> <date_format>
+  #   Example: date2ts "2016-02-02 13:21:45" "%Y-%m-%d %H:%M:%S"
+  date2ts() {
+    # Notes: -j: disable setting of system date, -f: format of input date
+    date -j -f "$2" "$1" '+%s'
+  }
+
+  # Convert a UNIX timestamp in seconds to a date string. The format of the
+  # output date string can be optinally specified (e.g. '+%Y-%m-%d %H:%M:%S').
+  #   Usage: ts2date <timestamp> [<out_format>]
+  ts2date() {
+    if is_set "$2"; then date -r "$1" "$2"
+    else                 date -r "$1"
+    fi
+  }
+elif _is-linux; then
+  # Convert a date string to a UNIX timestamp in seconds. The date string format
+  # is the one described in the 'date' man page as '--date=STRING'.
+  #   Usage: date2ts <date>
+  date2ts() {
+    date -d "$1" '+%s'
+  }
+
+  # Convert a UNIX timestamp in seconds to a date string. The format of the
+  # output date string can be optionally specified (e.g. '+%Y-%m-%d %H:%M:%S').
+  #   Usage: ts2date <timestamp> [<out_format>]
+  ts2date() {
+    if is_set "$2"; then date -d "@$1" "$2"
+    else                 date -d "@$1"
+    fi
+  }
+fi
+
+
+#------------------------------------------------------------------------------#
+# Networking
+#------------------------------------------------------------------------------#
+
+# Get public IP address of local machine
+myip() {
+  curl -s checkip.amazonaws.com
+}
+
+# Show local ports that are currently in use
+ports() {
+  lsof -i -P -n | grep LISTEN
+}
+
+change_mac() {
+  local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g;s/.$//')
+  sudo ifconfig en0 ether "$mac"
+  echo "Changed MAC address of en0 device to $mac"
+}
+
+#------------------------------------------------------------------------------#
+# Shell operations
+#------------------------------------------------------------------------------#
+
+# Enable/disable vi line-editing mode in shell input (Readline)
 vi-mode-on() {
   bind 'set editing-mode vi'  # Equivalen to set -o vi
   bind 'set show-mode-in-prompt on'
@@ -24,23 +184,38 @@ vi-mode-on() {
   bind 'set vi-cmd-mode-string \1\033[1;42;37m@\033[;1;32m|\033[m\2'
   bind '"\C-k": vi-movement-mode'
 }
+
 vi-mode-off() {
   bind 'set editing-mode emacs'  # Equivalen to set +o vi
   bind 'set show-mode-in-prompt off'
 }
 
-# Capitalise the first letter of a string
-capitalize () {
-  echo $(echo "${1:0:1}" | tr '[:lower:]' '[:upper:]')"${1:1}"
+# Show the source file and line where a function is defined
+funcfile() {
+  shopt -s extdebug
+  declare -F "$1"
+  shopt -u extdebug
+}
+complete -A function funcfile
+
+# Search through the central history file (see PROMPT_COMMAND) and either
+# print or directly execute the selected command
+# TODO: add option for just pasting the selected command to the prompt without
+# executing it
+hist() {
+  _ensure-installed fzf
+  # Directly execute the command
+  if [[ "$1" = -x ]]; then
+    eval $(cat "$HISTFILE" | fzf -e --tac)
+  # Print the command to stdout
+  else
+    cat "$HISTFILE" | fzf -e --tac
+  fi
 }
 
-# Create random alphanumeric string (only lower-case) of the specified length.
-random() {
-  length=${1:-16}
-  [[ "$length" =~ ^[1-9][0-9]*$ ]] ||
-    { echo "Argument must be positive integer"; return 1; }
-  cat /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c "$length"
-}
+#------------------------------------------------------------------------------#
+# Terminal colours
+#------------------------------------------------------------------------------#
 
 # Print the 8 base colours of this terminal (black, red, green, yellow, blue,
 # magenta, cyan, white) in normal, bright, and bold variations.
@@ -115,69 +290,9 @@ __c-echo() {
   else return 1; fi
 }
 
-# Transform a string of text to a kebab case identifier, which means:
-#   - All characters are transformed to lower-case
-#   - Punctuation characters are deleted
-#   - Whitespace characters are replaced by dashes 
-#   - Repeated dashes are squeezed to a single dash
-#   - Dashes at the beginning or end of the resulting identifier are deleted
-str2kebab() {
-  tr '[:upper:]' '[:lower:]' | \
-  sed 's/[[:punct:]]//g;s/[[:space:]]/-/g' | \
-  tr -s - | \
-  sed 's/^-//;s/-$//'
-}
-
-# Print large directories in the current directory. The threshold for printing
-# directories can be specified either as 'g' or 'm':
-#   - 'g': print directories larger than 1 GB
-#   - 'm': print directories larger than 1 MB
-large-dirs() {
-  threshold=${1:-g}
-  case "$threshold" in
-    g) pattern="G$(printf "\t")" ;;
-    m) pattern="M$(printf "\t")\|G$(printf "\t")" ;;
-  esac
-  sudo du -h | grep "$pattern"
-}
-
-# Get public IP address of local machine
-myip() {
-  curl -s checkip.amazonaws.com
-}
-
-# Show local ports that are currently in use
-ports() {
-  lsof -i -P -n | grep LISTEN
-}
-
-# Show the help page of a shell builtin like man page
-#help() { builtin help -m "$1" | less; }
-#complete -b help 
-
-# Show the source file and line where a function is defined
-funcfile() {
-  shopt -s extdebug
-  declare -F "$1"
-  shopt -u extdebug
-}
-complete -A function funcfile
-
-# Search through the central history file (see PROMPT_COMMAND) and either
-# print or directly execute the selected command
-# TODO: add option for just pasting the selected command to the prompt without
-# executing it
-hist() {
-  _ensure-installed fzf
-  # Directly execute the command
-  if [[ "$1" = -x ]]; then
-    eval $(cat "$HISTFILE" | fzf -e --tac)
-  # Print the command to stdout
-  else
-    cat "$HISTFILE" | fzf -e --tac
-  fi
-}
-
+#------------------------------------------------------------------------------#
+# File system operations
+#------------------------------------------------------------------------------#
 
 # Change into the directory of the file pointed to by a symlink
 cdl() {
@@ -211,16 +326,66 @@ dotf() { local d=${1:-.}; __dotx "${d%/}" f; }
 dotd() { local d=${1:-.}; __dotx "${d%/}" d; }
 __dotx() { find "$1" -name '.*' -maxdepth 1 -type "$2" | xargs -Ix basename x; }
 
-# Change the extension of a filename
-chext() { echo "${1%.*}.$2"; }
+# Print large directories in the current directory. The threshold for printing
+# directories can be specified either as 'g' or 'm':
+#   - 'g': print directories larger than 1 GB
+#   - 'm': print directories larger than 1 MB
+large-dirs() {
+  threshold=${1:-g}
+  case "$threshold" in
+    g) pattern="G$(printf "\t")" ;;
+    m) pattern="M$(printf "\t")\|G$(printf "\t")" ;;
+  esac
+  sudo du -h | grep "$pattern"
+}
+
+if _is-mac; then
+  # Recursively delete all .DS_Store files in the current directory
+  alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
+
+  # Move one or more files or directories to the trash
+  trash() {
+    for i in "$@"; do
+      # mv fails if target directory already exists
+      if ! mv "$i" ~/.Trash &>/dev/null; then
+        rm -rf ~/.Trash/"$i"
+        mv "$i" ~/.Trash
+      fi
+    done
+  }
+
+  make-space() {
+    sudo rm -rf ./Library/Caches
+  }
+fi
+
+#------------------------------------------------------------------------------#
+# Misc
+#------------------------------------------------------------------------------#
+
+# Print operating system name and version
+os() {
+  if _is-mac; then
+    echo "$(sw_vers -productName)-$(sw_vers -productVersion)"
+  elif _is-linux; then
+    if [[ -f /etc/os-release ]]; then
+      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
+    else
+      echo unknown
+    fi
+  fi
+}
 
 # Dump the hexadecimal code of the provided string (output depends on the char
 # encoding used by the terminal).
-enc() { echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-; }
+enc() {
+  echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-
+}
 
 # Print the character encoding used by the terminal
-enc-type() { echo $LC_CTYPE; }
-
+enc-type() {
+  echo $LC_CTYPE
+}
 
 # Copy to system clipboard
 # Usage:
@@ -239,104 +404,7 @@ clip() {
   fi
 }
 
-
-#------------------------------------------------------------------------------#
-# Numbers
-#------------------------------------------------------------------------------#
-
-log2()  { bc -l <<<"l($1) / l(2)" ; }
-log10() { bc -l <<<"l($1) / l(10)"; }
-
-# Round number ($1) to specific number of digits ($2) after decimal point
-round() { printf "%.$2f\n" "$1"; }
-
-# Round number down to nearest integer
-floor() { bc <<<"$1/1"; }
-
-# Test if number is even or odd
-even() { (($1 % 2 == 0)); }
-odd()  { (($1 % 2 != 0)); }
-
-# Convert numbers between numeral systems. Input read from stdin or arg list.
-d2b() { __x2x 10  2 0    "$@"; }
-d2o() { __x2x 10  8 0    "$@"; }
-d2h() { __x2x 10 16 0    "$@"; }
-b2d() { __x2x  2 10 0    "$@"; }
-o2d() { __x2x  8 10 0    "$@"; }
-h2d() { __x2x 16 10 0    "$@"; }
-h2b() { __x2x 16  2 4    "$@"; }
-h2o() { __x2x 16  8 0    "$@"; }
-b2h() { __x2x  2 16 0.25 "$@"; }
-o2h() { __x2x  8 16 0    "$@"; }
-b2o() { __x2x  2  8 0.33 "$@"; }
-o2b() { __x2x  8  2 3    "$@"; }
-# Read input from stdin or arg list
-__x2x() {
-  (($# == 3)) && ____x2x "$@" $(</dev/stdin) || ____x2x "$@"
-}
-# Convert numbers and zero-pad based on number of digits and value of arg 3
-____x2x() {
-  local tok
-  for tok in $(_to-upper ${@:4}); do
-    bc <<< "obase=$2; ibase=$1; $tok" | _pad $(bc <<<"(${#tok}*$3)/1")
-  done
-}
-
-# Print a number in binary, octal, decimal, and hexadecmial formats. The number
-# can be provided as binary (0b...), octal (0...), decimal, or hexadecimal (0x...)
-n() {
-  local PAT_BIN='^0b([01]+)$'
-  local PAT_OCT='^0([0-7]+)$'
-  local PAT_DEC='^([1-9][0-9]*)$'
-  local PAT_HEX='^0x([0-9a-fA-F]+)$'
-  local PAT_0='^(0)$'
-  local n
-  # Convert number to decimal as an intermediary format
-  if   [[ $1 =~ $PAT_HEX ]]; then n=$(h2d ${BASH_REMATCH[1]})
-  elif [[ $1 =~ $PAT_BIN ]]; then n=$(b2d ${BASH_REMATCH[1]})
-  elif [[ $1 =~ $PAT_OCT ]]; then n=$(o2d ${BASH_REMATCH[1]})
-  elif [[ $1 =~ $PAT_DEC || $1 =~ $PAT_0 ]]; then n=${BASH_REMATCH[1]}
-  else
-    echo "Invalid number: $1" && return 1
-  fi
-  # Convert from decimal to other systems
-  echo "Binary: $(d2b $n)"
-  echo "Octal: $(d2o $n)"
-  echo "Decimal: $n"
-  echo "Hexadecimal: $(d2h $n)"
-}
-
-# Generate a random hexadecimal string of a given length
-hex(){
-  digits=$1
-  cat /dev/urandom | head -c $((("$digits"/2)+1)) | hexdump -e '"%x"' | head -c "$digits"
-  echo
-}
-
-# Convert a number of seconds to a "<X>m <Y>s" representation.
-sec2min() {
-  echo "$(("$1"/60))m $(("$1"%60))s"
-}
-
-
-#------------------------------------------------------------------------------#
-# macOS and Linux specific functions
-#------------------------------------------------------------------------------#
 if _is-mac; then
-
-  # Recursively delete all .DS_Store files in the current directory
-  alias rmds='find . -type f \( -name .DS_Store -or -name ._.DS_Store \) -delete'
-
-  # Move one or more files or directories to the trash
-  trash() {
-    for i in "$@"; do
-      # mv fails if target directory already exists
-      if ! mv "$i" ~/.Trash &>/dev/null; then
-        rm -rf ~/.Trash/"$i"
-        mv "$i" ~/.Trash
-      fi
-    done
-  }
 
   # Make Finder hiding hidden files, e.g. dotfiles (default)
   finder_hide() {
@@ -350,65 +418,12 @@ if _is-mac; then
     killall Finder
   }
 
-  # Permanently disable the Mac startup sound
-  disable_startup_sound() {
-    sudo nvram SystemAudioVolume=%80  # %80 = 0x80 (hex) = 128 (dec)
-  }
-
-  # Permanently re-enable the Mac startup sound
-  enable_startup_sound() {
-    sudo nvram -d SystemAudioVolume
-  }
-
   # Get the bundle ID (e.g. com.apple.Preview) of an application
   app-id() {
     local app_name=$1
     osascript -e "id of app \"$app_name\""
   }
-
-  # Convert a date string in a specific format to a UNIX timestamp in seconds.
-  # If the date string doesn't include a time, the current time is assumed.
-  #   Usage:   date2ts <date> <date_format>
-  #   Example: date2ts "2016-02-02 13:21:45" "%Y-%m-%d %H:%M:%S"
-  date2ts() {
-    date -j -f "$2" "$1" '+%s'
-    # Note: -j: disable setting of system date, -f: format of input date
-  }
-
-  # Convert a UNIX timestamp in seconds to a date string. The format of the
-  # output date string can be optinally specified (e.g. '+%Y-%m-%d %H:%M:%S').
-  #   Usage: ts2date <timestamp> [<out_format>]
-  ts2date() {
-    if is_set "$2"; then date -r "$1" "$2"
-    else                 date -r "$1"
-    fi
-  }
-
-  # Remove application support files after uninstalling Docker Desktop on macOS
-  post-uninstall-docker-desktop() {
-    sudo rm -rf /usr/local/lib/docker/
-    # This is usually the only large directory
-    rm -rf ~/Library/Containers/com.docker.docker
-    rm -rf ~/.docker/
-    rm -rf ~/Library/Application\ Support/Docker\ Desktop
-    rm -rf ~/Library/Saved\ Application\ State/com.electron.docker*
-    rm -rf ~/Library/Preferences/com.electron.docker*
-    rm -rf ~/Library/Group\ Containers/group.com.docker
-    rm -rf ~/Library/Logs/Docker\ Desktop
-  }
-
-  make-space() {
-    sudo rm -rf ./Library/Caches
-  }
-
-
 elif _is-linux; then
-
-  alias ls='ls --color=auto'
-  alias grep='grep --color=auto'
-  alias fgrep='fgrep --color=auto'
-  alias egrep='egrep --color=auto'
-
   # Customise keyboard layout with setxkbmap:
   #   - Add Swiss German keyboard layout
   #   - Swap Caps-Lock and Ctrl keys
@@ -429,33 +444,15 @@ elif _is-linux; then
   # Source: https://wiki.archlinux.org/index.php/Keyboard_configuration_in_Xorg
   #         http://betabug.ch/blogs/ch-athens/1242
   config_keyboard() {
-    if $(which setxkbmap); then
-      # Set Swiss German and German as keyboard layouts (ch(de) is default)
-      setxkbmap 'ch(de),de'
-      # Left Alt-Shift for toggling between keyboard layouts
-      setxkbmap -option grp:lalt_lshift_toggle
-      # Swap Caps-Lock and Ctrl keys
-      setxkbmap -option ctrl:swapcaps
-    else
-      echo "Error: setxkbmap is not installed."
-    fi
+    _ensure-installed setxkbmap
+    # Set Swiss German and German as keyboard layouts (ch(de) is default)
+    setxkbmap 'ch(de),de'
+    # Left Alt-Shift for toggling between keyboard layouts
+    setxkbmap -option grp:lalt_lshift_toggle
+    # Swap Caps-Lock and Ctrl keys
+    setxkbmap -option ctrl:swapcaps
   }
 
-  # Convert a date string to a UNIX timestamp in seconds. The date string format
-  # is the one described in the 'date' man page as '--date=STRING'.
-  #   Usage: date2ts <date>
-  date2ts() {
-    date -d "$1" '+%s'
-  }
-
-  # Convert a UNIX timestamp in seconds to a date string. The format of the
-  # output date string can be optionally specified (e.g. '+%Y-%m-%d %H:%M:%S').
-  #   Usage: ts2date <timestamp> [<out_format>]
-  ts2date() {
-    if is_set "$2"; then date -d "@$1" "$2"
-    else                 date -d "@$1"
-    fi
-  }
 
   # Check if the dependencies of a Debian package are installed
   checkdep() {
@@ -470,17 +467,3 @@ elif _is-linux; then
     done
   }
 fi
-
-change_mac() {
-  local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g;s/.$//')
-  sudo ifconfig en0 ether "$mac"
-  echo "Changed MAC address of en0 device to $mac"
-}
-
-# JMESPath Terminal
-# https://github.com/jmespath/jmespath.terminal
-jpterm() {
-  python /Users/dw/Library/Python/2.7/lib/python/site-packages/jpterm.py
-}
-
-alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'

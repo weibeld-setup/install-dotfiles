@@ -1,0 +1,12 @@
+# ~/.bashrc.misc
+#
+# Functions and settings for miscellaneous narrow-purpose tools.
+#------------------------------------------------------------------------------#
+
+# JMESPath Terminal (https://github.com/jmespath/jmespath.terminal)
+jpterm() {
+  python /Users/dw/Library/Python/2.7/lib/python/site-packages/jpterm.py
+}
+
+# Grip (https://github.com/joeyespo/grip)
+alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'

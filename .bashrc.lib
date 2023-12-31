@@ -72,6 +72,16 @@ _insert-basename-suffix() {
   echo "${file%.*}${suffix}.${file##*.}"
 }
 
+
+# Change the extension of a file name.
+# Usage:
+#   _change-filename-extension <file> <extension>
+# Example:
+#   _change-filename-extension test.txt md  ==>  test.md
+_change-filename-extension() {
+  echo "${1%.*}.$2"
+}
+
 # Read text from stdin and format it to width of terminal with word wrapping.
 # This function is similar to the 'fmt' command, but it preserves all newlines.
 # Notes:

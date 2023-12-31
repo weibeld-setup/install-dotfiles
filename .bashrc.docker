@@ -72,3 +72,19 @@ dktags() {
     | sed 's/^\([a-zA-Z0-9._-]*\)/'$(echo -e '\e')'[33m\1'$(echo -e '\e')'[0m/' \
     | column -t -s $'\t' 
 }
+
+
+# Remove application support files after uninstalling Docker Desktop on macOS
+if _is-mac; then
+  post-uninstall-docker-desktop() {
+    sudo rm -rf /usr/local/lib/docker/
+    # This is usually the only large directory
+    rm -rf ~/Library/Containers/com.docker.docker
+    rm -rf ~/.docker/
+    rm -rf ~/Library/Application\ Support/Docker\ Desktop
+    rm -rf ~/Library/Saved\ Application\ State/com.electron.docker*
+    rm -rf ~/Library/Preferences/com.electron.docker*
+    rm -rf ~/Library/Group\ Containers/group.com.docker
+    rm -rf ~/Library/Logs/Docker\ Desktop
+  }
+fi
