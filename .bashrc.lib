@@ -1,7 +1,7 @@
 # ~/.bashrc.lib
 #
-# Library of functions intended to be used in other scripts. All user-facing
-# functions start with a single underline (_).
+# Shell function library. All functions starting with a single underscore are
+# intended to be used by other .bashrc.* files.
 #------------------------------------------------------------------------------#
 
 # Check if running on macOS, Linux, or WSL2 (special case of Linux)
@@ -24,7 +24,9 @@ _is-unset() {
 }
 
 # Check whether a given command is installed and in the PATH
-_is-installed() { which "$1" &>/dev/null; }
+_is-installed() {
+  which "$1" &>/dev/null
+}
 
 # Check whether a given Homebrew formula or cask is installed (macOS only)
 if _is-installed brew; then

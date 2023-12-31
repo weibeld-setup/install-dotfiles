@@ -1,6 +1,10 @@
 # ~/.bashrc
+#
+# Master .bashrc file sourcing all the specialised .bashrc.* files.
+#------------------------------------------------------------------------------#
 
-# Shell options (first, because some of them alter shell syntax, e.g. extglob)
+# Shell options (these come first before sourcing any of the .bashrc.* files
+# because some of these options, such as extglob, alter the shell syntax).
 shopt -s extglob
 shopt -s nullglob
 shopt -s direxpand
@@ -12,17 +16,17 @@ if [[ -f ~/.bashrc.path ]]; then
   . ~/.bashrc.path
 fi
 
-# Source common shell functions
+# Source shell function library
 if [[ -f ~/.bashrc.lib ]]; then
   . ~/.bashrc.lib
 fi
 
-# Source extended shell configuration
+# Source main shell configuration
 if [[ -f ~/.bashrc.config ]]; then
   . ~/.bashrc.config
 fi
 
-# Source all other .bashrc files
+# Source all other .bashrc.* files
 for f in ~/.bashrc.!(path|commons|config); do
   [[ -f "$f" ]] && . "$f"
 done
