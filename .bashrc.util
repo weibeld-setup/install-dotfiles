@@ -1,5 +1,8 @@
-# ~/.bashrc.misc
+# ~/.bashrc.util
 #
+# Useful user-facing functions.
+#------------------------------------------------------------------------------#
+
 # Print operating system name and version
 os() {
   if _is-linux; then
@@ -124,54 +127,6 @@ str2kebab() {
   tr -s - | \
   sed 's/^-//;s/-$//'
 }
-
-alias br='vim ~/.bashrc'
-alias bp='vim ~/.bash_profile'
-alias sbr='. ~/.bashrc'
-alias sbp='. ~/.bash_profile'
-alias vr='vim ~/.vimrc'
-alias rmf='rm -rf'
-alias la="ls -a"
-alias ll="ls -al"
-alias ld="ls -d */"
-alias wl='wc -l'
-alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-alias d=dotfiles
-alias ds='dotfiles status'
-alias da='dotfiles add'
-alias dco='dotfiles commit'
-alias dp='dotfiles push'
-alias ddi='dotfiles diff'
-complete -F _complete_alias dotfiles
-complete -F _complete_alias d
-alias ssh='TERM=xterm-256color ssh'
-alias torsocks='TERM=xterm-256color torsocks'
-alias pgrep='pgrep -fl'
-alias x='chmod +x'
-alias X='chmod -x'
-alias which='which -a'
-alias watch='watch -n 1'
-alias di='date -Iseconds'
-
-# File sizes
-alias dh='du -h'
-# alias ds='du | sort -k 1 -n -r'
-alias dhm='du -h | grep M$"\t" | sort -k 1 -n -r'
-
-# Print or remove completion specification of a command
-alias comp='complete -p'
-alias compr='complete -r'
-complete -c comp compr
-
-# Set default options
-alias curl='curl -s'
-alias sed='sed -E'
-alias gsed='gsed -E'
-
-
-# Coloured diff output (requires diffutils [1] package)
-# [1] https://www.gnu.org/software/diffutils/
-alias diff='diff --color'
 
 # Print large directories in the current directory. The threshold for printing
 # directories can be specified either as 'g' or 'm':
@@ -515,7 +470,6 @@ elif _is-linux; then
     done
   }
 fi
-
 
 change_mac() {
   local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g;s/.$//')
