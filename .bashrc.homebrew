@@ -1,5 +1,0 @@
-# ~/.bashrc.homebrew
-
-# PATH is set in ~/.bashrc.path
-eval $(brew shellenv | grep -v 'export PATH=')
-export HOMEBREW_NO_AUTO_UPDATE=1
