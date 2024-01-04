@@ -19,3 +19,8 @@
         # Use rebase instead of merge when pulling a branch
         # https://git-scm.com/docs/git-config#Documentation/git-config.txt-pullrebase
 	rebase = false
+[credential]
+	helper = 
+	helper = /usr/local/bin/git-credential-manager
+[credential "https://dev.azure.com"]
+	useHttpPath = true
