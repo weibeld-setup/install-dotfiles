@@ -49,16 +49,27 @@ _to-lower() {
 __to-upper() { tr '[:lower:]' '[:upper:]'; }
 __to-lower() { tr '[:upper:]' '[:lower:]'; }
 
-# Pad a list of numbers with 0s up to the provided total number of digits.
+# 0-pad a list of strings up to a given total length. If no strings are given
+# as args, then stdin is read and interpreted as the list of strings to pad.
 # Usage:
-#   _pad <digits> <number>...
+#   _pad <length> [<str>...]
 # Example:
-#   _pad 4 21 22 23  ==>  0021 0022 0023
+#   _pad 5 1 2 foo verylong  ==>  00001 00002 00foo verylong
+#   echo 1 2 foo verylong | _pad 5  ==>  00001 00002 00foo verylong
 _pad() {
   (($# == 0)) && return 1
   (($# == 1)) && __pad "$1" $(</dev/stdin) || __pad $@
 }
-__pad() { printf "%0$1d\n" ${@:2}; }
+__pad() {
+  for s in "${@:2}"; do
+    local pad=$(($1-${#s}))
+    if [[ "$pad" -lt 1 ]]; then
+      echo "$s"
+    else
+      echo "$(printf '%*s' "$pad" | tr ' ' 0)$s"
+    fi
+  done
+}
 
 # Insert string ($2) into filename ($1), just before filename extension.
 # Add a suffix to a file basename, just before the extension
