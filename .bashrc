@@ -27,7 +27,7 @@ if [[ -f ~/.bashrc.config ]]; then
 fi
 
 # Source all other .bashrc.* files
-for f in ~/.bashrc.!(path|commons|config); do
+for f in ~/.bashrc.!(path|lib|config); do
   [[ -f "$f" ]] && . "$f"
 done
 
