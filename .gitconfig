@@ -1,31 +1,21 @@
 [user]
 	name = Daniel Weibel
 	email = danielmweibel@gmail.com
-	useConfigOnly = true
+        # Avoid automatic guessing of user.name and user.email
+        # https://git-scm.com/docs/git-config#Documentation/git-config.txt-useruseConfigOnly
+        useConfigOnly = true
 [core]
 	excludesfile = ~/.gitignore_global
-	autocrlf = input
-[push]
-	default = simple
-[alias]
-	a = add
-	c = commit
-	st = status
-	co = checkout
-	br = branch
-[difftool "sourcetree"]
-	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path = 
+        # Convert CRLF to LF on commit, but not the other way around on checkout
+        # https://git-scm.com/docs/git-config#Documentation/git-config.txt-coreautocrlf
+        autocrlf = input
 [mergetool]
-	keepBackup = false
-[filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+        # Don't keep file with conflict markers in case of merge conflict
+        # https://git-scm.com/docs/git-config#Documentation/git-config.txt-mergetoolkeepBackup
+        keepBackup = false
 [init]
-	defaultBranch = main
-[include]
-	path = ~/.gitconfig.credential
+        defaultBranch = main
 [pull]
+        # Use rebase instead of merge when pulling a branch
+        # https://git-scm.com/docs/git-config#Documentation/git-config.txt-pullrebase
 	rebase = false
