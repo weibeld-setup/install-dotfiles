@@ -1,90 +1,70 @@
 # ~/.bashrc.aws
-
-#------------------------------------------------------------------------------#
-# AWS CLI
+#
 #------------------------------------------------------------------------------#
 
-
-pw() {
-  if ! which -s aws; then
-    echo "You must install the AWS CLI to use this command"
-    return 1
-  fi
-  LENGTH=${1:-32}
-  aws secretsmanager get-random-password --exclude-punctuation --password-length "$LENGTH" --query RandomPassword --output text
-}
-
-alias a=aws
-alias ae="aws ec2"
-alias ac="vim ~/.aws/config"
-alias acr="vim ~/.aws/credentials"
-
-# List enabled (or all) AWS regions.
+# List AWS regions including opt-in status.
 # Usage:
-#   areg [-a|--all]
-# Without any arguments, only the IDs of the enabled regions are listed (since
-# 2019, new regions have to be explicitly enabled [1]). With -a|--all, all
-# regions (including disabled ones) are listed, including additional info.
+#   areg [-c]
+# The -c option prints the output in CSV format without any colours.
+# Notes:
+#   - Since 2019, new regions have to be explicitly enabled [1]
+#   - Region names are hardcoded and must be manually udpated in this function
+#     when new AWS regions are introduced.
+#   - Full list of regions including region names can be found in [2]
 # [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
-# TODO: add support for additional arguments to aws CLI (e.g. --profile)
+# [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 areg() {
-  if [[ "$#" = 0 ]]; then
-    aws ec2 describe-regions \
-      --no-cli-auto-prompt \
-      --query 'Regions[].RegionName' |
-      jq -r '.[]' |
-      sort
-  # sed expression for inserting region name column can be created from a file
-  # containing region IDs and names in tab-separated columns as in [1]. A full
-  # list of regions, including human-readable names, can be found in [2].
-  # [1] sed 's|^|        s/^|;s|\t|\\t/\\0|;s|$|\\t/;|'
-  # [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
-  elif [[ "$1" =~ --all|-a ]]; then
+  local csv=$( \
     aws ec2 describe-regions \
       --no-cli-auto-prompt \
       --all-regions \
       --query 'Regions[].[RegionName,OptInStatus]' |
-      jq -r '.[] | join("\t")' |
-      sed "
-        s/\topted-in/\tenabled\tManually enabled/;
-        s/\topt-in-not-required/\tenabled\tEnabled by default/;
-        s/\tnot-opted-in/\tdisabled\tMay be enabled/" |
-      sed '
-        s/^af-south-1\t/\0Cape Town\t/;
-        s/^ap-east-1\t/\0Hong Kong\t/;
-        s/^ap-northeast-1\t/\0Tokyo\t/;
-        s/^ap-northeast-2\t/\0Seoul\t/;
-        s/^ap-northeast-3\t/\0Osaka\t/;
-        s/^ap-south-1\t/\0Mumbai\t/;
-        s/^ap-south-2\t/\0Hyderabad\t/;
-        s/^ap-southeast-1\t/\0Singapore\t/;
-        s/^ap-southeast-2\t/\0Sydney\t/;
-        s/^ap-southeast-3\t/\0Jakarta\t/;
-        s/^ap-southeast-4\t/\0Melbourne\t/;
-        s/^ca-central-1\t/\0Central\t/;
-        s/^eu-central-1\t/\0Frankfurt\t/;
-        s/^eu-central-2\t/\0Zurich\t/;
-        s/^eu-north-1\t/\0Stockholm\t/;
-        s/^eu-south-1\t/\0Milan\t/;
-        s/^eu-south-2\t/\0Spain\t/;
-        s/^eu-west-1\t/\0Ireland\t/;
-        s/^eu-west-2\t/\0London\t/;
-        s/^eu-west-3\t/\0Paris\t/;
-        s/^me-central-1\t/\0UAE\t/;
-        s/^me-south-1\t/\0Bahrain\t/;
-        s/^sa-east-1\t/\0São Paulo\t/;
-        s/^us-east-1\t/\0N. Virginia\t/;
-        s/^us-east-2\t/\0Ohio\t/;
-        s/^us-west-1\t/\0N. California\t/;
-        s/^us-west-2\t/\0Oregon\t/' |
-      sort -t $'\t' -k3,3r -k1,1 |
-      column -t -s $'\t' |
-      sed "
-        /May be enabled$/s/^/$(_sgr d)/;s/$/$(_sgr)/;
-        s/Manually enabled/$(_sgr d)\0$(_sgr)/" |
-      sed "
-        s/ enabled /$(_sgr green)\0$(_sgr)/;
-        s/ disabled /$(_sgr)$(_sgr red)\0$(_sgr)$(_sgr d)/"
+    jq -r '.[] | join(",")' |
+    sed '
+      s/,opted-in/,enabled,Opted-in/;
+      s/,opt-in-not-required/,enabled,Default/;
+      s/,not-opted-in/,disabled,Opt-in possible/' |
+    sed '
+      s/^af-south-1,/\0Cape Town,/;
+      s/^ap-east-1,/\0Hong Kong,/;
+      s/^ap-northeast-1,/\0Tokyo,/;
+      s/^ap-northeast-2,/\0Seoul,/;
+      s/^ap-northeast-3,/\0Osaka,/;
+      s/^ap-south-1,/\0Mumbai,/;
+      s/^ap-south-2,/\0Hyderabad,/;
+      s/^ap-southeast-1,/\0Singapore,/;
+      s/^ap-southeast-2,/\0Sydney,/;
+      s/^ap-southeast-3,/\0Jakarta,/;
+      s/^ap-southeast-4,/\0Melbourne,/;
+      s/^ca-central-1,/\0Central,/;
+      s/^ca-west-1,/\0Calgary,/;
+      s/^eu-central-1,/\0Frankfurt,/;
+      s/^eu-central-2,/\0Zurich,/;
+      s/^eu-north-1,/\0Stockholm,/;
+      s/^eu-south-1,/\0Milan,/;
+      s/^eu-south-2,/\0Spain,/;
+      s/^eu-west-1,/\0Ireland,/;
+      s/^eu-west-2,/\0London,/;
+      s/^eu-west-3,/\0Paris,/;
+      s/^il-central-1,/\0Tel Aviv,/;
+      s/^me-central-1,/\0UAE,/;
+      s/^me-south-1,/\0Bahrain,/;
+      s/^sa-east-1,/\0São Paulo,/;
+      s/^us-east-1,/\0North Virginia,/;
+      s/^us-east-2,/\0Ohio,/;
+      s/^us-west-1,/\0North California,/;
+      s/^us-west-2,/\0Oregon,/' |
+    sort \
+  )
+  if [[ "$1" = -c ]]; then
+    echo "$csv"
+  else
+    echo "$csv" |
+    column -t -s , |
+    sed "
+      s/Default/$(_sgr black+)\0$(_sgr)/;
+      s/enabled/$(_sgr green)\0$(_sgr)/;
+      s/disabled/$(_sgr red)\0$(_sgr)/"
   fi
 }
 
