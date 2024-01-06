@@ -83,7 +83,6 @@ _insert-basename-suffix() {
   echo "${file%.*}${suffix}.${file##*.}"
 }
 
-
 # Change the extension of a file name.
 # Usage:
 #   _change-filename-extension <file> <extension>
@@ -109,39 +108,12 @@ _wrap() {
     sed 's/\xE2\x80\x90/-/g'
 }
 
-# Split an argument sequence into an array containing the args before a custom
-# delimiter and another array containing the args after the delimiter.
-# Usage:
-#   _splitargs <arr_a> <arr_b> <delim> <args>...
-# Args:
-#   <arr_a>  Name of an array to which to assign the args before the delimiter
-#   <arr_b>  Name of an array to which to assign the args after the delimiter
-#   <delim>  The delimiter (e.g. --)
-#   <args>   Sequence of arguments (possibly containing)
-# Example:
-#   _splitargs arr1 arr2 -- before1 before2 -- after1 after2
-# The above results in the following assignments to arr1 and arr2:
-#   - arr1["before1", "before2"]
-#   - arr2["after1", "after2"]
-# If the args sequence does not contain the delimiter, then all the args are
-# assigned to the first array (<arr_a>).
-# Notes:
-#   - The passed in array names must not be __a and __b as these are the
-#     locally used array names (causes a "circular name reference" error).
-#   - Nameref variables, see [1]
-# [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
-_splitargs() {
-  local -n __a=$1 __b=$2
-  local delim=$3
-  shift 3
-  for i in $(seq 1 "$#"); do
-    if [[ "${!i}" = "$delim" ]]; then
-      __a=("${@:1:$(($i-1))}")  # Args before delimiter
-      __b=("${@:$(($i+1))}")    # Args after delimiter
-      return
-    fi
+# Print the elements of an array with indices (alternative to 'declare -p <a>')
+_array-print() {
+  [[ "$#" -eq 0 ]] && return
+  for i in $(seq "$#"); do
+    echo "[$(($i-1))]: ${!i}"
   done
-  __a=("$@")  # If the args don't contain the delimiter
 }
 
 # Test if an array contains a specific element.
@@ -152,10 +124,72 @@ _splitargs() {
 _array-has() {
   local array=("${@:1:$#-1}")
   local element=${@:$#}
-  for i in $(seq 0 $(("${#array[@]}"-1))); do
+  for i in "${!array[@]}"; do
     [[ "${array[$i]}" = "$element" ]] && return 0
   done
   return 1
+}
+
+# Remove all occurrences of a specific element from an array.
+# Usage:
+#   _array-remove <array> <element> <out_array_name>
+# Example:
+#   _array-remove "${myarr[@]}" foo result
+# In the above example, all "foo" elements are removed from the 'myarr' array
+# and the resulting array is saved in a variable named 'result'.
+# Notes:
+#   - The result array variable does NOT need to be declared beforehand
+#   - The assignment to the passed in result array name is implemented through
+#     the nameref attribute [1] (requires at least Bash 4.3)
+# [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
+_array-remove() {
+  local in_array=("${@:1:$#-2}")
+  local element=${@:$#-1:1}
+  local -n __ref=${@:$#}
+  __ref=()
+  for i in "${!in_array[@]}"; do
+    if [[ "${in_array[$i]}" != "$element" ]]; then
+      __ref+=("${in_array[$i]}")
+    fi
+  done
+}
+
+# Split arguments into two arrays separated by a delimiter.
+# Usage:
+#   _splitargs <array_name_1> <arrary_name_2> <delimiter> <args>...
+# Args:
+#   <array_name_1>  Name of array variable for elements before delimiter
+#   <array_name_2>  Name of array variable for elements after delimiter
+#   <delimiter>     Delimiter string 
+#   <args>...       Argument sequence containing elements and delimiter
+# Example:
+#   _splitargs a1 a2 -- foo bar -- baz kux
+# The above assigns ["foo" "bar"] to a variable named 'a1' and ["baz" "kux"] to
+# a variable named 'a2'. These variables can be used in the calling context.
+# Notes:
+#   - The passed variable names do NOT need to be declared beforehand
+#   - If <args>... does not contain the delimiter, then all elements are
+#     assigned to <array_name_1> (and <array_name_2> is left empty)
+#   - If <args>... contains multiple occurrences of the delimiter, then the
+#     split happens at the first of these delimiters.
+#   - The passed variable names must not be '__ref1' and '__ref2' as these are
+#     internally used (otherwise, a "circular name reference" error occurs).
+#   - The assignments to the passed in variable names are implemented through
+#     the nameref attribute [1] (requires at least Bash 4.3)
+# [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
+_splitargs() {
+  local -n __ref1=$1 __ref2=$2
+  local d=$3
+  shift 3
+  for i in $(seq "$#"); do
+    if [[ "${!i}" = "$d" ]]; then
+      __ref1=("${@:1:$(($i-1))}")  # Arguments before delimiter
+      __ref2=("${@:$(($i+1))}")    # Arguments after delimiter
+      return
+    fi
+  done
+  # If no delimiter found
+  __ref1=("$@")
 }
 
 # Print an Select Graphic Rendition (SGR) [1] to set display attributes.

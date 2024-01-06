@@ -16,7 +16,7 @@ if _is-installed terraform; then
   alias tfdd='terraform destroy --auto-approve'
 
   # Enable command completion
-  if _is-mac; then
+  if _is-mac && _is-installed brew; then
     complete -C $(brew --prefix)/bin/terraform terraform
   elif _is-linux; then
     complete -C /usr/bin/terraform terraform
