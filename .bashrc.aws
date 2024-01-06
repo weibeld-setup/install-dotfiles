@@ -1,22 +1,47 @@
 # ~/.bashrc.aws
 #
+# Utility functions and settings for the AWS CLI.
 #------------------------------------------------------------------------------#
+
+# Enable command completion
+if _is-mac && _is-installed brew; then
+  complete -C $(brew --prefix)/bin/aws_completer aws
+elif _is-linux; then
+  complete -C aws_completer aws
+fi
 
 # List AWS regions including opt-in status.
 # Usage:
-#   areg [-c]
-# The -c option prints the output in CSV format without any colours.
+#   areg [-c] [region...]
+# Examples:
+#   areg
+#   areg -c
+#   areg us-west-1 us-west-2
+#   areg eu- us-
+# The -c option outputs the result in CSV format (may occur anywhere in the
+# argument string). If no regions are specified, then all regions are listed.
+# It's also possible to specify substrings for the region in order to match
+# multiple regions with a single pattern.
 # Notes:
 #   - Since 2019, new regions have to be explicitly enabled [1]
-#   - Region names are hardcoded and must be manually udpated in this function
-#     when new AWS regions are introduced.
+#   - Region names are hardcoded in the function body and must be manually
+#     udpated when new AWS regions become available 
 #   - Full list of regions including region names can be found in [2]
 # [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
 # [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 areg() {
+  # Parse command-line arguments
+  if _array-has "$@" -c; then
+    local output_csv=1
+  fi
+  local -a regions
+  _array-remove "$@" -c regions
+
+  # Retrieve all regions in CSV format
   local csv=$( \
     aws ec2 describe-regions \
       --no-cli-auto-prompt \
+      --output json \
       --all-regions \
       --query 'Regions[].[RegionName,OptInStatus]' |
     jq -r '.[] | join(",")' |
@@ -56,25 +81,37 @@ areg() {
       s/^us-west-2,/\0Oregon,/' |
     sort \
   )
-  if [[ "$1" = -c ]]; then
-    echo "$csv"
+
+  # Filter desired regions in CSV format
+  local grep_pattern
+  for r in "${regions[@]}"; do
+    grep_pattern+="$r\|"
+  done
+  grep_pattern="${grep_pattern%\\|}"
+  local csv_filtered=$(echo "$csv" | grep "$grep_pattern")
+
+  # Output result either as CSV or pretty table
+  if _is-set "$output_csv"; then
+    echo "$csv_filtered"
   else
-    echo "$csv" |
+    echo "$csv_filtered" |
     column -t -s , |
-    sed "
-      s/Default/$(_sgr black+)\0$(_sgr)/;
-      s/enabled/$(_sgr green)\0$(_sgr)/;
-      s/disabled/$(_sgr red)\0$(_sgr)/"
+    sed "s/Default/$(_sgr black+)\0$(_sgr)/;s/enabled/$(_sgr green)\0$(_sgr)/;s/disabled/$(_sgr red)\0$(_sgr)/" |
+    nl -w 2 -s '  '
   fi
 }
 
-# List the availability zones of a specific region. Additional arguments for
-# the 'describe-availability-zones' command may be supplied (e.g. --region).
+# List availability zones of a specific region
+# Usage:
+#   aaz [region]
+# If no region is specified, default region from the default profile is used.
 aaz() {
+  _is-set "$1" && local region="$1" || local region=$(aws configure get region)
   aws ec2 describe-availability-zones \
     --no-cli-auto-prompt \
+    --output json \
     --query 'AvailabilityZones[].ZoneName' \
-    "$@" |
+    --region "$region" |
     jq -r '.[]' |
     sort
 }
@@ -197,12 +234,4 @@ sm() {
   [[ -z "$1" ]] && { echo "Usage: smd STACK_NAME"; return 1; }
   smp && smd "$1"
 }
-
-# Command completion
-if _is-mac; then
-  complete -C $(brew --prefix)/bin/aws_completer aws
-fi
-if _is-linux; then
-  complete -C aws_completer aws
-fi
 
