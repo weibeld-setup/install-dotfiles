@@ -38,7 +38,7 @@ areg() {
   _array-remove "$@" -c regions
 
   # Retrieve all regions in CSV format
-  local csv=$( \
+  local csv=$(
     aws ec2 describe-regions \
       --no-cli-auto-prompt \
       --output json \
@@ -79,15 +79,11 @@ areg() {
       s/^us-east-2,/\0Ohio,/;
       s/^us-west-1,/\0North California,/;
       s/^us-west-2,/\0Oregon,/' |
-    sort \
+    sort
   )
 
   # Filter desired regions in CSV format
-  local grep_pattern
-  for r in "${regions[@]}"; do
-    grep_pattern+="$r\|"
-  done
-  grep_pattern="${grep_pattern%\\|}"
+  local grep_pattern=$(_array-join "${regions[@]}" '\|')
   local csv_filtered=$(echo "$csv" | grep "$grep_pattern")
 
   # Output result either as CSV or pretty table

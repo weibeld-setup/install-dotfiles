@@ -130,6 +130,23 @@ _array-has() {
   return 1
 }
 
+# Join the elements of an array with a delimiter.
+# Usage:
+#   _array-join <array> <delimiter>
+# Example:
+#   _array-join "${myarr[@]}" ::
+# The above example joins the elements of the array with a '::' delimiter.
+# A delimiter may be an arbitrary string.
+_array-join() {
+  local array=("${@:1:$#-1}")
+  local d=${@:$#}
+  local str="${array[0]}"
+  for e in "${array[@]:1}"; do
+    str+="$d$e"
+  done
+  echo "$str"
+}
+
 # Remove all occurrences of a specific element from an array.
 # Usage:
 #   _array-remove <array> <element> <out_array_name>
