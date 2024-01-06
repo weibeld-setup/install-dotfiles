@@ -18,15 +18,14 @@ fi
 #   areg -c
 #   areg us-west-1 us-west-2
 #   areg eu- us-
-# The -c option outputs the result in CSV format (may occur anywhere in the
-# argument string). If no regions are specified, then all regions are listed.
-# It's also possible to specify substrings for the region in order to match
-# multiple regions with a single pattern.
+# If no regions are specified, then all regions are listed. The -c option
+# outputs the result in CSV format. Regions may be specified with substrings
+# that may match multiple regions (e.g. "eu-", "us-", etc.).
 # Notes:
 #   - Since 2019, new regions have to be explicitly enabled [1]
 #   - Region names are hardcoded in the function body and must be manually
 #     udpated when new AWS regions become available 
-#   - Full list of regions including region names can be found in [2]
+#   - Full list of regions including full region names can be found in [2]
 # [1] https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
 # [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 areg() {
@@ -46,9 +45,9 @@ areg() {
       --query 'Regions[].[RegionName,OptInStatus]' |
     jq -r '.[] | join(",")' |
     sed '
-      s/,opted-in/,enabled,Opted-in/;
-      s/,opt-in-not-required/,enabled,Default/;
-      s/,not-opted-in/,disabled,Opt-in possible/' |
+      s/,opted-in/,Enabled,Opted-in/;
+      s/,opt-in-not-required/,Enabled,Default/;
+      s/,not-opted-in/,Disabled,Opt-in possible/' |
     sed '
       s/^af-south-1,/\0Cape Town,/;
       s/^ap-east-1,/\0Hong Kong,/;
@@ -84,7 +83,7 @@ areg() {
 
   # Filter desired regions in CSV format
   local grep_pattern=$(_array-join "${regions[@]}" '\|')
-  local csv_filtered=$(echo "$csv" | grep "$grep_pattern")
+  local csv_filtered=$(echo "$csv" | grep -- "$grep_pattern")
 
   # Output result either as CSV or pretty table
   if _is-set "$output_csv"; then
@@ -92,24 +91,73 @@ areg() {
   else
     echo "$csv_filtered" |
     column -t -s , |
-    sed "s/Default/$(_sgr black+)\0$(_sgr)/;s/enabled/$(_sgr green)\0$(_sgr)/;s/disabled/$(_sgr red)\0$(_sgr)/" |
+    sed "s/Default/$(_sgr black+)\0$(_sgr)/;s/Enabled/$(_sgr green)\0$(_sgr)/;s/Disabled/$(_sgr red)\0$(_sgr)/" |
     nl -w 2 -s '  '
   fi
 }
 
-# List availability zones of a specific region
+# List availability zones (AZs) of one or more regions.
 # Usage:
-#   aaz [region]
-# If no region is specified, default region from the default profile is used.
+#   aaz [-c] [region...]
+# Examples:
+#   aaz
+#   aaz -c
+#   aaz us-west-1 us-west-2
+#   aaz eu- us-
+# If no regions are specified, then the AZs of all regions are listed. The -c
+# option outputs the result in CSV format. Regions may be specified with 
+# substrings that may match multiple regions (e.g. "eu-", "us-", etc.).
 aaz() {
-  _is-set "$1" && local region="$1" || local region=$(aws configure get region)
-  aws ec2 describe-availability-zones \
-    --no-cli-auto-prompt \
-    --output json \
-    --query 'AvailabilityZones[].ZoneName' \
-    --region "$region" |
-    jq -r '.[]' |
-    sort
+  # Parse command-line arguments
+  if _array-has "$@" -c; then
+    local output_csv=1
+  fi
+  local -a region_patterns
+  _array-remove "$@" -c region_patterns
+
+  # Filter the desired regions from all regions
+  local grep_pattern=$(_array-join "${region_patterns[@]}" '\|')
+  local all_regions=$(
+    aws ec2 describe-regions \
+      --no-cli-auto-prompt \
+      --output text \
+      --all-regions \
+      --query 'Regions[].[RegionName]' | sort
+  )
+  local selected_regions=($(echo "$all_regions" | grep -- "$grep_pattern"))
+
+  # Output delimiters
+  _is-set "$output_csv" && local d1=, d2=, || local d1='\t' d2=' | '
+
+  # List availability zones of selected regions
+  for r in "${selected_regions[@]}"; do
+    echo -ne "$r$d1"
+
+    # Query availability zone for region
+    local response=$(
+      aws ec2 describe-availability-zones \
+        --no-cli-auto-prompt \
+        --output json \
+        --query 'AvailabilityZones[].ZoneName' \
+        --region "$r" 2>/dev/null
+    )
+
+    # Detect disabled regions (which cannot be queried)
+    local na='Region disabled'
+    if ! _is-set "$response"; then
+      local value=$na
+    # Format response
+    else
+      local value=$(echo "$response" | jq -r "sort | join(\"$d2\")")
+    fi
+
+    # Output
+    if _is-set "$output_csv"; then
+      echo "$value"
+    else
+      echo "$value" | sed "s|$na|$(_sgr red)\0$(_sgr)|"
+    fi
+  done
 }
 
 # List AMIs that match a given name pattern in the current region. Pattern
