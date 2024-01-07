@@ -22,14 +22,12 @@ _get-input() {
   [[ "$#" -gt 0 ]] && echo "$*" || echo "$(</dev/stdin)"
 }
 
-# Print an error message and exit.
+# Print an error message to stderr.
 # Usage:
-#   _abort <msg>
-# The printed error message incorporates the name of the function that called
-# the _abort function.
-_abort() {
+#   _error <msg>
+# The error message includes the name of the function that called this function.
+_error() {
   echo "${FUNCNAME[1]}: $@" >&2
-  return 1
 }
 
 #------------------------------------------------------------------------------#
@@ -70,7 +68,9 @@ _is-installed() {
 
 # Check whether a given command is installed and in the PATH, or return error
 _ensure-installed() {
-  _is-installed "$1" || _abort "'$1' not installed"
+  if ! _is-installed "$1"; then
+    _error "'$1' not installed" && return 1
+  fi
 }
 
 # Check whether a given Homebrew formula or cask is installed
