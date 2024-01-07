@@ -117,27 +117,39 @@ _title-case() {
 
 # Pad a list of strings up to a desired total length.
 # Usage:
-#   _pad <length> <char> [<args>...]
+#   _pad-left <length> <char> [<args>...]
+#   _pad-right <length> <char> [<args>...]
 # Example:
-#   _pad 3 ' ' $(seq 100)
-# In the above example, the numbers 1 to 100 are padded with spaces (' ') to a
-# total of 3 digits.
+#   _pad-left 3 ' ' $(seq 100)
+#   _pad-right 8 - red green blue yellow cyan
+# In the first of the above examples, the numbers 1 to 100 are padded to the
+# left with spaces to a total of 3 digits. In the second examples, the strings
+# are padded to the right with dashes to a total width of 8 characters
 # Notes:
 #   - If no arguments are given beyond <length> and <char>, the strings to pad
 #     are read from stdin.
 #   - If a string to pad is longer than <length>, it is printed unchanged.
-_pad() {
+_pad-left() {
   [[ "$#" -lt 2 ]] && _error "must provide length and padding character" && return 1
-  local length=$1
-  local char=$2
-  shift 2
-  for e in $(_get-input "$@"); do
-    local fill=$(("$length"-"${#e}"))
-    if [[ "$fill" -lt 1 ]]; then
-      echo "$e"
-    else
-      echo "$(printf '%*s' "$fill" | tr ' ' "$char")$e"
-    fi
+  __pad l "$1" "$2" $(shift 2 && _get-input "$@")
+}
+_pad-right() {
+  [[ "$#" -lt 2 ]] && _error "must provide length and padding character" && return 1
+  __pad r "$1" "$2" $(shift 2 && _get-input "$@")
+}
+__pad() {
+  local direction=$1
+  local length=$2
+  local char=$3
+  shift 3
+  for e in "$@"; do
+    local fill_length=$(("$length"-"${#e}"))
+    [[ "$fill_length" -lt 0 ]] && fill_length=0
+    local fill=$(printf '%*s' "$fill_length" | tr ' ' "$char")
+    case "$direction" in
+      l) echo "$fill$e" ;;
+      r) echo "$e$fill" ;;
+    esac
   done
 }
 
