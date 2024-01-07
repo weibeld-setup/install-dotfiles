@@ -80,7 +80,7 @@ gif-split() {
   # is because gifsicle labels the frames starting from 0 rather than 1.
   for f in "$dir"/*; do
     local i=${f##*.}
-    mv "$f" "${f%.*}.$(_pad "${#i}" $(bc <<<"$i+1")).gif"
+    mv "$f" "${f%.*}.$(_pad "${#i}" 0 $(bc <<<"$i+1")).gif"
   done
   echo "$(($(ls "$dir" | wc -l))) frames saved in $dir"
 }

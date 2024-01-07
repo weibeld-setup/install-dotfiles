@@ -95,7 +95,7 @@ c256() {
   local columns=${1:-6}
   local string=${2:-colour-}
   for i in {0..255} ; do
-    printf "\e[38;5;${i}m${string}$(_pad 3 "$i") "
+    printf "\e[38;5;${i}m${string}$(_pad 3 0 "$i") "
     [[ $((($i + 1) % $columns)) = 0 && "$i" -lt 255 ]] && echo
   done
   printf "\e[0m\n"
@@ -207,7 +207,7 @@ __x2x() {
 ____x2x() {
   local tok
   for tok in $(_upper-case ${@:4}); do
-    bc <<< "obase=$2; ibase=$1; $tok" | _pad $(bc <<<"(${#tok}*$3)/1")
+    bc <<< "obase=$2; ibase=$1; $tok" | _pad $(bc <<<"(${#tok}*$3)/1" 0)
   done
 }
 
