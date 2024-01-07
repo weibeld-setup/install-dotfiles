@@ -129,11 +129,6 @@ __echoc() {
 # Text processing
 #------------------------------------------------------------------------------#
 
-# Capitalise the first letter of a string
-capitalize () {
-  echo $(echo "${1:0:1}" | tr '[:lower:]' '[:upper:]')"${1:1}"
-}
-
 # Transform a string of text to a kebab case identifier, which means:
 #   - All characters are transformed to lower-case
 #   - Punctuation characters are deleted
@@ -211,7 +206,7 @@ __x2x() {
 # Convert numbers and zero-pad based on number of digits and value of arg 3
 ____x2x() {
   local tok
-  for tok in $(_to-upper ${@:4}); do
+  for tok in $(_upper-case ${@:4}); do
     bc <<< "obase=$2; ibase=$1; $tok" | _pad $(bc <<<"(${#tok}*$3)/1")
   done
 }

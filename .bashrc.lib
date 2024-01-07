@@ -4,6 +4,28 @@
 # intended to be used by other .bashrc.* files.
 #------------------------------------------------------------------------------#
 
+#------------------------------------------------------------------------------#
+# Input
+#------------------------------------------------------------------------------#
+
+# Print arguments or stdin, if no arguments are provided.
+# Usage:
+#   _get-input <args>...
+#   _get-input
+# This function is intended to be used in functions that can read their input
+# from both the argument list and stdin (if no arguments are provided).
+# Notes:
+#   - If arguments are provided, they are reproduced as a plain string. That
+#     means, if the arg list "$@" of a function is passed to this function, the
+#     tokenisation of the arguments within "$@" is NOT maintained.
+_get-input() {
+  [[ "$#" -gt 0 ]] && echo "$*" || echo "$(</dev/stdin)"
+}
+
+#------------------------------------------------------------------------------#
+# Check OS
+#------------------------------------------------------------------------------#
+
 # Check if running on macOS, Linux, or WSL2 (special case of Linux)
 _is-mac() {
   [[ "$OSTYPE" =~ darwin ]]
@@ -15,6 +37,10 @@ _is-wsl() {
   _is-linux && [[ -n "$WSL_DISTRO_NAME" ]]
 }
 
+#------------------------------------------------------------------------------#
+# Check variables
+#------------------------------------------------------------------------------#
+
 # Check if variable is set (i.e. non-empty) or unset (i.e. empty)?
 _is-set() {
   [[ -n "$1" ]]
@@ -22,6 +48,10 @@ _is-set() {
 _is-unset() {
   [[ -z "$1" ]]
 }
+
+#------------------------------------------------------------------------------#
+# Check installation status
+#------------------------------------------------------------------------------#
 
 # Check whether a given command is installed and in the PATH
 _is-installed() {
@@ -39,15 +69,41 @@ _is-poured() {
   brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
 }
 
-# Convert args or stdin to upper-case or lower-case
-_to-upper() {
-  (($# == 0)) && __to-upper || __to-upper <<<"$@"
+#------------------------------------------------------------------------------#
+# Text processing
+#------------------------------------------------------------------------------#
+
+# Transform the input to upper-case
+# Usage:
+#   _upper-case [<args>...]
+# If no arguments are provided, the input is read from stdin.
+_upper-case() {
+  _get-input "$@" |
+  tr '[:lower:]' '[:upper:]'
 }
-_to-lower() {
-  (($# == 0)) && __to-lower || __to-lower <<<"$@"
+
+# Transform the input to lower-case
+# Usage:
+#   _lower-case [<args>...]
+# If no arguments are provided, the input is read from stdin.
+_lower-case() {
+  _get-input "$@" |
+  tr '[:upper:]' '[:lower:]'
 }
-__to-upper() { tr '[:lower:]' '[:upper:]'; }
-__to-lower() { tr '[:upper:]' '[:lower:]'; }
+
+# Transform the input to title-case (first letter of each word capitalised).
+# Usage:
+#   _title-case [<args>...]
+# If no arguments are provided, the input is read from stdin.
+_title-case() {
+  _get-input "$@" |
+  awk '{
+    for (i=1; i<=NF; i++) {
+      $i = toupper(substr($i,1,1)) substr($i,2)
+    }
+  }
+  { print }'
+}
 
 # 0-pad a list of strings up to a given total length. If no strings are given
 # as args, then stdin is read and interpreted as the list of strings to pad.
@@ -71,27 +127,6 @@ __pad() {
   done
 }
 
-# Insert string ($2) into filename ($1), just before filename extension.
-# Add a suffix to a file basename, just before the extension
-# Usage:
-#   _insert-basename-suffix <suffix> <file>
-# Example:
-#   _insert-basename-suffix -foo test.txt  ==>  test-foo.txt
-_insert-basename-suffix() {
-  local suffix=$1
-  local file=$2
-  echo "${file%.*}${suffix}.${file##*.}"
-}
-
-# Change the extension of a file name.
-# Usage:
-#   _change-filename-extension <file> <extension>
-# Example:
-#   _change-filename-extension test.txt md  ==>  test.md
-_change-filename-extension() {
-  echo "${1%.*}.$2"
-}
-
 # Read text from stdin and format it to width of terminal with word wrapping.
 # This function is similar to the 'fmt' command, but it preserves all newlines.
 # Notes:
@@ -107,6 +142,10 @@ _wrap() {
     nroff |
     sed 's/\xE2\x80\x90/-/g'
 }
+
+#------------------------------------------------------------------------------#
+# Array processing
+#------------------------------------------------------------------------------#
 
 # Print the elements of an array with indices (alternative to 'declare -p <a>')
 _array-print() {
@@ -208,6 +247,35 @@ _splitargs() {
   # If no delimiter found
   __ref1=("$@")
 }
+
+#------------------------------------------------------------------------------#
+# Filename processing
+#------------------------------------------------------------------------------#
+
+# Insert string ($2) into filename ($1), just before filename extension.
+# Add a suffix to a file basename, just before the extension
+# Usage:
+#   _insert-basename-suffix <suffix> <file>
+# Example:
+#   _insert-basename-suffix -foo test.txt  ==>  test-foo.txt
+_insert-basename-suffix() {
+  local suffix=$1
+  local file=$2
+  echo "${file%.*}${suffix}.${file##*.}"
+}
+
+# Change the extension of a file name.
+# Usage:
+#   _change-filename-extension <file> <extension>
+# Example:
+#   _change-filename-extension test.txt md  ==>  test.md
+_change-filename-extension() {
+  echo "${1%.*}.$2"
+}
+
+#------------------------------------------------------------------------------#
+# Terminal colours
+#------------------------------------------------------------------------------#
 
 # Print an Select Graphic Rendition (SGR) [1] to set display attributes.
 # Usage:
