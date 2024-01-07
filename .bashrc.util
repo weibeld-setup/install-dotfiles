@@ -129,18 +129,6 @@ __echoc() {
 # Text processing
 #------------------------------------------------------------------------------#
 
-# Transform a string of text to a kebab case identifier, which means:
-#   - All characters are transformed to lower-case
-#   - Punctuation characters are deleted
-#   - Whitespace characters are replaced by dashes 
-#   - Repeated dashes are squeezed to a single dash
-#   - Dashes at the beginning or end of the resulting identifier are deleted
-str2kebab() {
-  tr '[:upper:]' '[:lower:]' | \
-  sed 's/[[:punct:]]//g;s/[[:space:]]/-/g' | \
-  tr -s - | \
-  sed 's/^-//;s/-$//'
-}
 
 # Create random alphanumeric lower-case string of the specified length
 random() {

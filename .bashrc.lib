@@ -115,6 +115,25 @@ _title-case() {
   { print }'
 }
 
+# Transform the input to kebab-case (lower-case joined by dashes)
+# Usage:
+#   _kebab-case [<args>...]
+# If no arguments are provided, the input is read from stdin.
+# Notes:
+#   - This implementation of kebab-case involves the following:
+#     1. All characters are transformed to lower-case
+#     2. Punctuation characters are deleted
+#     3. Whitespace characters are replaced by dashes 
+#     4. Repeated dashes replaced with a single dash
+#     5. Dashes at the beginning and end of strings are omitted
+_kebab-case() {
+  _get-input "$@" |
+  tr '[:upper:]' '[:lower:]' |
+  sed 's/[[:punct:]]//g;s/[[:space:]]/-/g' |
+  tr -s - |
+  sed 's/^-//;s/-$//'
+}
+
 # Pad a list of strings up to a desired total length.
 # Usage:
 #   _pad-left <length> <char> [<args>...]
