@@ -10,6 +10,9 @@ elif _is-linux; then
   complete -C aws_completer aws
 fi
 
+#------------------------------------------------------------------------------#
+# areg
+#------------------------------------------------------------------------------#
 # List AWS regions including opt-in status.
 # Usage:
 #   areg [-c] [region...]
@@ -35,7 +38,6 @@ areg() {
   fi
   local -a regions
   _array-remove "$@" -c regions
-
   # Retrieve all regions in CSV format
   local csv=$(
     aws ec2 describe-regions \
@@ -80,11 +82,9 @@ areg() {
       s/^us-west-2,/\0Oregon,/' |
     sort
   )
-
   # Filter desired regions in CSV format
   local grep_pattern=$(_array-join "${regions[@]}" '\|')
   local csv_filtered=$(echo "$csv" | grep -- "$grep_pattern")
-
   # Output result either as CSV or pretty table
   if _is-set "$output_csv"; then
     echo "$csv_filtered"
@@ -96,6 +96,9 @@ areg() {
   fi
 }
 
+#------------------------------------------------------------------------------#
+# aaz
+#------------------------------------------------------------------------------#
 # List availability zones (AZs) of one or more regions.
 # Usage:
 #   aaz [-c] [region...]
@@ -114,8 +117,7 @@ aaz() {
   fi
   local -a region_patterns
   _array-remove "$@" -c region_patterns
-
-  # Filter the desired regions from all regions
+  # Create full list of desired regions
   local grep_pattern=$(_array-join "${region_patterns[@]}" '\|')
   local all_regions=$(
     aws ec2 describe-regions \
@@ -125,14 +127,24 @@ aaz() {
       --query 'Regions[].[RegionName]' | sort
   )
   local selected_regions=($(echo "$all_regions" | grep -- "$grep_pattern"))
-
-  # Output delimiters
-  _is-set "$output_csv" && local d1=, d2=, || local d1='\t' d2=' | '
-
-  # List availability zones of selected regions
+  # Formatting settings
+  if _is-set "$output_csv"; then
+    local delim=,
+  else
+    local delim=' | '
+    # Length of longest region string (for aligning columns)
+    local max=$(awk -v RS=" " '{ if (length > max) max = length } END { print max }' <<<$(echo -n "${selected_regions[@]}"))
+    local i=1
+  fi
+  # Cycle through all selected regions
   for r in "${selected_regions[@]}"; do
-    echo -ne "$r$d1"
-
+    # Print region name
+    if _is-set "$output_csv"; then
+      echo -n "$r,"
+    else
+      echo -n "$(_pad-left 2 ' ' "$i")  $(_pad-right "$max" ' ' "$r")  "
+      i=$(("$i"+1))
+    fi
     # Query availability zone for region
     local response=$(
       aws ec2 describe-availability-zones \
@@ -141,16 +153,14 @@ aaz() {
         --query 'AvailabilityZones[].ZoneName' \
         --region "$r" 2>/dev/null
     )
-
     # Detect disabled regions (which cannot be queried)
     local na='Region disabled'
     if ! _is-set "$response"; then
       local value=$na
     # Format response
     else
-      local value=$(echo "$response" | jq -r "sort | join(\"$d2\")")
+      local value=$(echo "$response" | jq -r "sort | join(\"$delim\")")
     fi
-
     # Output
     if _is-set "$output_csv"; then
       echo "$value"
@@ -160,6 +170,9 @@ aaz() {
   done
 }
 
+#------------------------------------------------------------------------------#
+# aami
+#------------------------------------------------------------------------------#
 # List AMIs that match a given name pattern in the current region. Pattern
 # matching may be skipped by using '-' as the pattern. This allows to either
 # list all AMIs or look up specific AMIs by their IDs (with --image-ids). The
