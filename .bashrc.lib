@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
-# Input
+# Function helpers
 #------------------------------------------------------------------------------#
 
 # Print arguments or stdin, if no arguments are provided.
@@ -20,6 +20,16 @@
 #     tokenisation of the arguments within "$@" is NOT maintained.
 _get-input() {
   [[ "$#" -gt 0 ]] && echo "$*" || echo "$(</dev/stdin)"
+}
+
+# Print an error message and exit.
+# Usage:
+#   _abort <msg>
+# The printed error message incorporates the name of the function that called
+# the _abort function.
+_abort() {
+  echo "${FUNCNAME[1]}: $@" >&2
+  return 1
 }
 
 #------------------------------------------------------------------------------#
@@ -60,7 +70,7 @@ _is-installed() {
 
 # Check whether a given command is installed and in the PATH, or return error
 _ensure-installed() {
-  _is-installed "$1" || { echo "Error: '$1' not installed."; return 1; }
+  _is-installed "$1" || _abort "'$1' not installed"
 }
 
 # Check whether a given Homebrew formula or cask is installed
