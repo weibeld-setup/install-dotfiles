@@ -187,6 +187,7 @@ _array-print() {
 # Example:
 #   _array-has "${myarr[@]}" foo
 _array-has() {
+  [[ "$#" -lt 1 ]] && _error "must specify array and element to check for" && return 1
   local array=("${@:1:$#-1}")
   local element=${@:$#}
   for i in "${!array[@]}"; do
@@ -203,6 +204,7 @@ _array-has() {
 # The above example joins the elements of the array with a '::' delimiter.
 # A delimiter may be an arbitrary string.
 _array-join() {
+  [[ "$#" -lt 1 ]] && _error "must specify array and delimiter" && return 1
   local array=("${@:1:$#-1}")
   local d=${@:$#}
   local str="${array[0]}"
@@ -225,6 +227,7 @@ _array-join() {
 #     the nameref attribute [1] (requires at least Bash 4.3)
 # [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
 _array-remove() {
+  [[ "$#" -lt 2 ]] && _error "must specify array, element to remove, and name of result variable" && return 1
   local in_array=("${@:1:$#-2}")
   local element=${@:$#-1:1}
   local -n __ref=${@:$#}
