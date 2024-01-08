@@ -129,7 +129,6 @@ __echoc() {
 # Text processing
 #------------------------------------------------------------------------------#
 
-
 # Create random alphanumeric lower-case string of the specified length
 random() {
   local length=${1:-16}

@@ -241,7 +241,8 @@ _array-join() {
 # In the above example, all "foo" elements are removed from the 'myarr' array
 # and the resulting array is saved in a variable named 'result'.
 # Notes:
-#   - The result array variable does NOT need to be declared beforehand
+#   - The result array DOESN'T need to be declared in the calling function, but
+#     it's advisable to declare it with 'local' in order to keep it local.
 #   - The assignment to the passed in result array name is implemented through
 #     the nameref attribute [1] (requires at least Bash 4.3)
 # [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
@@ -271,7 +272,8 @@ _array-remove() {
 # The above assigns ["foo" "bar"] to a variable named 'a1' and ["baz" "kux"] to
 # a variable named 'a2'. These variables can be used in the calling context.
 # Notes:
-#   - The passed variable names do NOT need to be declared beforehand
+#   - The variable names DON'T need to be declared in the calling function, but
+#     it's advisable to declare them with 'local' in order to keep them local.
 #   - If <args>... does not contain the delimiter, then all elements are
 #     assigned to <array_name_1> (and <array_name_2> is left empty)
 #   - If <args>... contains multiple occurrences of the delimiter, then the
