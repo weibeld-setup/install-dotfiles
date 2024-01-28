@@ -8,16 +8,19 @@
 # Function helpers
 #------------------------------------------------------------------------------#
 
-# Print arguments or stdin, if no arguments are provided.
+# Print provided args or stdin, if no args are provided.
 # Usage:
-#   _get-input <args>...
-#   _get-input
-# This function is intended to be used in functions that can read their input
-# from both the argument list and stdin (if no arguments are provided).
+#   _get-input [<args>...]
+# Example:
+#   fun() {
+#     _get-input "$@" | cmd
+#   }
 # Notes:
-#   - If arguments are provided, they are reproduced as a plain string. That
-#     means, if the arg list "$@" of a function is passed to this function, the
-#     tokenisation of the arguments within "$@" is NOT maintained.
+#   - This function is intended to be used inside other functions to gather the
+#     input for the enclosing function (see example above). This allows creating
+#     functions that take their input either from arguments or from stdin.
+#   - If input is taken from arguments, the tokenisation of the argument list
+#     is NOT maintained, i.e. the argument list is reproduced as a plain string.
 _get-input() {
   [[ "$#" -gt 0 ]] && echo "$*" || echo "$(</dev/stdin)"
 }

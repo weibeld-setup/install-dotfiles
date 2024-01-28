@@ -144,6 +144,14 @@ random-hex(){
   echo
 }
 
+# Get the Unicode code point of a single character (source [1])
+# [1] https://superuser.com/a/1019853
+unicode() {
+  local char=$(_get-input "$@")
+  [[ "${#char}" -ne 1 ]] && { _error "must pass a single character"; return 1; }
+  echo -n "$char" | iconv -f UTF-8 -t UTF-32BE | xxd -p | sed -r 's/^0+/0x/' | xargs printf 'U+%04X\n'
+}
+
 #------------------------------------------------------------------------------#
 # Number processing
 #------------------------------------------------------------------------------#
