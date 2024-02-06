@@ -125,13 +125,14 @@ _title-case() {
 # Notes:
 #   - This implementation of kebab-case involves the following:
 #     1. All characters are transformed to lower-case
-#     2. Punctuation characters are deleted
+#     2. Punctuation characters (except '-') are deleted
 #     3. Whitespace characters are replaced by dashes 
 #     4. Repeated dashes replaced with a single dash
 #     5. Dashes at the beginning and end of strings are omitted
 _kebab-case() {
   _get-input "$@" |
   tr '[:upper:]' '[:lower:]' |
+  tr - ' ' |
   sed 's/[[:punct:]]//g;s/[[:space:]]/-/g' |
   tr -s - |
   sed 's/^-//;s/-$//'
