@@ -1,6 +1,7 @@
-# ~/.bashrc.misc
+# ~/.bashrc.tmp
 #
-# Miscellaneous functions and settings for narrow-purpose or temporary tools.
+# Temporary stuff that should either be deleted from time to time, or incorp-
+# orated into a stable .bashrc.* file.
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#

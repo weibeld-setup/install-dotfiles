@@ -1,7 +1,227 @@
-# ~/.bashrc.util
+# ~/.bashrc.general
 #
-# General-purpose end-user functions.
+# General shell settings, functions, aliases, etc. Everything that doesn't
+# deserve its own .bashrc.* file should go here.
 #------------------------------------------------------------------------------#
+
+#------------------------------------------------------------------------------#
+# .bashrc file handling
+#------------------------------------------------------------------------------#
+
+# Open one of the .bashrc* files in Vim
+br() {
+  _ensure-installed fzf
+  local select=$(basename ~/.bashrc* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
+  if _is-set "$select"; then
+    vim "$select"
+  else
+    echo "No selection"
+  fi
+}
+
+# Source all .bashrc* files
+alias sbr='. ~/.bashrc'
+
+#------------------------------------------------------------------------------#
+# Aliases and shorthand variables
+#------------------------------------------------------------------------------#
+
+alias vr='vim ~/.vimrc'
+alias rmf='rm -rf'
+alias la="ls -a"
+alias ll="ls -al"
+alias wl='wc -l'
+alias ssh='TERM=xterm-256color ssh'
+alias pgrep='pgrep -fl'
+alias x='chmod +x'
+alias X='chmod -x'
+alias which='which -a'
+alias watch='watch -n 1'
+alias dh='du -h'
+alias curl='curl -s'
+alias sed='sed -E'
+alias gsed='gsed -E'
+alias diff='diff --color'
+
+if _is-linux; then
+  alias ls='ls --color=auto'
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
+elif _is-mac; then
+  export d=~/Desktop
+fi
+
+#------------------------------------------------------------------------------#
+# Prompt
+#------------------------------------------------------------------------------#
+
+PROMPT_COMMAND='__set-prompt; __dump_history'
+__set-prompt() {
+  # Exit code of previous command (must be first statement)
+  local exit_code=$?
+  # Different colours for root and non-root users
+  if [[ "$USER" = root ]]; then
+    local colour=$(_sgr red b)
+    local user="root|"
+  else
+    local colour=$(_sgr green b)
+  fi
+  # Include OS name and version on Linux
+  if _is-linux; then
+    local os="$(os)|"
+  fi
+  # Prompt
+  PS1="\[$colour\]$$|$os$user\w\$ \[$(_sgr)\]"
+  # Prepend exit code of previous command if it was non-zero
+  if [[ "$exit_code" -ne 0 ]]; then
+    PS1="\[$(_sgr red b)\]$exit_code|$(_sgr)$PS1"
+  fi
+}
+
+# Append the last command to the $HISTFILE history file (for aggregating the
+# history of all active shells)
+# TODO: emulate HISTCONTROL=ignoredups by omitting writing a command to the
+# history file if it's equal to the lastly written command.
+__dump_history() {
+  history -a
+}
+
+#------------------------------------------------------------------------------#
+# ls colours
+#------------------------------------------------------------------------------#
+
+if _is-mac; then
+  # LSCOLORS (BSD-specific)
+  # Positions:
+  #   1=dir, 2=symlink, 3=socket, 4=pipe, 5=executable, 6=block special,
+  #   7=char special, 8=executable with setuid, 9=executable with setgid,
+  #   10=other-writable dir w. sticky bit, 11=other-writable dir wo. sticky bit
+  # Colours (lower-case means normal, upper-case means bold):
+  #   a=black, b=red, c=green, d=yellow, e=blue, f=magenta, g=cyan, h=white,
+  #   x=default
+  # Format:
+  #   <foreground><background>...
+  # Example:
+  #   Gx: bold cyan foreground and default background
+  # Documentation:
+  #   man ls (search for 'LSCOLORS')
+  export LSCOLORS=GxFxHxHxCxHxHxCxCxGxGx
+  export CLICOLOR=1
+elif _is-linux; then
+  # LS_COLORS (GNU-specific)
+  # Fields:
+  #   di=dir, ln=symlink, so=socket, pi=pipe, ex=executable, bd=block special,
+  #   cd=char special, su=executble with setuid, sg=executable with setgid,
+  #   tw=other-writable dir w. sticky bit, ow=other-writable dir wo. sticky bit
+  # Colours:
+  #   ANSI colour codes
+  # Documentation:
+  #   'man ls', 'man dircolors', 'dircolors'
+  export LS_COLORS="di=1;36:ln=1;35:so=0:pi=0:ex=1;32:bd=0:cd=0:su=1;32:sg=1;32:tw=1;36:ow=1;36"
+fi
+
+#------------------------------------------------------------------------------#
+# bash-completion and complete-alias
+#------------------------------------------------------------------------------#
+
+if _is-mac && _is-installed brew ; then
+  source $(brew --prefix)/etc/profile.d/bash_completion.sh
+  for f in $(brew --prefix)/etc/bash_completion.d/*; do
+    source "$f"
+  done
+fi
+
+# Only execute if bash-completion isn't activated yet
+if _is-linux && ! type _init_completion &>/dev/null; then
+  # Code from /etc/bash.bashrc which by default is outcommented
+  if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [[ -f /etc/bash_completion ]]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# complete-alias (https://github.com/cykerway/complete-alias)
+source ~/.complete_alias
+
+#------------------------------------------------------------------------------#
+# Dotfiles
+#------------------------------------------------------------------------------#
+
+alias d='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+alias ds='d status'
+alias da='d add'
+alias dr='d rm'
+alias dco='d commit'
+alias dp='d push'
+alias ddi='d diff'
+
+#------------------------------------------------------------------------------#
+# Git
+#------------------------------------------------------------------------------#
+
+alias gl='git log --decorate --graph' 
+alias gr='git remote -v'
+alias gs='git status -u'
+alias ga='git add -A'
+alias gc='git commit'
+alias gca='git commit --amend'
+alias gp='git push'
+alias gpf='git push -f'
+alias gb="git branch"
+alias gd="git diff"
+alias gpu="git pull"
+
+#------------------------------------------------------------------------------#
+# Vim/Neovim
+#------------------------------------------------------------------------------#
+
+# Vim order of precedence: Neovim > Homebrew Vim > native Vim
+if _is-installed nvim; then
+  alias vim=nvim
+elif _is-installed brew && _is-poured vim; then
+  alias vim=$(brew --prefix)/bin/vim
+fi
+
+# Set EDITOR variable to selected version of Vim from above
+export EDITOR=${BASH_ALIASES[vim]}
+
+#------------------------------------------------------------------------------#
+# Homebrew
+#------------------------------------------------------------------------------#
+
+if _is-installed brew; then
+  # Set Homebrew variables except PATH (which is already set in .bashrc.path)
+  eval $(brew shellenv | grep -v 'export PATH=')
+  export HOMEBREW_NO_AUTO_UPDATE=1
+fi
+
+#------------------------------------------------------------------------------#
+# Misc
+#------------------------------------------------------------------------------#
+
+# Increase history size (default is 500)
+export HISTSIZE=5000
+export HISTFILESIZE=5000
+
+# Readline configuration
+# https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
+bind 'set skip-completed-text on'
+
+# Make Bash resolve the word after 'sudo' as an alias [1,2], which makes it
+# possible to execute aliases with sudo. Note that the replacement is done by
+# the shell before invoking sudo and it works only with aliases, not with Bash
+# functions (sudo itself works only with executables, it doesn't resolve aliases
+# or shell functions, nor does it source .bashrc or .bash_profile). For full
+# access to the environment, start an interactive shell with 'sudo -s' which
+# in turn sources the .bashrc file found in $HOME.
+# [1] https://linuxhandbook.com/run-alias-as-sudo/
+# [2] https://www.gnu.org/software/bash/manual/bash.html#Aliases
+alias sudo='sudo '
+
+# Minicom
+alias minicom='minicom -c on'
 
 #------------------------------------------------------------------------------#
 # Shell operations

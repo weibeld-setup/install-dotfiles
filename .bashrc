@@ -21,13 +21,13 @@ if [[ -f ~/.bashrc.lib ]]; then
   . ~/.bashrc.lib
 fi
 
-# Source main shell configuration
-if [[ -f ~/.bashrc.config ]]; then
-  . ~/.bashrc.config
+# Source general .bashrc.* file
+if [[ -f ~/.bashrc.general ]]; then
+  . ~/.bashrc.general
 fi
 
 # Source all other .bashrc.* files
-for f in ~/.bashrc.!(path|lib|config); do
+for f in ~/.bashrc.!(path|lib|general); do
   [[ -f "$f" ]] && . "$f"
 done
 
