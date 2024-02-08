@@ -33,6 +33,15 @@ _error() {
   echo "${FUNCNAME[1]}: $@" >&2
 }
 
+# Print a message only if stdout is directed to the terminal
+# Notes:
+#   - Does NOT print an automatic newline at the end of the message.
+_print-if-term() {
+  if [[ -t 1 ]]; then
+    printf "$@"
+  fi
+}
+
 #------------------------------------------------------------------------------#
 # Check OS
 #------------------------------------------------------------------------------#
