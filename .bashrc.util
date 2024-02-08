@@ -21,14 +21,60 @@ vi-mode-off() {
   bind 'set show-mode-in-prompt off'
 }
 
-# Show the source file and line where a function is defined
-funcfile() {
-  shopt -s extdebug
-  declare -F "$1"
-  shopt -u extdebug
+# Determine type and "location" of any command. For every valid command, this
+# function returns:
+#   1) Type:     function, alias, file, or shell builtin
+#   2) Location: in the case of functions, aliases, and files, the specific
+#                file where this command is defined (including line number for
+#                functions and aliases)
+# If there are multiple definitions for a command (e.g. both a shell builtin
+# and a file, or an alias and a file), then all of the corresponding types and
+# locations are listed.
+locate() {
+  {
+    local types=$(type -at "$1")
+    if _is-unset "$types"; then
+      return 1
+    fi
+    local file_counter=0
+    echo "$types" | while read t; do
+      case "$t" in
+        function)
+          { shopt -s extdebug; local result=$(declare -F "$1"); shopt -u extdebug; }
+          local file=$(echo "$result" | cut -d ' ' -f 3-)
+          local line=$(echo "$result" | cut -d ' ' -f 2)
+          echo "Function:|$file:$line"
+        ;;
+        alias)
+          # Locate definition of alias through Bash traces and a trick with $PS4
+          # (printed before each line of the Bash traces, default is "+"):
+          #     Identifiy first line in Bash traces where the alias is defined.
+          #     The previous line, thus, must be the definition of the alias and
+          #     $BASH_SOURCE and $LINENO yields the file name and line number
+          #     where the alias is defined.
+          # Source: https://unix.stackexchange.com/a/483353/317243
+          local result=$(PS4='[${BASH_SOURCE}:${LINENO}${BASH_ALIASES['$1']+"<'$1'>"}] ' bash -lixc : |& grep -m 1 -B 1 "<$1>" | head -n 1 | cut -d ']' -f 1 | tr -d '[')
+          if _is-set "$result"; then
+            local file=$(echo "$result" | cut -d : -f 1)
+            local line=$(echo "$result" | cut -d : -f 2)
+            echo "Alias:|$file:$line"
+          else
+            echo "Alias:|<no file>"
+          fi
+        ;;
+        file)
+          file_counter=$((file_counter+1))
+          local file=$(which -a "$1" | sed "${file_counter}q;d")
+          echo "File:|$file"
+        ;;
+        builtin)
+          echo "Builtin:|$ help $1"
+        ;;
+      esac
+    done
+    } | column -t -s '|' | sed 's/  / /'
 }
-# Allow completion of function names
-complete -A function funcfile
+complete -c locate
 
 # Search through the central history file (see PROMPT_COMMAND) and either
 # print or directly execute the selected command
