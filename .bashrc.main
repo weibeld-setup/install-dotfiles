@@ -780,32 +780,3 @@ jpterm() {
 
 # Minicom
 alias minicom='minicom -c on'
-
-
-#------------------------------------------------------------------------------#
-# TODO: move to .bashrc.lib
-#------------------------------------------------------------------------------#
-
-# Print coloured message to stdout/stderr if connected to terminal and omit the
-# colours if not connected to a terminal.
-# Usage:
-#   echoc <colour-attribute>... <msg>
-# Examples:
-#   echoc red b "Foo bar"         # Print red bold message to stdout
-#   echoc red b "Foo bar" >out    # Colours omitted because stdout is file
-#   echocerr red b "Foo bar"      # Print red bold message to stderr
-echoc() { __echoc 1 "$@"; }
-echocerr() { __echoc 2 "$@"; }
-__echoc() {
-  local fd=$1
-  local c_args=(${@:2:$#-2})
-  local msg=${@:$#}
-  [[ -t "$fd" ]] && msg=$(_sgr "${c_args[@]}")$msg$(_sgr)
-  if [[ "$fd" -eq 1 ]]; then
-    echo "$msg"
-  elif [[ "$fd" -eq 2 ]]; then
-    echo "$msg" >/dev/stderr
-  else
-    return 1
-  fi
-}

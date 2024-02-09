@@ -5,40 +5,89 @@
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
-# Function helpers
+# Input/output
 #------------------------------------------------------------------------------#
 
-# Print provided args or stdin, if no args are provided.
+# Print either the arguments, if arguments are provided, or stdin, if no
+# arguments are provided.
 # Usage:
 #   _get-input [<args>...]
-# Example:
-#   fun() {
-#     _get-input "$@" | cmd
-#   }
 # Notes:
-#   - This function is intended to be used inside other functions to gather the
-#     input for the enclosing function (see example above). This allows creating
-#     functions that take their input either from arguments or from stdin.
-#   - If input is taken from arguments, the tokenisation of the argument list
-#     is NOT maintained, i.e. the argument list is reproduced as a plain string.
+#   - The intended usage of this function is allowing other functions to gather
+#     their input either from the argument list or from stdin (if no arguments
+#     are provided).
+#   - The tokenisation of the argument list is NOT maintained, i.e. the arg 
+#     list is reproduced as a plain string.
+# Example application:
+#   my-function() {
+#     _get-input "$@" | ...
+#   }
 _get-input() {
-  [[ "$#" -gt 0 ]] && echo "$*" || echo "$(</dev/stdin)"
+  if [[ "$#" -gt 0 ]]
+    then echo "$*"
+  else
+    echo "$(</dev/stdin)"
+  fi
 }
 
 # Print an error message to stderr.
 # Usage:
 #   _error <msg>
-# The error message includes the name of the function that called this function.
+# The error message includes the name of the calling function. This fuction
+# is intended to be used in abort blocks of other functions.
+# Example application:
+#   if [[ "$#" -ne 2 ]]; then
+#     _error "Must provide two arguments"
+#     return 1
+#  fi
 _error() {
-  echo "${FUNCNAME[1]}: $@" >&2
+  echo "Error in ${FUNCNAME[1]}: $@" >&2
 }
 
-# Print a message only if stdout is directed to the terminal
-# Notes:
-#   - Does NOT print an automatic newline at the end of the message.
-_print-if-term() {
+# Print a message to stdout ONLY if stdout is directed to the terminal
+_print-cond-out() {
   if [[ -t 1 ]]; then
     printf "$@"
+  fi
+}
+
+# Print a message to stderr ONLY if stderr is directed to the terminal
+_print-cond-err() {
+  if [[ -t 2 ]]; then
+    printf "$@" >>/dev/stderr
+  fi
+}
+
+# Print a message to stdout and apply Select Graphic Rendition (SGR) formatting
+# ONLY if stdout is directed to a terminal (otherwise omit the SGR formatting).
+# Usage:
+#   _print-cond-sgr-out [<sgr-arg>...] <msg>
+# Notes:
+# The <sg-args> args correspond to the arguments accepted by the _sgr function.
+_print-cond-sgr-out() {
+  local sgr_args=(${@:$#-2})
+  local msg=${@:$#}
+  if [[ -t 1 ]]; then
+    echo "$(_sgr "${sgr_args[@]}")$msg$(_sgr)"
+  else
+    echo "$msg"
+  fi
+}
+
+# Print a message to stderr and apply Select Graphic Rendition (SGR) formatting
+# ONLY if stderr is directed to a terminal (otherwise omit the SGR formatting).
+# Usage:
+#   _print-cond-sgr-err [<sgr-arg>...] <msg>
+# Notes:
+# The <sg-args> args correspond to the arguments accepted by the _sgr function.
+_print-cond-sgr-err() {
+  local sgr_args=(${@:$#-2})
+  local msg=${@:$#}
+  if [[ -t 2 ]]; then
+    echo "$(_sgr "${sgr_args[@]}")$msg$(_sgr)" >/dev/stderr
+  else
+    echo "$msg" >/dev/stderr
+
   fi
 }
 
@@ -70,7 +119,7 @@ _is-unset() {
 }
 
 #------------------------------------------------------------------------------#
-# Check installation status
+# Check command installation status
 #------------------------------------------------------------------------------#
 
 # Check whether a given command is installed and in the PATH
@@ -401,3 +450,5 @@ _sgr() {
   # Print escape sequence
   printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
 }
+
+
