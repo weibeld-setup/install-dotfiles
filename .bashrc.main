@@ -809,38 +809,3 @@ __echoc() {
     return 1
   fi
 }
-
-#------------------------------------------------------------------------------#
-# TODO: delete
-#------------------------------------------------------------------------------#
-
-if _is-linux; then
-  # Customise keyboard layout with setxkbmap:
-  #   - Add Swiss German keyboard layout
-  #   - Swap Caps-Lock and Ctrl keys
-  #   - Set key combination for toggling between keyboard layouts
-  # All the options and keyboard layouts of setxkbmap can be found in the file
-  # ==> /usr/share/X11/xkb/rules/base.lst
-  # Notes:
-  # - The settings made by setxkbmap do NOT persists across logins
-  # - To make the settigns persistent, one option would be to put the setxkbmap
-  #   commands directly into ~/.bashrc. However, this may cause an X error
-  #   (cannot open display "default display")
-  # - Another option would be to put the setxkbmap commands into ~/.xinitrc or
-  #   /etc/X11/xorg.conf.d/00-keyboard.conf (different syntax). However, there
-  #   are inconsistencies across systems, and different desktop environments
-  #   read these files in different ways
-  # - Because of the above problems, the setxkbmap commands are provided here
-  #   as a function that can be called manually
-  # Source: https://wiki.archlinux.org/index.php/Keyboard_configuration_in_Xorg
-  #         http://betabug.ch/blogs/ch-athens/1242
-  config_keyboard() {
-    _ensure-installed setxkbmap
-    # Set Swiss German and German as keyboard layouts (ch(de) is default)
-    setxkbmap 'ch(de),de'
-    # Left Alt-Shift for toggling between keyboard layouts
-    setxkbmap -option grp:lalt_lshift_toggle
-    # Swap Caps-Lock and Ctrl keys
-    setxkbmap -option ctrl:swapcaps
-  }
-fi
