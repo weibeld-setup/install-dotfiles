@@ -22,12 +22,12 @@ if [[ -f ~/.bashrc.lib ]]; then
 fi
 
 # Source general .bashrc.* file
-if [[ -f ~/.bashrc.general ]]; then
-  . ~/.bashrc.general
+if [[ -f ~/.bashrc.main ]]; then
+  . ~/.bashrc.main
 fi
 
 # Source all other .bashrc.* files
-for f in ~/.bashrc.!(path|lib|general); do
+for f in ~/.bashrc.!(path|lib|main); do
   [[ -f "$f" ]] && . "$f"
 done
 
