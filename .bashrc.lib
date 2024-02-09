@@ -91,6 +91,68 @@ _print-cond-sgr-err() {
   fi
 }
 
+# Print a Select Graphic Rendition (SGR) [1] string to set display attributes.
+# Usage:
+#   _sgr [<colour/modifier>...]
+# Available colours:
+#   black, black+, red, red+, green, green+, yellow, yellow+, blue, blue+,
+#   magenta, magenta+, cyan, cyan+, white, white+
+# Available modifiers:
+#   x (reset), b (bold), d (dim), i (italic), u (underline)
+# Notes:
+#   - Colours with a + are the bright versions of the corresponding colours
+#   - The x modifier resets all set attributes (colours and modifiers). The
+#     same effect can be achieved by omitting any arguments.
+#   - Modifiers may be combined into a single argument
+# Examples:
+#   _sgr red        // Red 
+#   _sgr red+       // Bright red 
+#   _sgr red b      // Bold red
+#   _sgr red biu    // Bold, italic, and underlined red
+#   _sgr red b i u  // Same as above
+#   _sgr bu         // Bold and underlined (colour isn't changed)
+#   _sgr x          // Reset all previously set attributes
+#   _sgr            // Same as above
+#   echo "$(_sgr red bi)red $(_sgr x blue+ u)blue$(_sgr) normal"
+# [1] https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
+_sgr() {
+  local p
+  for a in "$@"; do
+    # Parse colour
+    case "$a" in
+      black)    p+=(30); continue ;;
+      red)      p+=(31); continue ;;
+      green)    p+=(32); continue ;;
+      yellow)   p+=(33); continue ;;
+      blue)     p+=(34); continue ;;
+      magenta)  p+=(35); continue ;;
+      cyan)     p+=(36); continue ;;
+      white)    p+=(37); continue ;;
+      black+)   p+=(90); continue ;;
+      red+)     p+=(91); continue ;;
+      green+)   p+=(92); continue ;;
+      yellow+)  p+=(93); continue ;;
+      blue+)    p+=(94); continue ;;
+      magenta+) p+=(95); continue ;;
+      cyan+)    p+=(96); continue ;;
+      white+)   p+=(97); continue ;;
+    esac
+    # Parse modifiers (x, b, i, u, d)
+    a=($(grep -o . <<<"$a"))
+    for i in "${a[@]}"; do
+      case "$i" in
+        x) p+=(0) ;;  # Reset
+        b) p+=(1) ;;  # Bold
+        d) p+=(2) ;;  # Dim
+        i) p+=(3) ;;  # Italic
+        u) p+=(4) ;;  # Underlined
+      esac
+    done
+  done
+  # Print escape sequence
+  printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
+}
+
 #=-----------------------------------------------------------------------------#
 # Check OS
 #------------------------------------------------------------------------------#
@@ -383,70 +445,4 @@ _insert-basename-suffix() {
 #   _change-filename-extension test.txt md  ==>  test.md
 _change-filename-extension() {
   echo "${1%.*}.$2"
-}
-
-#=-----------------------------------------------------------------------------#
-# Terminal colours
-#------------------------------------------------------------------------------#
-
-# Print an Select Graphic Rendition (SGR) [1] to set display attributes.
-# Usage:
-#   _sgr [<colour/modifier>...]
-# Available colours:
-#   black, black+, red, red+, green, green+, yellow, yellow+, blue, blue+,
-#   magenta, magenta+, cyan, cyan+, white, white+
-# Available modifiers:
-#   x (reset), b (bold), d (dim), i (italic), u (underline)
-# Notes:
-#   - Colours with a + are the bright versions of the corresponding colours
-#   - The x modifier resets all set attributes (colours and modifiers). The
-#     same effect can be achieved by omitting any arguments.
-#   - Modifiers may be combined into a single argument
-# Examples:
-#   _sgr red        // Red 
-#   _sgr red+       // Bright red 
-#   _sgr red b      // Bold red
-#   _sgr red biu    // Bold, italic, and underlined red
-#   _sgr red b i u  // Same as above
-#   _sgr bu         // Bold and underlined (colour isn't changed)
-#   _sgr x          // Reset all previously set attributes
-#   _sgr            // Same as above
-#   echo "$(_sgr red bi)red $(_sgr x blue+ u)blue$(_sgr) normal"
-# [1] https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-_sgr() {
-  local p
-  for a in "$@"; do
-    # Parse colour
-    case "$a" in
-      black)    p+=(30); continue ;;
-      red)      p+=(31); continue ;;
-      green)    p+=(32); continue ;;
-      yellow)   p+=(33); continue ;;
-      blue)     p+=(34); continue ;;
-      magenta)  p+=(35); continue ;;
-      cyan)     p+=(36); continue ;;
-      white)    p+=(37); continue ;;
-      black+)   p+=(90); continue ;;
-      red+)     p+=(91); continue ;;
-      green+)   p+=(92); continue ;;
-      yellow+)  p+=(93); continue ;;
-      blue+)    p+=(94); continue ;;
-      magenta+) p+=(95); continue ;;
-      cyan+)    p+=(96); continue ;;
-      white+)   p+=(97); continue ;;
-    esac
-    # Parse modifiers (x, b, i, u, d)
-    a=($(grep -o . <<<"$a"))
-    for i in "${a[@]}"; do
-      case "$i" in
-        x) p+=(0) ;;  # Reset
-        b) p+=(1) ;;  # Bold
-        d) p+=(2) ;;  # Dim
-        i) p+=(3) ;;  # Italic
-        u) p+=(4) ;;  # Underlined
-      esac
-    done
-  done
-  # Print escape sequence
-  printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
 }
