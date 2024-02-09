@@ -506,7 +506,7 @@ rand() {
   local format=r
   local upper
   if [[ "$1" =~ r|R|h|H|a|A|n ]]; then
-    format=$(_lower-case "$1")
+    format=$(_to-lower-case "$1")
     upper=$([[ "$1" =~ [[:upper:]] ]] && echo 1)
     shift
   fi
@@ -523,7 +523,7 @@ rand() {
     h) str=$(cat /dev/urandom | hexdump -e '"%x"' | head -c "$length" ) ;;
   esac
   if _is-set "$upper"; then
-    _upper-case "$str"
+    _to-upper-case "$str"
   else
     echo "$str"
   fi
@@ -601,7 +601,7 @@ __x2x() {
 # Convert numbers and zero-pad based on number of digits and value of arg 3
 ____x2x() {
   local tok
-  for tok in $(_upper-case ${@:4}); do
+  for tok in $(_to-upper-case ${@:4}); do
     bc <<< "obase=$2; ibase=$1; $tok" | _pad-left $(bc <<<"(${#tok}*$3)/1" 0)
   done
 }

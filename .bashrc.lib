@@ -146,27 +146,27 @@ _is-poured() {
 
 # Transform the input to upper-case
 # Usage:
-#   _upper-case [<args>...]
+#   _to-upper-case [<args>...]
 # If no arguments are provided, the input is read from stdin.
-_upper-case() {
+_to-upper-case() {
   _get-input "$@" |
   tr '[:lower:]' '[:upper:]'
 }
 
 # Transform the input to lower-case
 # Usage:
-#   _lower-case [<args>...]
+#   _to-lower-case [<args>...]
 # If no arguments are provided, the input is read from stdin.
-_lower-case() {
+_to-lower-case() {
   _get-input "$@" |
   tr '[:upper:]' '[:lower:]'
 }
 
 # Transform the input to title-case (first letter of each word capitalised).
 # Usage:
-#   _title-case [<args>...]
+#   _to-title-case [<args>...]
 # If no arguments are provided, the input is read from stdin.
-_title-case() {
+_to-title-case() {
   _get-input "$@" |
   awk '{
     for (i=1; i<=NF; i++) {
@@ -178,7 +178,7 @@ _title-case() {
 
 # Transform the input to kebab-case (lower-case joined by dashes)
 # Usage:
-#   _kebab-case [<args>...]
+#   _to-kebab-case [<args>...]
 # If no arguments are provided, the input is read from stdin.
 # Notes:
 #   - This implementation of kebab-case involves the following:
@@ -187,7 +187,7 @@ _title-case() {
 #     3. Whitespace characters are replaced by dashes 
 #     4. Repeated dashes replaced with a single dash
 #     5. Dashes at the beginning and end of strings are omitted
-_kebab-case() {
+_to-kebab-case() {
   _get-input "$@" |
   tr '[:upper:]' '[:lower:]' |
   tr - ' ' |
