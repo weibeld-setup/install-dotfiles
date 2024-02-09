@@ -572,37 +572,64 @@ floor() {
   bc <<<"$1/1"
 }
 
-# Test if number is even or odd
+# Check whether a number is even
 is-even() {
   (($1 % 2 == 0))
 }
+
+# Check whether a number is odd
 is-odd() {
   (($1 % 2 != 0))
 }
 
 # Convert numbers between numeral systems. Input read from stdin or arg list.
-d2b() { __x2x 10  2 0    "$@"; }
-d2o() { __x2x 10  8 0    "$@"; }
-d2h() { __x2x 10 16 0    "$@"; }
-b2d() { __x2x  2 10 0    "$@"; }
-o2d() { __x2x  8 10 0    "$@"; }
-h2d() { __x2x 16 10 0    "$@"; }
-h2b() { __x2x 16  2 4    "$@"; }
-h2o() { __x2x 16  8 0    "$@"; }
-b2h() { __x2x  2 16 0.25 "$@"; }
-o2h() { __x2x  8 16 0    "$@"; }
-b2o() { __x2x  2  8 0.33 "$@"; }
-o2b() { __x2x  8  2 3    "$@"; }
-# TODO: rewrite with _get-input
-# Read input from stdin or arg list
-__x2x() {
-  (($# == 3)) && ____x2x "$@" $(</dev/stdin) || ____x2x "$@"
+# Convert a list of numbers between numeral systems
+# Usage:
+#   d2b 10 999 
+d2b() {
+  __x2x 10 2 "$(_get-input "$@")"
 }
-# Convert numbers and zero-pad based on number of digits and value of arg 3
-____x2x() {
-  local tok
-  for tok in $(_to-upper-case ${@:4}); do
-    bc <<< "obase=$2; ibase=$1; $tok" | _pad-left $(bc <<<"(${#tok}*$3)/1" 0)
+d2o() {
+  __x2x 10 8 "$(_get-input "$@")"
+}
+d2h() {
+  __x2x 10 16 "$(_get-input "$@")"
+}
+h2b() {
+  __x2x 16 2 "$(_get-input "$@")"
+}
+h2o() {
+  __x2x 16 8 "$(_get-input "$@")"
+}
+h2d() {
+  __x2x 16 10 "$(_get-input "$@")"
+}
+b2o() {
+  __x2x 2 8 "$(_get-input "$@")"
+}
+b2d() {
+  __x2x 2 10 "$(_get-input "$@")"
+}
+b2h() {
+  __x2x 2 16 "$(_get-input "$@")"
+}
+o2b() {
+  __x2x 8 2 "$(_get-input "$@")"
+}
+o2d() {
+  __x2x 8 10 "$(_get-input "$@")"
+}
+o2h() {
+  __x2x 8 16 "$(_get-input "$@")"
+}
+__x2x() {
+  local from=$1
+  local to=$2
+  shift 2
+  local n
+  for n in $@; do
+    # Note: obase must be before ibase
+    bc <<<"obase=$to; ibase=$from; $(_to-upper-case "$n")"
   done
 }
 
@@ -622,7 +649,7 @@ n() {
   local PAT_HEX='^0x([0-9a-fA-F]+)$'
   local PAT_0='^(0)$'
   local n
-  # Convert number to decimal as an intermediary format
+  # Convert number to decimal as an intermediate format
   if   [[ $1 =~ $PAT_HEX ]]; then n=$(h2d ${BASH_REMATCH[1]})
   elif [[ $1 =~ $PAT_BIN ]]; then n=$(b2d ${BASH_REMATCH[1]})
   elif [[ $1 =~ $PAT_OCT ]]; then n=$(o2d ${BASH_REMATCH[1]})
@@ -630,7 +657,7 @@ n() {
   else
     echo "Invalid number: $1" && return 1
   fi
-  # Convert from decimal to other systems
+  # Convert from decimal to binary, octal, decimal, and hexadecimal
   echo "$(d2b $n)"
   echo "$(d2o $n)"
   echo "$n"
