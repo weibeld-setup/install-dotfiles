@@ -12,7 +12,7 @@
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
-# .bashrc file handling
+# .bashrc* file handling
 #------------------------------------------------------------------------------#
 
 # Open one of the .bashrc* files in Vim
@@ -30,34 +30,16 @@ br() {
 alias sbr='. ~/.bashrc'
 
 #------------------------------------------------------------------------------#
-# Aliases and shorthand variables
+# Dotfiles
 #------------------------------------------------------------------------------#
 
-alias vr='vim ~/.vimrc'
-alias rmf='rm -rf'
-alias la="ls -a"
-alias ll="ls -al"
-alias wl='wc -l'
-alias ssh='TERM=xterm-256color ssh'
-alias pgrep='pgrep -fl'
-alias x='chmod +x'
-alias X='chmod -x'
-alias which='which -a'
-alias watch='watch -n 1'
-alias dh='du -h'
-alias curl='curl -s'
-alias sed='sed -E'
-alias gsed='gsed -E'
-alias diff='diff --color'
-
-if _is-linux; then
-  alias ls='ls --color=auto'
-  alias grep='grep --color=auto'
-  alias fgrep='fgrep --color=auto'
-  alias egrep='egrep --color=auto'
-elif _is-mac; then
-  export d=~/Desktop
-fi
+alias d='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+alias ds='d status'
+alias da='d add'
+alias dr='d rm'
+alias dco='d commit'
+alias dp='d push'
+alias ddi='d diff'
 
 #------------------------------------------------------------------------------#
 # Prompt
@@ -95,10 +77,20 @@ __dump_history() {
 }
 
 #------------------------------------------------------------------------------#
-# ls colours
+# File system operations
 #------------------------------------------------------------------------------#
 
+alias rmf='rm -rf'
+alias la="ls -a"
+alias ll="ls -al"
+alias x='chmod +x'
+alias X='chmod -x'
+alias dh='du -h'
+alias which='which -a'
+alias diff='diff --color'
+
 if _is-mac; then
+  export d=~/Desktop
   # LSCOLORS (BSD-specific)
   # Positions:
   #   1=dir, 2=symlink, 3=socket, 4=pipe, 5=executable, 6=block special,
@@ -116,6 +108,7 @@ if _is-mac; then
   export LSCOLORS=GxFxHxHxCxHxHxCxCxGxGx
   export CLICOLOR=1
 elif _is-linux; then
+  alias ls='ls --color=auto'
   # LS_COLORS (GNU-specific)
   # Fields:
   #   di=dir, ln=symlink, so=socket, pi=pipe, ex=executable, bd=block special,
@@ -128,135 +121,82 @@ elif _is-linux; then
   export LS_COLORS="di=1;36:ln=1;35:so=0:pi=0:ex=1;32:bd=0:cd=0:su=1;32:sg=1;32:tw=1;36:ow=1;36"
 fi
 
-#------------------------------------------------------------------------------#
-# bash-completion and complete-alias
-#------------------------------------------------------------------------------#
+# Create new directory and navigate into it
+mkcd() {
+  mkdir "$1" && cd "$1"
+}
 
-if _is-mac && _is-installed brew ; then
-  source $(brew --prefix)/etc/profile.d/bash_completion.sh
-  for f in $(brew --prefix)/etc/bash_completion.d/*; do
-    source "$f"
+# Change <n> levels up in the directory hierarchy
+cdu() {
+  local n=${1:-1}
+  for i in $(seq "$n"); do
+    cd ..
   done
-fi
-
-# Only execute if bash-completion isn't activated yet
-if _is-linux && ! type _init_completion &>/dev/null; then
-  # Code from /etc/bash.bashrc which by default is outcommented
-  if [[ -f /usr/share/bash-completion/bash_completion ]]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [[ -f /etc/bash_completion ]]; then
-    . /etc/bash_completion
-  fi
-fi
-
-# complete-alias (https://github.com/cykerway/complete-alias)
-source ~/.complete_alias
-
-#------------------------------------------------------------------------------#
-# Dotfiles
-#------------------------------------------------------------------------------#
-
-alias d='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-alias ds='d status'
-alias da='d add'
-alias dr='d rm'
-alias dco='d commit'
-alias dp='d push'
-alias ddi='d diff'
-
-#------------------------------------------------------------------------------#
-# Git
-#------------------------------------------------------------------------------#
-
-alias gl='git log --decorate --graph' 
-alias gr='git remote -v'
-alias gs='git status -u'
-alias ga='git add -A'
-alias gc='git commit'
-alias gca='git commit --amend'
-alias gp='git push'
-alias gpf='git push -f'
-alias gb="git branch"
-alias gd="git diff"
-alias gpu="git pull"
-
-#------------------------------------------------------------------------------#
-# Vim/Neovim
-#------------------------------------------------------------------------------#
-
-# Vim order of precedence: Neovim > Homebrew Vim > native Vim
-if _is-installed nvim; then
-  alias vim=nvim
-elif _is-installed brew && _is-poured vim; then
-  alias vim=$(brew --prefix)/bin/vim
-fi
-
-# Set EDITOR variable to selected version of Vim from above
-export EDITOR=${BASH_ALIASES[vim]}
-
-#------------------------------------------------------------------------------#
-# Homebrew
-#------------------------------------------------------------------------------#
-
-if _is-installed brew; then
-  # Set Homebrew variables except PATH (which is already set in .bashrc.path)
-  eval $(brew shellenv | grep -v 'export PATH=')
-  export HOMEBREW_NO_AUTO_UPDATE=1
-fi
-
-#------------------------------------------------------------------------------#
-# Misc
-#------------------------------------------------------------------------------#
-
-# Increase history size (default is 500)
-export HISTSIZE=5000
-export HISTFILESIZE=5000
-
-# Readline configuration
-# https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
-bind 'set skip-completed-text on'
-
-# Make Bash resolve the word after 'sudo' as an alias [1,2], which makes it
-# possible to execute aliases with sudo. Note that the replacement is done by
-# the shell before invoking sudo and it works only with aliases, not with Bash
-# functions (sudo itself works only with executables, it doesn't resolve aliases
-# or shell functions, nor does it source .bashrc or .bash_profile). For full
-# access to the environment, start an interactive shell with 'sudo -s' which
-# in turn sources the .bashrc file found in $HOME.
-# [1] https://linuxhandbook.com/run-alias-as-sudo/
-# [2] https://www.gnu.org/software/bash/manual/bash.html#Aliases
-alias sudo='sudo '
-
-# Minicom
-alias minicom='minicom -c on'
-
-#------------------------------------------------------------------------------#
-# Shell operations
-#------------------------------------------------------------------------------#
-
-# Enable/disable vi line-editing mode in shell input (Readline)
-vi-mode-on() {
-  bind 'set editing-mode vi'  # Equivalen to 'set -o vi'
-  bind 'set show-mode-in-prompt on'
-  bind 'set vi-ins-mode-string \1\033[1;32m@|\033[m\2'
-  bind 'set vi-cmd-mode-string \1\033[1;42;37m@\033[;1;32m|\033[m\2'
-  bind '"\C-k": vi-movement-mode'
 }
 
-vi-mode-off() {
-  bind 'set editing-mode emacs'  # Equivalen to 'set +o vi'
-  bind 'set show-mode-in-prompt off'
+# Change into the directory of the file pointed to by a symlink
+cdl() {
+  local t=$(readlink "$1")
+  cd $([[ -f "$t" ]] && echo $(dirname "$t") || echo "$t")
+}
+complete -f cdl
+
+# List all the dotfiles or dot-directories in the specified directory.
+dotfiles() {
+  local d=${1:-.}
+  __dotx "${d%/}" f
+}
+dotdirs() {
+  local d=${1:-.}
+  __dotx "${d%/}" d
+}
+__dotx() {
+  find "$1" -name '.*' -maxdepth 1 -type "$2" |
+  grep -v '^\.$' |
+  xargs -Ix basename x |
+  sort --ignore-case
 }
 
-# Determine type and "location" of any command. For every valid command, this
-# function returns:
+if _is-mac; then
+  # Recursively delete all .DS_Store files in the specified directory
+  rmds() {
+    sudo find "${1:-.}" -type f \( -name .DS_Store -or -name ._.DS_Store \) -print -delete 2>/dev/null
+    return 0
+  }
+
+  # Move one or more files or directories to the trash
+  trash() {
+    for i in "$@"; do
+      # mv fails if target directory already exists
+      if ! mv "$i" ~/.Trash &>/dev/null; then
+        rm -rf ~/.Trash/"$i"
+        mv "$i" ~/.Trash
+      fi
+    done
+  }
+fi
+
+# Recursively find GB or MB sized directories under the specified directory.
+find-gb-dirs() { __find-x-dirs g "${1:-.}"; }
+find-mb-dirs() { __find-x-dirs m "${1:-.}"; }
+__find-x-dirs() {
+  case "$1" in
+    g) local pattern="G$(printf "\t")" ;;
+    m) local pattern="M$(printf "\t")\|G$(printf "\t")" ;;
+  esac
+  sudo du -h "$2" 2>/dev/null | grep "$pattern"
+  return 0
+}
+
+# Combination of 'type' and 'which' on steroids. Determine type and "location"
+# of any command. For valid command name, this function returns:
 #   1) Type:     function, alias, file, or shell builtin
-#   2) Location: in the case of functions, aliases, and files, the specific
-#                file where this command is defined (including line number for
-#                functions and aliases)
-# If there are multiple definitions for a command (e.g. both a shell builtin
-# and a file, or an alias and a file), then all of the corresponding types and
-# locations are listed.
+#   2) Location: in the case of functions, aliases, and files, the file that 
+#                this command belongs to (in the case of functions and aliases,
+#                this includes the line number of the definition)
+# If there are multiple sources for a command (e.g. a command is both a shell 
+# builtin and a file, or an alias and a file), then all of these sources are
+# listed.
 locate() {
   {
     local types=$(type -at "$1")
@@ -303,6 +243,86 @@ locate() {
 }
 complete -c locate
 
+#------------------------------------------------------------------------------#
+# Miscellaneous tools and settings
+#------------------------------------------------------------------------------#
+
+alias curl='curl -s'
+alias ssh='TERM=xterm-256color ssh'
+alias pgrep='pgrep -fl'
+alias watch='watch -n 1'
+
+# Make Bash resolve the word after 'sudo' as an alias [1,2], which makes it
+# possible to execute aliases with sudo. Note that the replacement is done by
+# the shell before invoking sudo and it works only with aliases, not with
+# functions (sudo itself works only with executables, it doesn't resolve aliases
+# or shell functions, nor does it source .bashrc or .bash_profile). For full
+# access to the environment, start an interactive shell with 'sudo -s' which
+# in turn sources the .bashrc file found in $HOME.
+# [1] https://linuxhandbook.com/run-alias-as-sudo/
+# [2] https://www.gnu.org/software/bash/manual/bash.html#Aliases
+alias sudo='sudo '
+
+# Print operating system name and version
+os() {
+  if _is-mac; then
+    echo "$(sw_vers -productName)-$(sw_vers -productVersion)"
+  elif _is-linux; then
+    if [[ -f /etc/os-release ]]; then
+      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
+    else
+      echo unknown
+    fi
+  fi
+}
+
+# Copy file or stdin to system clipboard
+# Usage:
+#   clip [file]
+# If a file is provided, its content is copied to the clipboard. If no file is
+# provided, then stdin is copied to the clipboard.
+clip() {
+  local cmd
+  _is-mac && cmd=pbcopy
+  _is-linux && cmd=xclip
+  _is-wsl && cmd=clip.exe
+  if [[ "$#" -eq 0 ]]; then
+    eval "$cmd"
+  else
+    cat "$1" | eval "$cmd"
+  fi
+}
+
+#------------------------------------------------------------------------------#
+# Shell input
+#------------------------------------------------------------------------------#
+
+# Readline configuration
+# https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
+bind 'set skip-completed-text on'
+
+# Enable/disable vi line-editing mode
+vi-mode-on() {
+  bind 'set editing-mode vi'  # Equivalent to 'set -o vi'
+  bind 'set show-mode-in-prompt on'
+  bind 'set vi-ins-mode-string \1\033[1;32m@|\033[m\2'
+  bind 'set vi-cmd-mode-string \1\033[1;42;37m@\033[;1;32m|\033[m\2'
+  bind '"\C-k": vi-movement-mode'
+}
+
+vi-mode-off() {
+  bind 'set editing-mode emacs'  # Equivalent to 'set +o vi'
+  bind 'set show-mode-in-prompt off'
+}
+
+#------------------------------------------------------------------------------#
+# Shell history
+#------------------------------------------------------------------------------#
+
+# Increase history size (default is 500)
+export HISTSIZE=5000
+export HISTFILESIZE=5000
+
 # Search through the central history file (see PROMPT_COMMAND) and either
 # print or directly execute the selected command
 # TODO: paste the command on the command line without executing it
@@ -316,6 +336,30 @@ hist() {
     cat "$HISTFILE" | fzf -e --tac
   fi
 }
+
+#------------------------------------------------------------------------------#
+# Command completion
+#------------------------------------------------------------------------------#
+
+# bash-completion (https://github.com/scop/bash-completion)
+# Use Homebrew bash-completion
+if _is-mac && _is-installed brew ; then
+  source $(brew --prefix)/etc/profile.d/bash_completion.sh
+  for f in $(brew --prefix)/etc/bash_completion.d/*; do
+    source "$f"
+  done
+# Only execute if bash-completion isn't activated yet
+elif _is-linux && ! type _init_completion &>/dev/null; then
+  # Code from /etc/bash.bashrc which by default is outcommented
+  if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [[ -f /etc/bash_completion ]]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# complete-alias (https://github.com/cykerway/complete-alias)
+source ~/.complete_alias
 
 #------------------------------------------------------------------------------#
 # Terminal colours
@@ -374,55 +418,137 @@ c256() {
   printf "\e[0m\n"
 }
 
-# Print coloured message to stdout/stderr if connected to terminal and omit the
-# colours if not connected to a terminal.
-# Usage:
-#   echoc <colour-attribute>... <msg>
-# Examples:
-#   echoc red b "Foo bar"         # Print red bold message to stdout
-#   echoc red b "Foo bar" >out    # Colours omitted because stdout is file
-#   echocerr red b "Foo bar"      # Print red bold message to stderr
-echoc() { __echoc 1 "$@"; }
-echocerr() { __echoc 2 "$@"; }
-__echoc() {
-  local fd=$1
-  local c_args=(${@:2:$#-2})
-  local msg=${@:$#}
-  [[ -t "$fd" ]] && msg=$(_sgr "${c_args[@]}")$msg$(_sgr)
-  if [[ "$fd" -eq 1 ]]; then
-    echo "$msg"
-  elif [[ "$fd" -eq 2 ]]; then
-    echo "$msg" >/dev/stderr
-  else
-    return 1
-  fi
-}
+#------------------------------------------------------------------------------#
+# Git
+#------------------------------------------------------------------------------#
+
+alias gl='git log --decorate --graph' 
+alias gr='git remote -v'
+alias gs='git status -u'
+alias ga='git add -A'
+alias gc='git commit'
+alias gca='git commit --amend'
+alias gp='git push'
+alias gpf='git push -f'
+alias gb="git branch"
+alias gd="git diff"
+alias gpu="git pull"
+
+# Use Grip with a GitHub personal access token (PAT) to avoid the rate limit
+# https://github.com/joeyespo/grip
+alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
+
+#------------------------------------------------------------------------------#
+# Vim/Neovim
+#------------------------------------------------------------------------------#
+
+alias vr='vim ~/.vimrc'
+
+# Vim order of precedence: Neovim > Homebrew Vim > native Vim
+if _is-installed nvim; then
+  alias vim=nvim
+elif _is-installed brew && _is-poured vim; then
+  alias vim=$(brew --prefix)/bin/vim
+fi
+
+# Set EDITOR variable to selected version of Vim from above
+export EDITOR=${BASH_ALIASES[vim]}
+
+#------------------------------------------------------------------------------#
+# Package management
+#------------------------------------------------------------------------------#
+
+if _is-installed brew; then
+  # Set Homebrew variables except PATH (which is already set in .bashrc.path)
+  eval $(brew shellenv | grep -v 'export PATH=')
+  export HOMEBREW_NO_AUTO_UPDATE=1
+fi
+
+if _is-linux; then
+  # Check if the dependencies of a Debian package are installed
+  checkdep() {
+    local dep=($(apt-cache depends "$1" | grep Depends: | cut -d : -f 2))
+    for d in "${dep[@]}"; do
+      echo -n "$d: "
+     if dpkg -s "$d" 2>/dev/null | grep -q "Status: .* installed"; then
+        echo installed
+      else
+        echo "NOT INSTALLED"
+      fi
+    done
+  }
+fi
 
 #------------------------------------------------------------------------------#
 # Text processing
 #------------------------------------------------------------------------------#
 
-# Create random alphanumeric lower-case string of the specified length
-random() {
-  local length=${1:-16}
-  [[ "$length" =~ ^[1-9][0-9]*$ ]] || { echo "Argument must be positive integer"; return 1; }
-  cat /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c "$length"
-  echo
+alias sed='sed -E'
+alias gsed='gsed -E'
+alias wl='wc -l'
+if _is-linux; then
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
+fi
+
+# Create a random string in one of different formats.
+# Usage:
+#   rand [r|R|a|A|h|H|n] [<length>]
+# Args:
+#   format: r|R: alphanumeric with all lower-case (r) or all upper-case (R)
+#           a|A: alphabetic with all lower-case (a) or all upper-case (A)
+#           h|H: hexadecimal with all lower-case (h) or all upper-case (H)
+#           n:   numeric
+#           Default is 'r'
+#   length: positive integer (default is 8)
+rand() {
+  local format=r
+  local upper
+  if [[ "$1" =~ r|R|h|H|a|A|n ]]; then
+    format=$(_lower-case "$1")
+    upper=$([[ "$1" =~ [[:upper:]] ]] && echo 1)
+    shift
+  fi
+  local length=${1:-8}
+  if [[ ! "$length" =~ [0-9]+ ]]; then
+    _error "Length must be a number but found '$length'"
+    return 1
+  fi
+  local str
+  case "$format" in
+    r) str=$(cat /dev/urandom | LC_ALL=C tr -dc a-z0-9 | head -c "$length") ;;
+    a) str=$(cat /dev/urandom | LC_ALL=C tr -dc a-z | head -c "$length") ;;
+    n) str=$(cat /dev/urandom | LC_ALL=C tr -dc 0-9 | head -c "$length") ;;
+    h) str=$(cat /dev/urandom | hexdump -e '"%x"' | head -c "$length" ) ;;
+  esac
+  if _is-set "$upper"; then
+    _upper-case "$str"
+  else
+    echo "$str"
+  fi
 }
 
-# Generate a random hexadecimal string of the specified length
-random-hex(){
-  local digits=$1
-  cat /dev/urandom | head -c $((("$digits"/2)+1)) | hexdump -e '"%x"' | head -c "$digits"
-  echo
-}
-
-# Get the Unicode code point of a single character (source [1])
-# [1] https://superuser.com/a/1019853
+# Get the Unicode code point of a single character
+# Source: https://superuser.com/a/1019853
 unicode() {
   local char=$(_get-input "$@")
-  [[ "${#char}" -ne 1 ]] && { _error "must pass a single character"; return 1; }
+  if [[ "${#char}" -ne 1 ]]; then
+    _error "Argument must be a single character"
+    return 1
+  fi
   echo -n "$char" | iconv -f UTF-8 -t UTF-32BE | xxd -p | sed -r 's/^0+/0x/' | xargs printf 'U+%04X\n'
+}
+
+# Dump the hexadecimal code of the provided string (output depends on encoding
+# used by the terminal).
+enc() {
+  echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-
+}
+
+# Print the character encoding used by the terminal
+enc-type() {
+  echo $LC_CTYPE
 }
 
 #------------------------------------------------------------------------------#
@@ -467,6 +593,7 @@ b2h() { __x2x  2 16 0.25 "$@"; }
 o2h() { __x2x  8 16 0    "$@"; }
 b2o() { __x2x  2  8 0.33 "$@"; }
 o2b() { __x2x  8  2 3    "$@"; }
+# TODO: rewrite with _get-input
 # Read input from stdin or arg list
 __x2x() {
   (($# == 3)) && ____x2x "$@" $(</dev/stdin) || ____x2x "$@"
@@ -577,135 +704,19 @@ change_mac() {
 }
 
 #------------------------------------------------------------------------------#
-# File system operations
+# macOS
 #------------------------------------------------------------------------------#
-
-# Create new directory and navigate into it
-mkcd() {
-  mkdir "$1" && cd "$1"
-}
-
-# Change <n> levels up in the directory hierarchy
-cdu() {
-  local n=${1:-1}
-  for i in $(seq "$n"); do
-    cd ..
-  done
-}
-
-# Change into the directory of the file pointed to by a symlink
-cdl() {
-  local t=$(readlink "$1")
-  cd $([[ -f "$t" ]] && echo $(dirname "$t") || echo "$t")
-}
-complete -f cdl
-
-# List all the dotfiles or dot-directories in the specified directory.
-dotfiles() {
-  local d=${1:-.}
-  __dotx "${d%/}" f
-}
-dotdirs() {
-  local d=${1:-.}
-  __dotx "${d%/}" d
-}
-__dotx() {
-  find "$1" -name '.*' -maxdepth 1 -type "$2" |
-  grep -v '^\.$' |
-  xargs -Ix basename x |
-  sort --ignore-case
-}
-
-# Recursively find GB or MB sized directories under the specified directory.
-find-gb-dirs() {
-  __find-x-dirs g "${1:-.}"
-}
-find-mb-dirs() {
-  __find-x-dirs m "${1:-.}"
-}
-__find-x-dirs() {
-  case "$1" in
-    g) local pattern="G$(printf "\t")" ;;
-    m) local pattern="M$(printf "\t")\|G$(printf "\t")" ;;
-  esac
-  sudo du -h "$2" 2>/dev/null | grep "$pattern"
-  return 0
-}
 
 if _is-mac; then
-  # Recursively delete all .DS_Store files in the specified directory
-  rmds() {
-    sudo find "${1:-.}" -type f \( -name .DS_Store -or -name ._.DS_Store \) -print -delete 2>/dev/null
-    return 0
-  }
-
-  # Move one or more files or directories to the trash
-  trash() {
-    for i in "$@"; do
-      # mv fails if target directory already exists
-      if ! mv "$i" ~/.Trash &>/dev/null; then
-        rm -rf ~/.Trash/"$i"
-        mv "$i" ~/.Trash
-      fi
-    done
-  }
-fi
-
-#------------------------------------------------------------------------------#
-# Misc
-#------------------------------------------------------------------------------#
-
-# Copy file or stdin to system clipboard
-# Usage:
-#   clip [file]
-# If a file is provided, its content is copied to the clipboard. If no file is
-# provided, then stdin is copied to the clipboard.
-clip() {
-  local cmd
-  _is-mac && cmd=pbcopy
-  _is-linux && cmd=xclip
-  _is-wsl && cmd=clip.exe
-  if [[ "$#" -eq 0 ]]; then
-    eval "$cmd"
-  else
-    cat "$1" | eval "$cmd"
-  fi
-}
-
-# Print operating system name and version
-os() {
-  if _is-mac; then
-    echo "$(sw_vers -productName)-$(sw_vers -productVersion)"
-  elif _is-linux; then
-    if [[ -f /etc/os-release ]]; then
-      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
-    else
-      echo unknown
-    fi
-  fi
-}
-
-# Dump the hexadecimal code of the provided string (output depends on the 
-# encoding used by the terminal).
-enc() {
-  echo -n "$@" | hexdump | head -1 | cut -d ' ' -f 2-
-}
-
-# Print the character encoding used by the terminal
-enc-type() {
-  echo $LC_CTYPE
-}
-
-if _is-mac; then
-  # Make Finder hide or show hidden files
+  # Hide hidden files in Finder
   finder-hide-hidden-files() {
-    __finder-x-hidden-files FALSE
+    defaults write com.apple.finder AppleShowAllFiles FALSE 
+    killall Finder
   }
+
+  # Show hidden files in Finder
   finder-show-hidden-files() {
-    __finder-x-hidden-files TRUE
-  }
-  __finder-x-hidden-files() {
-    defaults write com.apple.finder AppleShowAllFiles "$1"
+    defaults write com.apple.finder AppleShowAllFiles TRUE
     killall Finder
   }
 
@@ -713,49 +724,6 @@ if _is-mac; then
   # Note: app names are case insensitive
   app-id() {
     osascript -e "id of app \"$1\""
-  }
-
-elif _is-linux; then
-  # Check if the dependencies of a Debian package are installed
-  checkdep() {
-    local dep=($(apt-cache depends "$1" | grep Depends: | cut -d : -f 2))
-    for d in "${dep[@]}"; do
-      echo -n "$d: "
-     if dpkg -s "$d" 2>/dev/null | grep -q "Status: .* installed"; then
-        echo installed
-      else
-        echo "NOT INSTALLED"
-      fi
-    done
-  }
-
-  # Customise keyboard layout with setxkbmap:
-  #   - Add Swiss German keyboard layout
-  #   - Swap Caps-Lock and Ctrl keys
-  #   - Set key combination for toggling between keyboard layouts
-  # All the options and keyboard layouts of setxkbmap can be found in the file
-  # ==> /usr/share/X11/xkb/rules/base.lst
-  # Notes:
-  # - The settings made by setxkbmap do NOT persists across logins
-  # - To make the settigns persistent, one option would be to put the setxkbmap
-  #   commands directly into ~/.bashrc. However, this may cause an X error
-  #   (cannot open display "default display")
-  # - Another option would be to put the setxkbmap commands into ~/.xinitrc or
-  #   /etc/X11/xorg.conf.d/00-keyboard.conf (different syntax). However, there
-  #   are inconsistencies across systems, and different desktop environments
-  #   read these files in different ways
-  # - Because of the above problems, the setxkbmap commands are provided here
-  #   as a function that can be called manually
-  # Source: https://wiki.archlinux.org/index.php/Keyboard_configuration_in_Xorg
-  #         http://betabug.ch/blogs/ch-athens/1242
-  config_keyboard() {
-    _ensure-installed setxkbmap
-    # Set Swiss German and German as keyboard layouts (ch(de) is default)
-    setxkbmap 'ch(de),de'
-    # Left Alt-Shift for toggling between keyboard layouts
-    setxkbmap -option grp:lalt_lshift_toggle
-    # Swap Caps-Lock and Ctrl keys
-    setxkbmap -option ctrl:swapcaps
   }
 fi
 
@@ -804,12 +772,75 @@ prometheus-clean() {
 # Misc
 #------------------------------------------------------------------------------#
 
-# Use Grip [1] with a GitHub PAT to avoid the anonymous user rate limit
-# [1] https://github.com/joeyespo/grip
-alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
-
-# Open a JMESPath Terminal [1]
-# [1] https://github.com/jmespath/jmespath.terminal)
+# Open a JMESPath Terminal
+# https://github.com/jmespath/jmespath.terminal)
 jpterm() {
   python /Users/dw/Library/Python/2.7/lib/python/site-packages/jpterm.py
 }
+
+# Minicom
+alias minicom='minicom -c on'
+
+
+#------------------------------------------------------------------------------#
+# TODO: move to .bashrc.lib
+#------------------------------------------------------------------------------#
+
+# Print coloured message to stdout/stderr if connected to terminal and omit the
+# colours if not connected to a terminal.
+# Usage:
+#   echoc <colour-attribute>... <msg>
+# Examples:
+#   echoc red b "Foo bar"         # Print red bold message to stdout
+#   echoc red b "Foo bar" >out    # Colours omitted because stdout is file
+#   echocerr red b "Foo bar"      # Print red bold message to stderr
+echoc() { __echoc 1 "$@"; }
+echocerr() { __echoc 2 "$@"; }
+__echoc() {
+  local fd=$1
+  local c_args=(${@:2:$#-2})
+  local msg=${@:$#}
+  [[ -t "$fd" ]] && msg=$(_sgr "${c_args[@]}")$msg$(_sgr)
+  if [[ "$fd" -eq 1 ]]; then
+    echo "$msg"
+  elif [[ "$fd" -eq 2 ]]; then
+    echo "$msg" >/dev/stderr
+  else
+    return 1
+  fi
+}
+
+#------------------------------------------------------------------------------#
+# TODO: delete
+#------------------------------------------------------------------------------#
+
+if _is-linux; then
+  # Customise keyboard layout with setxkbmap:
+  #   - Add Swiss German keyboard layout
+  #   - Swap Caps-Lock and Ctrl keys
+  #   - Set key combination for toggling between keyboard layouts
+  # All the options and keyboard layouts of setxkbmap can be found in the file
+  # ==> /usr/share/X11/xkb/rules/base.lst
+  # Notes:
+  # - The settings made by setxkbmap do NOT persists across logins
+  # - To make the settigns persistent, one option would be to put the setxkbmap
+  #   commands directly into ~/.bashrc. However, this may cause an X error
+  #   (cannot open display "default display")
+  # - Another option would be to put the setxkbmap commands into ~/.xinitrc or
+  #   /etc/X11/xorg.conf.d/00-keyboard.conf (different syntax). However, there
+  #   are inconsistencies across systems, and different desktop environments
+  #   read these files in different ways
+  # - Because of the above problems, the setxkbmap commands are provided here
+  #   as a function that can be called manually
+  # Source: https://wiki.archlinux.org/index.php/Keyboard_configuration_in_Xorg
+  #         http://betabug.ch/blogs/ch-athens/1242
+  config_keyboard() {
+    _ensure-installed setxkbmap
+    # Set Swiss German and German as keyboard layouts (ch(de) is default)
+    setxkbmap 'ch(de),de'
+    # Left Alt-Shift for toggling between keyboard layouts
+    setxkbmap -option grp:lalt_lshift_toggle
+    # Swap Caps-Lock and Ctrl keys
+    setxkbmap -option ctrl:swapcaps
+  }
+fi
