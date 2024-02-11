@@ -12,12 +12,12 @@
 #------------------------------------------------------------------------------#
 
 #=-----------------------------------------------------------------------------#
-# .bashrc* file handling
+# .bashrc* files
 #------------------------------------------------------------------------------#
 
 # Open a .bashrc* file in Vim
 br() {
-  _ensure-installed fzf
+  _ensure-cmd fzf || return 1
   local select=$(basename ~/.bashrc* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
   if _is-set "$select"; then
     vim "$select"
@@ -31,17 +31,18 @@ alias sbr='. ~/.bashrc'
 
 # List the function and alias names defined in a .bashrc.* file
 # Notes:
-#   This function has the following requirements on .bashrc.* files:
-#     1. There MAY be headers starting with #= at the beginning of a line
-#     2. If there are headers, they MUST be exactly three lines high
-#   If the above requirements are met, then these headers are nicely printed
-#   along with the function and alias names. If there are no such headers,
-#   then only the function and alias names are printed.
+#   This function puts the following requirements on .bashrc.* files:
+#     1. There MAY be headers starting with #= at the beginning of the line
+#     2. These headers MUST be exactly three lines high (the first line must
+#        start with #=, the remaining two lines can have arbitrary content).
+#   If the above requirements are met, then these headers are printed along
+#   with the function and alias names. If the .bashrc.* file does not contain
+#   any such headers, then only the function and alias names are printed.
 lbr() {
   # Read input file
   local file=$1
   if ! _is-set "$file"; then
-    _ensure-installed fzf
+    _ensure-cmd fzf || return 1
     file=$(basename ~/.bashrc.* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
     ! _is-set "$file" && { echo "No selection"; return; }
   fi
@@ -67,12 +68,61 @@ lbr() {
   done
 }
 
+# Print the documentation string and body of a function or alias definition.
+#doc() {
+#  cmd "$1" | grep -e '^Function' -e '^Alias'
+#}
+
+# List all the definitions of a command.
+# Prints the type (file, alias, function, or builtin) and the file where the
+# definition occurs (including the line number for aliases and functions).
+# Notes:
+#   1. The definitions are ordered in order of precedence with the highest
+#      definition (i.e. the one taking effect) on top.
+#   2. If an alias or function has multiple definitions, only the last one
+#      (i.e. the one taking effect) is shown.
+#   3. Aliases and functions that have been defined in the shell are listed
+#      with 'null' as the file name.
+#   4. For the correct parsing of alias definitions, all alias definitions
+#      must be in one of the ~/.bashrc.* files and there must be ONLY white-
+#      space between the beginning of the line and the 'alias' keyword.
+cmd() {
+  _is-cmd "$1" || { echo "No command named '$1'"; return 1; }
+  local i file_i
+  type -at "$1" | while read t; do
+    ((i++))
+    case "$t" in
+      function)
+        { shopt -s extdebug; local res=$(declare -F "$1"); shopt -u extdebug; }
+        local file=$(cut -d ' ' -f 3- <<<"$res"):$(cut -d ' ' -f 2 <<<"$res")
+        __cmd-print "$i" function "$([[ "$file" =~ ^/ ]] && echo "$file")"
+        ;;
+      alias)
+        __cmd-print "$i" alias "$(grep -nE "^[ ]*alias[ ]+$1=" $(_bashrc) | tail -n 1 | cut -d : -f 1-2)"
+        ;;
+      file)
+        ((file_i++))
+        __cmd-print "$i" file "$(which -a "$1" | sed "${file_i}q;d")"
+        ;;
+      builtin)
+        __cmd-print "$i" builtin
+        ;;
+    esac
+  done | column -t -s '|'
+}
+complete -c cmd
+
+__cmd-print() {
+  echo "$1|$2|${3:-null}"
+}
+
 #=-----------------------------------------------------------------------------#
 # Dotfiles
 #------------------------------------------------------------------------------#
 
 alias d='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 alias ds='d status'
+alias dl='d log'
 alias da='d add'
 alias dr='d rm'
 alias dco='d commit'
@@ -226,60 +276,6 @@ __find-x-dirs() {
   return 0
 }
 
-# Print the following information about a command:
-#   1. Type:       function, alias, executable file, or shell builtin
-#   2. Definition: for function and aliases, the file and line number where
-#                  the function or alias is defined, for executable files, the
-#                  file name(s).
-# If a command has multiple sources (e.g. multiple executable files, or both
-# an alias and an executable file), then all of these sources are listed.
-cmd() {
-  {
-    local types=$(type -at "$1")
-    if _is-unset "$types"; then
-      echo "Not a command: $1"
-      return 1
-    fi
-    local file_counter=0
-    echo "$types" | while read t; do
-      case "$t" in
-        function)
-          { shopt -s extdebug; local result=$(declare -F "$1"); shopt -u extdebug; }
-          local file=$(echo "$result" | cut -d ' ' -f 3-)
-          local line=$(echo "$result" | cut -d ' ' -f 2)
-          echo "Function '$1':|$file:$line"
-          ;;
-        alias)
-          # Locate definition of alias through Bash traces and a trick with $PS4
-          # (printed before each line of the Bash traces, default is "+"):
-          #     Identifiy first line in Bash traces where the alias is defined.
-          #     The previous line, thus, must be the definition of the alias and
-          #     $BASH_SOURCE and $LINENO yields the file name and line number
-          #     where the alias is defined.
-          # Source: https://unix.stackexchange.com/a/483353/317243
-          local result=$(PS4='[${BASH_SOURCE}:${LINENO}${BASH_ALIASES['$1']+"<'$1'>"}] ' bash -lixc : |& grep -m 1 -B 1 "<$1>" | head -n 1 | cut -d ']' -f 1 | tr -d '[')
-          if _is-set "$result"; then
-            local file=$(echo "$result" | cut -d : -f 1)
-            local line=$(echo "$result" | cut -d : -f 2)
-            echo "Alias '$1':|$file:$line"
-          else
-            echo "Alias '$1':|<no file>"
-          fi
-          ;;
-        file)
-          file_counter=$((file_counter+1))
-          local file=$(which -a "$1" | sed "${file_counter}q;d")
-          echo "File '$1':|$file"
-          ;;
-        builtin)
-          echo "Builtin '$1':|help $1"
-          ;;
-      esac
-    done
-    } | column -t -s '|' | sed 's/  / /'
-}
-complete -c cmd
-
 #=-----------------------------------------------------------------------------#
 # Miscellaneous tools and settings
 #------------------------------------------------------------------------------#
@@ -364,7 +360,7 @@ export HISTFILESIZE=5000
 # print or directly execute the selected command
 # TODO: paste the command on the command line without executing it
 hist() {
-  _ensure-installed fzf
+  _ensure-cmd fzf || return 1
   # Directly execute the command
   if [[ "$1" = -x ]]; then
     eval $(cat "$HISTFILE" | fzf -e --tac)
@@ -380,7 +376,7 @@ hist() {
 
 # bash-completion (https://github.com/scop/bash-completion)
 # Use Homebrew bash-completion
-if _is-mac && _is-installed brew ; then
+if _is-mac && _is-cmd brew ; then
   source $(brew --prefix)/etc/profile.d/bash_completion.sh
   for f in $(brew --prefix)/etc/bash_completion.d/*; do
     source "$f"
@@ -459,7 +455,7 @@ c256() {
 # Package management
 #------------------------------------------------------------------------------#
 
-if _is-installed brew; then
+if _is-cmd brew; then
   # Set Homebrew variables except PATH (which is already set in .bashrc.path)
   eval $(brew shellenv | grep -v 'export PATH=')
   export HOMEBREW_NO_AUTO_UPDATE=1
@@ -487,9 +483,9 @@ fi
 alias vr='vim ~/.vimrc'
 
 # Vim order of precedence: Neovim > Homebrew Vim > native Vim
-if _is-installed nvim; then
+if _is-cmd nvim; then
   alias vim=nvim
-elif _is-installed brew && _is-poured vim; then
+elif _is-cmd brew && _is-homebrew-poured vim; then
   alias vim=$(brew --prefix)/bin/vim
 fi
 
@@ -795,7 +791,7 @@ fi
 # Terraform
 #------------------------------------------------------------------------------#
 
-if _is-installed terraform; then
+if _is-cmd terraform; then
   # Aliases
   alias tf=terraform
   alias tfa='terraform apply'
@@ -804,7 +800,7 @@ if _is-installed terraform; then
   alias tfdd='terraform destroy --auto-approve'
 
   # Enable command completion
-  if _is-mac && _is-installed brew; then
+  if _is-mac && _is-cmd brew; then
     complete -C $(brew --prefix)/bin/terraform terraform
   elif _is-linux; then
     complete -C /usr/bin/terraform terraform
