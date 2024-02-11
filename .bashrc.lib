@@ -208,27 +208,27 @@ _is-exec-file() {
 complete -c _is-exec-file
 
 # Check whether a given command exists (i.e. is either an executable file in 
-# the path, a shell alias, a shell function, or a shell builtin)
-_is-available() {
+# the path, an alias, a function, or a shell builtin)
+_is-cmd() {
   _is-exec-file "$1" || _is-alias "$1" || _is-function "$1" || _is-builtin "$1"
 }
-complete -c _is-available
+complete -c _is-cmd
 
-# Print an error message and exit with 1 if the given command is NOT available.
+# Print an error message and return 1 if the given command does NOT exist
 # Application example:
 #   my-function() {
-#     _ensure-available <cmd> | return 1
+#     _ensure-cmd <cmd> || return 1
 #   }
-_ensure-available() {
-  if ! _is-available "$1"; then
-    _error "'$1' is not available" && return 1
+_ensure-cmd() {
+  if ! _is-cmd "$1"; then
+    _error "'$1' is not a known command" && return 1
   fi
 }
 
 # Check whether a given Homebrew formula or cask is installed
 # Note: also checks whether Homebrew is installed, and aborts otherwise
 _is-homebrew-poured() {
-  _ensure-available brew || return 1
+  _ensure-cmd brew || return 1
   brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
 }
 

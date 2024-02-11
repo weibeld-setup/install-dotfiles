@@ -6,7 +6,7 @@
 
 # Merge multiple PDF files to a single PDF file.
 pdf-merge() {
-  _ensure-available pdftk || return 1
+  _ensure-cmd pdftk || return 1
   local out=out-pdf-merge.pdf
   pdftk "$@" cat output "$out"
   echo "$out"
@@ -15,7 +15,7 @@ pdf-merge() {
 # Split a PDF file into individual pages and save each page as a separate PDF
 # file in a subdirectory of the current working directory.
 pdf-split() {
-  _ensure-available pdftk || return 1
+  _ensure-cmd pdftk || return 1
   [[ -f "$1" ]] || { echo "Error: $1 not found"; return 1; }
   local basename=$(basename ${1%.*})
   mkdir -p "$basename-split"
@@ -26,7 +26,7 @@ pdf-split() {
 
 # Extract the table of contents from a PDF file
 pdf-toc() {
-  _ensure-available mutool || return 1
+  _ensure-cmd mutool || return 1
   local tab=$(printf '\t')
   # Extract TOC and delete page numbers separated from section titles by a tab
   mutool show "$1" outline | sed -E "s/${tab}[0-9]+\$//"
@@ -59,7 +59,7 @@ pdf-scale() {
 
 # Convert an audio file to the MP3 format. Requires ffmpeg.
 to-mp3() {
-  _ensure-available ffmpeg || return 1
+  _ensure-cmd ffmpeg || return 1
   ffmpeg -i "$1" -acodec libmp3lame "${1/.*/.mp3}"
 }
 
@@ -71,7 +71,7 @@ to-mp3() {
 #   - Requires gifsicle [1]. Install with 'brew install gifsicle'.
 # [1] https://www.lcdf.org/gifsicle/
 gif-split() {
-  _ensure-available gifsicle || return 1
+  _ensure-cmd gifsicle || return 1
   local name=${1%.gif}
   local dir=$name.gif.split
   mkdir "$dir"
@@ -90,7 +90,7 @@ gif-split() {
 # Usage:
 #   gif-trim <file.gif> <start> <end>
 gif-trim() {
-  _ensure-available gifsicle || return 1
+  _ensure-cmd gifsicle || return 1
   gifsicle --unoptimize "$1" "#$(("$2"-1))-$(("$3"-1))" -O2 -o "${1%.gif}"-trimmed.gif
 }
 
@@ -100,13 +100,13 @@ gif-trim() {
 
 # Get the size of an image in pixels
 img-size() {
-  _ensure-available identify || return 1
+  _ensure-cmd identify || return 1
   identify "$1"
 }
 
 # Crop an image to a specific size, optionally defining the upper left corner.
 img-crop() {
-  _ensure-available convert || return 1
+  _ensure-cmd convert || return 1
   if [[ $# -lt 3 ]]; then
     echo -e "${FUNCNAME[0]} file width height [top-offset] [left-offset] [out-file]"
     return
@@ -123,7 +123,7 @@ img-crop() {
 
 # Resize image. Usage: img-resize <file> <format> [<out_file>].
 img-resize() {
-  _ensure-available convert || return 1
+  _ensure-cmd convert || return 1
   local file=$1; local format=$2  # Format "50%" or "512x512"
   out_file=${3:-$(_insert-basename-suffix _resized "$file")}
   convert "$file" -resize "$format" "$out_file"
@@ -131,7 +131,7 @@ img-resize() {
 
 # Read date a photo was taken from the photo's EXIF data.
 img-date() {
-  _ensure-available identify || return 1
+  _ensure-cmd identify || return 1
   identify -format %[exif:DateTimeOriginal] "$1"
 }
 
@@ -145,7 +145,7 @@ img-date() {
 #     only the extension changed.
 #   - The output files are newly created, the input files are not modified.
 convert-format() {
-  _ensure-available convert || return 1
+  _ensure-cmd convert || return 1
   if [[ "$#" -lt 2 ]]; then
     echo "Usage: convert-format <input-ext> <output-ext>"
     return 1
