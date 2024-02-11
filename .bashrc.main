@@ -226,19 +226,18 @@ __find-x-dirs() {
   return 0
 }
 
-# Combination of 'type' and 'which' on steroids. Determine type and "location"
-# of any command. For valid command name, this function returns:
-#   1) Type:     function, alias, file, or shell builtin
-#   2) Location: in the case of functions, aliases, and files, the file that 
-#                this command belongs to (in the case of functions and aliases,
-#                this includes the line number of the definition)
-# If there are multiple sources for a command (e.g. a command is both a shell 
-# builtin and a file, or an alias and a file), then all of these sources are
-# listed.
-locate() {
+# Print the following information about a command:
+#   1. Type:       function, alias, executable file, or shell builtin
+#   2. Definition: for function and aliases, the file and line number where
+#                  the function or alias is defined, for executable files, the
+#                  file name(s).
+# If a command has multiple sources (e.g. multiple executable files, or both
+# an alias and an executable file), then all of these sources are listed.
+cmd() {
   {
     local types=$(type -at "$1")
     if _is-unset "$types"; then
+      echo "Not a command: $1"
       return 1
     fi
     local file_counter=0
@@ -248,8 +247,8 @@ locate() {
           { shopt -s extdebug; local result=$(declare -F "$1"); shopt -u extdebug; }
           local file=$(echo "$result" | cut -d ' ' -f 3-)
           local line=$(echo "$result" | cut -d ' ' -f 2)
-          echo "Function:|$file:$line"
-        ;;
+          echo "Function '$1':|$file:$line"
+          ;;
         alias)
           # Locate definition of alias through Bash traces and a trick with $PS4
           # (printed before each line of the Bash traces, default is "+"):
@@ -262,24 +261,24 @@ locate() {
           if _is-set "$result"; then
             local file=$(echo "$result" | cut -d : -f 1)
             local line=$(echo "$result" | cut -d : -f 2)
-            echo "Alias:|$file:$line"
+            echo "Alias '$1':|$file:$line"
           else
-            echo "Alias:|<no file>"
+            echo "Alias '$1':|<no file>"
           fi
-        ;;
+          ;;
         file)
           file_counter=$((file_counter+1))
           local file=$(which -a "$1" | sed "${file_counter}q;d")
-          echo "File:|$file"
-        ;;
+          echo "File '$1':|$file"
+          ;;
         builtin)
-          echo "Builtin:|$ help $1"
-        ;;
+          echo "Builtin '$1':|help $1"
+          ;;
       esac
     done
     } | column -t -s '|' | sed 's/  / /'
 }
-complete -c locate
+complete -c cmd
 
 #=-----------------------------------------------------------------------------#
 # Miscellaneous tools and settings
