@@ -8,7 +8,7 @@
 # .bashrc.* files
 #------------------------------------------------------------------------------#
 
-# List ~/.bashrc.* files in order in wich they are sourced (see ~/.bashrc)
+  # List ~/.bashrc.* files in the order in which they are sourced in ~/.bashrc
 _bashrc() {
   echo ~/.bashrc.path ~/.bashrc.lib ~/.bashrc.main ~/.bashrc.!(path|lib|main)
 }
@@ -41,16 +41,49 @@ _get-input() {
 
 # Print an error message to stderr.
 # Usage:
-#   _error <msg>
-# The error message includes the name of the calling function. This fuction
-# is intended to be used in abort blocks of other functions.
-# Example application:
-#   if [[ "$#" -ne 2 ]]; then
-#     _error "Must provide two arguments"
-#     return 1
-#  fi
-_error() {
-  echo "Error in ${FUNCNAME[1]}: $@" >&2
+#   _print-error-msg [<func-depth>] <msg>
+# The optional <func-depth> argument is the position of the function in the
+# function call stack whose named should be printed along with the error
+# message. The default value is 1, which is the calling function.
+#
+
+# Print all arguments to stderr.
+_stderr() {
+  echo -e "$@" >/dev/stderr
+}
+
+# Print a an error message.
+# Usage:
+#   _print-error-msg <msg> [<func-stack-index>]
+# Notes:
+#   - The <func-stack-index> argument is the position of the function in the
+#     function call stack whose name should be printed as part of the output.
+#     Its default value is 1, which corresponds to the function that called
+#     this function.
+#   - The <msg> argument must be passed a a single argument, that means, it
+#     must be wrapped in quotes.
+#   - The <msg> argument may contain formatting characters, such as \n or \t.
+_print-error-msg() {
+  local msg=$1
+  local i=${2:-1}
+  echo -e "Error (${FUNCNAME["$i"]}): $msg"
+}
+
+# Print a multi-line usage message, like the one below, to stderr.
+# Usage:
+#   _print-usage-msg <msg> [<func-stack-index>]
+# Notes:
+#   - The <func-stack-index> argument is the position of the function in the
+#     function call stack whose name should be printed in the second line. Its
+#     default value is 1, which corresponds to the function that called the
+#     _print-usage-msg function.
+#   - The <msg> argument must be passed a a single argument, that means, it
+#     must be wrapped in quotes.
+#   - The <msg> argument may contain formatting characters, such as \n or \t.
+_print-usage-msg() {
+  local msg=$1
+  local i=${2:-1}
+  echo -e "Usage:\n  ${FUNCNAME["$i"]} $msg"
 }
 
 # Print a message to stdout ONLY if stdout is directed to the terminal
@@ -223,21 +256,77 @@ _is-cmd() {
 }
 complete -c _is-cmd
 
+# List all the types of a command.
+# Usage:
+#   _type [-s] <cmd>
+# Lists all the types (function, alias, file, or builtin) for <cmd> in order
+# of precedence. For files, functions, and aliases, the source file is also
+# listed. For functions and aliases, the line number of the definition is
+# additionally appended to the filename. With -s, only the highest precedence
+# type (i.e. the one taking effect) is listed.
+# Notes:
+#   - This function is similar to 'type -a', however, it does NOT list function
+#     and alias bodies (use 'doc' for this), but in turn it lists file names
+#     and line numbers for functions and aliases.
+#   - Alias definitions are parsed from the .bashrc.* files (see '_bashrc').
+#     In order to be parsed correctly, alias definitions must only have white-
+#     space between the 'alias' keyword and the beginning of the line.
+_type() {
+  if [[ "$#" -eq 1 ]]; then
+    local cmd=$1
+  elif [[ "$#" -eq 2 && "$1" = -s ]]; then
+    local short=1 cmd=$2
+  else
+    _print-usage-msg "[-s] <cmd>" >/dev/stderr
+    return 1
+  fi
+  local types=$(type -ta "$cmd")
+  if _is-set "$short"; then
+    types=$(echo "$types" | head -n 1)
+  fi
+  local file_i
+  echo "$types" | while read t; do
+    case "$t" in
+      function)
+        { shopt -s extdebug; local res=$(declare -F "$cmd"); shopt -u extdebug; }
+        local file=$(echo "$res" | cut -d ' ' -f 3-)
+        local line=$(echo "$res" | cut -d ' ' -f 2)
+        __type-print function "$([[ "$file" =~ ^/ ]] && echo "$file:$line")"
+        ;;
+      alias)
+        __type-print alias "$(grep -nE "^[ ]*alias[ ]+$cmd=" $(_bashrc) /dev/null | tail -n 1 | cut -d : -f 1-2)"
+        ;;
+      file)
+        ((file_i++))
+        __type-print file "$(which -a "$cmd" | sed -n "${file_i}p")"
+        ;;
+      builtin)
+        __type-print builtin
+        ;;
+    esac
+  done
+}
+complete -c _type
+__type-print() {
+  echo "$1,${2:-null}"
+}
+
 # Print an error message and return 1 if the given command does NOT exist
-# Application example:
+# Usage example:
 #   my-function() {
-#     _ensure-cmd <cmd> || return 1
+#     _ensure-installed <cmd> || return 1
 #   }
-_ensure-cmd() {
+_ensure-installed() {
   if ! _is-cmd "$1"; then
-    _error "'$1' is not a known command" && return 1
+    _print-error-msg "'$1' is not installed" 2
+    return 1
   fi
 }
 
 # Check whether a given Homebrew formula or cask is installed
 # Note: also checks whether Homebrew is installed, and aborts otherwise
 _is-homebrew-poured() {
-  _ensure-cmd brew || return 1
+  _ensure-installed brew || return 1
   brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
 }
 
@@ -312,11 +401,11 @@ _to-kebab-case() {
 #     are read from stdin.
 #   - If a string to pad is longer than <length>, it is printed unchanged.
 _pad-left() {
-  [[ "$#" -lt 2 ]] && _error "must provide length and padding character" && return 1
+  [[ "$#" -lt 2 ]] && _print-error-msg "must provide length and padding character" && return 1
   __pad l "$1" "$2" $(shift 2 && _get-input "$@")
 }
 _pad-right() {
-  [[ "$#" -lt 2 ]] && _error "must provide length and padding character" && return 1
+  [[ "$#" -lt 2 ]] && _print-error-msg "must provide length and padding character" && return 1
   __pad r "$1" "$2" $(shift 2 && _get-input "$@")
 }
 __pad() {
@@ -369,7 +458,7 @@ _array-print() {
 # Example:
 #   _array-has "${myarr[@]}" foo
 _array-has() {
-  [[ "$#" -lt 1 ]] && _error "must specify array and element to check for" && return 1
+  [[ "$#" -lt 1 ]] && _print-error-msg "must specify array and element to check for" && return 1
   local array=("${@:1:$#-1}")
   local element=${@:$#}
   for i in "${!array[@]}"; do
@@ -386,7 +475,7 @@ _array-has() {
 # The above example joins the elements of the array with a '::' delimiter.
 # A delimiter may be an arbitrary string.
 _array-join() {
-  [[ "$#" -lt 1 ]] && _error "must specify array and delimiter" && return 1
+  [[ "$#" -lt 1 ]] && _print-error-msg "must specify array and delimiter" && return 1
   local array=("${@:1:$#-1}")
   local d=${@:$#}
   local str="${array[0]}"
@@ -410,7 +499,7 @@ _array-join() {
 #     the nameref attribute [1] (requires at least Bash 4.3)
 # [1] https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html
 _array-remove() {
-  [[ "$#" -lt 2 ]] && _error "must specify array, element to remove, and name of result variable" && return 1
+  [[ "$#" -lt 2 ]] && _print-error-msg "must specify array, element to remove, and name of result variable" && return 1
   local in_array=("${@:1:$#-2}")
   local element=${@:$#-1:1}
   local -n __ref=${@:$#}

@@ -17,7 +17,7 @@
 
 # Open a .bashrc* file in Vim
 br() {
-  _ensure-cmd fzf || return 1
+  _ensure-installed fzf || return 1
   local select=$(basename ~/.bashrc* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
   if _is-set "$select"; then
     vim "$select"
@@ -42,7 +42,7 @@ lbr() {
   # Read input file
   local file=$1
   if ! _is-set "$file"; then
-    _ensure-cmd fzf || return 1
+    _ensure-installed fzf || return 1
     file=$(basename ~/.bashrc.* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
     ! _is-set "$file" && { echo "No selection"; return; }
   fi
@@ -68,53 +68,67 @@ lbr() {
   done
 }
 
-# Print the documentation string and body of a function or alias definition.
-#doc() {
-#  cmd "$1" | grep -e '^Function' -e '^Alias'
-#}
-
-# List all the definitions of a command.
-# Prints the type (file, alias, function, or builtin) and the file where the
-# definition occurs (including the line number for aliases and functions).
+# Print documentation for a function or alias.
+# Usage:
+#   doc <name> [-a]
+# If <name> is a function or alias defined in a .bashrc.* file, print the
+# documentation and body of this function or alias definition. By default,
+# function bodies are truncated after 10 lines, however, this can be changed
+# with the -a option, which causes the entire function body to be printed.
 # Notes:
-#   1. The definitions are ordered in order of precedence with the highest
-#      definition (i.e. the one taking effect) on top.
-#   2. If an alias or function has multiple definitions, only the last one
-#      (i.e. the one taking effect) is shown.
-#   3. Aliases and functions that have been defined in the shell are listed
-#      with 'null' as the file name.
-#   4. For the correct parsing of alias definitions, all alias definitions
-#      must be in one of the ~/.bashrc.* files and there must be ONLY white-
-#      space between the beginning of the line and the 'alias' keyword.
-cmd() {
-  _is-cmd "$1" || { echo "No command named '$1'"; return 1; }
-  local i file_i
-  type -at "$1" | while read t; do
-    ((i++))
-    case "$t" in
-      function)
-        { shopt -s extdebug; local res=$(declare -F "$1"); shopt -u extdebug; }
-        local file=$(cut -d ' ' -f 3- <<<"$res"):$(cut -d ' ' -f 2 <<<"$res")
-        __cmd-print "$i" function "$([[ "$file" =~ ^/ ]] && echo "$file")"
-        ;;
-      alias)
-        __cmd-print "$i" alias "$(grep -nE "^[ ]*alias[ ]+$1=" $(_bashrc) | tail -n 1 | cut -d : -f 1-2)"
-        ;;
-      file)
-        ((file_i++))
-        __cmd-print "$i" file "$(which -a "$1" | sed "${file_i}q;d")"
-        ;;
-      builtin)
-        __cmd-print "$i" builtin
-        ;;
-    esac
-  done | column -t -s '|'
+#   - In order for the documentation to be recognised, the corresponding
+#     comment lines must be adjacent to the function or alias definition
+#     without any empty lines between them.
+doc() {
+  local name=$1
+  local all=$2
+  local result=$(_type -s "$name")
+  local type=$(echo "$result" | cut -d , -f 1)
+  local location=$(echo "$result" | cut -d , -f 2)
+  if [[ ! "$type" =~ function|alias || -z "$location" || "$location" = null ]]; then
+    return
+  fi
+  echo Location:
+  echo -e "$location\n"
+  local file=$(echo "$location" | cut -d : -f 1)
+  local line_nr=$(echo "$location" | cut -d : -f 2)
+  echo "Definition:"
+  # Print comment block from line_nr-1 backwards
+  tac "$file" | awk -v start_line_nr="$(($(wc -l <"$file")-line_nr+2))" '
+    BEGIN {
+      while ((getline line) > 0) {
+        if (NR >= start_line_nr) {
+          if (line ~ /^[ ]*#/) {
+            gsub(/^[ ]*/, "", line)
+            print line
+          }
+          else {
+            break
+          }
+        }
+      }
+    }' | tac
+  # Print function or alias body
+  if [[ "$type" = function ]]; then
+    local max_lines=10
+    local body=$(type "$name" | tail -n +2)
+    if [[ -n "$all" || $(echo "$body" | wc -l) -le "$max_lines" ]]; then
+      echo "$body"
+    else
+      echo "$body" | head -n "$max_lines"
+      echo "[...]"
+    fi
+  elif [[ "$type" = alias ]]; then
+    command -v "$name"
+  fi
 }
-complete -c cmd
+complete -c doc
 
-__cmd-print() {
-  echo "$1|$2|${3:-null}"
+# Shorthand wrapper for _type.
+t() {
+  _type "$@"
 }
+complete -c t
 
 #=-----------------------------------------------------------------------------#
 # Dotfiles
@@ -360,7 +374,7 @@ export HISTFILESIZE=5000
 # print or directly execute the selected command
 # TODO: paste the command on the command line without executing it
 hist() {
-  _ensure-cmd fzf || return 1
+  _ensure-installed fzf || return 1
   # Directly execute the command
   if [[ "$1" = -x ]]; then
     eval $(cat "$HISTFILE" | fzf -e --tac)
@@ -545,7 +559,7 @@ rand() {
   fi
   local length=${1:-8}
   if [[ ! "$length" =~ [0-9]+ ]]; then
-    _error "Length must be a number but found '$length'"
+    _print-error-msg "Length must be a number but found '$length'"
     return 1
   fi
   local str
@@ -567,7 +581,7 @@ rand() {
 unicode() {
   local char=$(_get-input "$@")
   if [[ "${#char}" -ne 1 ]]; then
-    _error "Argument must be a single character"
+    _print-error-msg "Argument must be a single character"
     return 1
   fi
   echo -n "$char" | iconv -f UTF-8 -t UTF-32BE | xxd -p | sed -r 's/^0+/0x/' | xargs printf 'U+%04X\n'
