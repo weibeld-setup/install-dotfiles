@@ -134,12 +134,16 @@ _print-cond-sgr-err() {
 
 # Print an SGR code to stdout, IF stdout is directed to a terminal
 _sgr-cond-out() {
-  [[ -t 1 ]] && _sgr "$@"
+  if [[ -t 1 ]]; then
+    _sgr "$@"
+  fi
 }
 
 # Print an SGR code to stderr, IF stderr is directed to a terminal
 _sgr-cond-err() {
-  [[ -t 2 ]] && _sgr "$@" >/dev/stderr
+  if [[ -t 2 ]]; then
+    _sgr "$@" >/dev/stderr
+  fi
 }
 
 # Print a Select Graphic Rendition (SGR) [1] string to set display attributes.

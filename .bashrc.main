@@ -79,7 +79,7 @@ lbr() {
 #   - In order for the documentation to be recognised, the corresponding
 #     comment lines must be adjacent to the function or alias definition
 #     without any empty lines between them.
-doc() {
+d() {
   local name=$1
   local all=$2
   local result=$(_type -s "$name")
@@ -124,7 +124,7 @@ doc() {
   fi
   _sgr-cond-out
 }
-complete -c doc
+complete -c d
 
 # Shorthand wrapper for _type.
 t() {
@@ -136,14 +136,14 @@ complete -c t
 # Dotfiles
 #------------------------------------------------------------------------------#
 
-alias d='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-alias ds='d status'
-alias dl='d log'
-alias da='d add'
-alias dr='d rm'
-alias dco='d commit'
-alias dp='d push'
-alias ddi='d diff'
+alias df='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+alias ds='df status'
+alias dl='df log'
+alias da='df add'
+alias dr='df rm'
+alias dco='df commit'
+alias dp='df push'
+alias ddi='df diff'
 
 #=------------------------------------------------------------------------------#
 # Prompt
