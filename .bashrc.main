@@ -88,12 +88,11 @@ doc() {
   if [[ ! "$type" =~ function|alias || -z "$location" || "$location" = null ]]; then
     return
   fi
-  echo Location:
-  echo -e "$location\n"
+  echo -e "$location"
   local file=$(echo "$location" | cut -d : -f 1)
   local line_nr=$(echo "$location" | cut -d : -f 2)
-  echo "Definition:"
   # Print comment block from line_nr-1 backwards
+  _sgr-cond-out cyan b
   tac "$file" | awk -v start_line_nr="$(($(wc -l <"$file")-line_nr+2))" '
     BEGIN {
       while ((getline line) > 0) {
@@ -108,7 +107,9 @@ doc() {
         }
       }
     }' | tac
+  _sgr-cond-out
   # Print function or alias body
+  _sgr-cond-out yellow
   if [[ "$type" = function ]]; then
     local max_lines=10
     local body=$(type "$name" | tail -n +2)
@@ -116,11 +117,12 @@ doc() {
       echo "$body"
     else
       echo "$body" | head -n "$max_lines"
-      echo "[...]"
+      _print-cond-sgr-out "[...]"
     fi
   elif [[ "$type" = alias ]]; then
     command -v "$name"
   fi
+  _sgr-cond-out
 }
 complete -c doc
 
