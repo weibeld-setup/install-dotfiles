@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------#
 
 # Enable command completion
-if _is-mac && _is-installed brew; then
+if _is-mac && _is-cmd brew; then
   complete -C $(brew --prefix)/bin/aws_completer aws
 elif _is-linux; then
   complete -C aws_completer aws
@@ -194,15 +194,51 @@ aaz() {
 # [1] https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html
 # [2] https://jmespath.org/
 # [3] https://jmespath.org/specification.html#sort-by
+
+# List AMIs matching a sequence of keywords.
+# Usage:
+#   aami <keywords>... [-- <args>...]
+# Examples:
+#   aami ubuntu 23.10
+#   aami ubuntu 23.10 -- --region eu-central-1 --owner 123456789
+#
 aami() {
-  local filter=$1
-  [[ "$filter" = - ]] && filter=*
-  shift 1
+  # Parse command-line arguments
+  local -a keywords args
+  _splitargs keywords args -- "$@"
+  # Construct filter expressions
+  local -a filters_name filters_description 
+  for e in "${keywords[@]}"; do
+    local E=$(_to-title-case "$e")
+    filters_name+=("Name=name,Values=*$e*,*$E*")
+    filters_description+=("Name=description,Values=*$e*,*$E*")
+  done
+  # Make two queries with filters against 'name' and 'description' fields, 
+  # combine results (OR), and sort results by creation date (newest first)
+  local results=$(
+    {
+      __aami-query "${filters_name[@]}" -- "${args[@]}";
+      __aami-query "${filters_description[@]}" -- "${args[@]}";
+    } | sort | uniq | sort -r -t $'\t' -k 1
+  )
+  # Output
+  if _is-cmd fzf; then
+    echo "$results" | fzf -e
+  else
+    echo "$results" | less
+  fi
+
+}
+__aami-query() {
+  local -a filters args
+  _splitargs filters args -- "$@"
   aws ec2 describe-images \
     --no-cli-auto-prompt \
-    --filters "Name=name,Values=$filter" \
-    --query 'sort_by(Images,&CreationDate)[].{id:ImageId,name:Name,description:Description,owner:OwnerId,creation_date:CreationDate}' \
-    "$@"
+    --output json \
+    --filters "${filters[@]}" \
+    --query 'Images[].{creation_date:CreationDate,id:ImageId,owner:OwnerId,name:Name,description:Description}' \
+    "${args[@]}" |
+  jq -r '.[] | join("\t")'
 }
 
 # List all security groups in the current region. Additional arguments for the
