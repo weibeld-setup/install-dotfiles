@@ -5,32 +5,17 @@
 #------------------------------------------------------------------------------#
 
 #=-----------------------------------------------------------------------------#
-# .bashrc.* files
+# Function helpers
 #------------------------------------------------------------------------------#
 
-  # List ~/.bashrc.* files in the order in which they are sourced in ~/.bashrc
-_bashrc() {
-  echo ~/.bashrc.path ~/.bashrc.lib ~/.bashrc.main ~/.bashrc.!(path|lib|main)
-}
-
-#=-----------------------------------------------------------------------------#
-# Input/output
-#------------------------------------------------------------------------------#
-
-# Print either the arguments, if arguments are provided, or stdin, if no
-# arguments are provided.
+# If no arguments are provided, print stdin, else print the arguments.
 # Usage:
 #   _get-input [<args>...]
+# This function can be used within another function to gather the function's
+# input either from the arguments or from stdin.
 # Notes:
-#   - The intended usage of this function is allowing other functions to gather
-#     their input either from the argument list or from stdin (if no arguments
-#     are provided).
-#   - The tokenisation of the argument list is NOT maintained, i.e. the arg 
-#     list is reproduced as a plain string.
-# Example application:
-#   my-function() {
-#     _get-input "$@" | ...
-#   }
+#   - The tokenisation of the argument list is NOT maintained, that means, the
+#     arguments are printed as a single string.
 _get-input() {
   if [[ "$#" -gt 0 ]]
     then echo "$*"
@@ -39,207 +24,595 @@ _get-input() {
   fi
 }
 
-# Print an error message to stderr.
-# Usage:
-#   _print-error-msg [<func-depth>] <msg>
-# The optional <func-depth> argument is the position of the function in the
-# function call stack whose named should be printed along with the error
-# message. The default value is 1, which is the calling function.
-#
+#=-----------------------------------------------------------------------------#
+# Output functions
+#------------------------------------------------------------------------------#
 
-# Print all arguments to stderr.
-_stderr() {
-  echo -e "$@" >/dev/stderr
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# These functions print output intended to be processed or used by other
+# functions or commands.
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+# Print ~/.bashrc.* files in the order they are sourced by ~/.bashrc
+_get-bashrc() {
+  echo ~/.bashrc.path ~/.bashrc.lib ~/.bashrc.main ~/.bashrc.!(path|lib|main)
 }
 
-# Print a an error message.
+# List and filter variables
 # Usage:
-#   _print-error-msg <msg> [<func-stack-index>]
+#   _list-vars [-nNvV <pat>] [-tT <attr>] [-l <len>] [-fs] [-c <cols>]
+# Args:
+#   -n|N <pat>:  postive/negative variable name filter
+#   -v|V <pat>:  positive/negative variable value filter
+#   -t|T <attr>: positive/negative attribute filter
+#   -l <len>:    maximum length of printed variable values (default: 100)
+#   -f:          print the full variable values (up to 2000 characters)
+#   -s:          print only the variable names
+#   -c <cols>:   columns to print (default: 1,2,3,4)
+# Description:
+#   Prints the variables matching the provided filters as a table consisting of
+#   the following columns:
+#     - 1: row number
+#     - 2: attributes
+#     - 3: variable name
+#     - 4: variable value
+#   The set of columns to print may be customised with the -c option. The -s
+#   option is a shorthand for '-c 3' and prints only the variable names.
 # Notes:
-#   - The <func-stack-index> argument is the position of the function in the
-#     function call stack whose name should be printed as part of the output.
-#     Its default value is 1, which corresponds to the function that called
-#     this function.
-#   - The <msg> argument must be passed a a single argument, that means, it
-#     must be wrapped in quotes.
-#   - The <msg> argument may contain formatting characters, such as \n or \t.
-_print-error-msg() {
-  local msg=$1
-  local i=${2:-1}
-  echo -e "Error (${FUNCNAME["$i"]}): $msg"
-}
-
-# Print a multi-line usage message, like the one below, to stderr.
-# Usage:
-#   _print-usage-msg <msg> [<func-stack-index>]
-# Notes:
-#   - The <func-stack-index> argument is the position of the function in the
-#     function call stack whose name should be printed in the second line. Its
-#     default value is 1, which corresponds to the function that called the
-#     _print-usage-msg function.
-#   - The <msg> argument must be passed a a single argument, that means, it
-#     must be wrapped in quotes.
-#   - The <msg> argument may contain formatting characters, such as \n or \t.
-_print-usage-msg() {
-  local msg=$1
-  local i=${2:-1}
-  echo -e "Usage:\n  ${FUNCNAME["$i"]} $msg"
-}
-
-# Print a message to stdout ONLY if stdout is directed to the terminal
-_print-cond-out() {
-  if [[ -t 1 ]]; then
-    printf "$@"
-  fi
-}
-
-# Print a message to stderr ONLY if stderr is directed to the terminal
-_print-cond-err() {
-  if [[ -t 2 ]]; then
-    printf "$@" >>/dev/stderr
-  fi
-}
-
-# Print a message to stdout and apply Select Graphic Rendition (SGR) formatting
-# ONLY if stdout is directed to a terminal (otherwise omit the SGR formatting).
-# Usage:
-#   _print-cond-sgr-out [<sgr-arg>...] <msg>
-# Notes:
-# The <sg-args> args correspond to the arguments accepted by the _sgr function.
-_print-cond-sgr-out() {
-  local sgr_args=(${@:$#-2})
-  local msg=${@:$#}
-  if [[ -t 1 ]]; then
-    echo "$(_sgr "${sgr_args[@]}")$msg$(_sgr)"
-  else
-    echo "$msg"
-  fi
-}
-
-# Print a message to stderr and apply Select Graphic Rendition (SGR) formatting
-# ONLY if stderr is directed to a terminal (otherwise omit the SGR formatting).
-# Usage:
-#   _print-cond-sgr-err [<sgr-arg>...] <msg>
-# Notes:
-# The <sg-args> args correspond to the arguments accepted by the _sgr function.
-_print-cond-sgr-err() {
-  local sgr_args=(${@:$#-2})
-  local msg=${@:$#}
-  if [[ -t 2 ]]; then
-    echo "$(_sgr "${sgr_args[@]}")$msg$(_sgr)" >/dev/stderr
-  else
-    echo "$msg" >/dev/stderr
-  fi
-}
-
-# Print an SGR code to stdout, IF stdout is directed to a terminal
-_sgr-cond-out() {
-  if [[ -t 1 ]]; then
-    _sgr "$@"
-  fi
-}
-
-# Print an SGR code to stderr, IF stderr is directed to a terminal
-_sgr-cond-err() {
-  if [[ -t 2 ]]; then
-    _sgr "$@" >/dev/stderr
-  fi
-}
-
-# Print a Select Graphic Rendition (SGR) [1] string to set display attributes.
-# Usage:
-#   _sgr [<colour/modifier>...]
-# Available colours:
-#   black, black+, red, red+, green, green+, yellow, yellow+, blue, blue+,
-#   magenta, magenta+, cyan, cyan+, white, white+
-# Available modifiers:
-#   x (reset), b (bold), d (dim), i (italic), u (underline)
-# Notes:
-#   - Colours with a + are the bright versions of the corresponding colours
-#   - The x modifier resets all set attributes (colours and modifiers). The
-#     same effect can be achieved by omitting any arguments.
-#   - Modifiers may be combined into a single argument
-# Examples:
-#   _sgr red        // Red 
-#   _sgr red+       // Bright red 
-#   _sgr red b      // Bold red
-#   _sgr red biu    // Bold, italic, and underlined red
-#   _sgr red b i u  // Same as above
-#   _sgr bu         // Bold and underlined (colour isn't changed)
-#   _sgr x          // Reset all previously set attributes
-#   _sgr            // Same as above
-#   echo "$(_sgr red bi)red $(_sgr x blue+ u)blue$(_sgr) normal"
-# [1] https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-_sgr() {
-  local p
+#   1. Lower-case options -n, -v, and -t allow specifying POSITIVE patterns.
+#      For example '-n ^foo' selects all variables whose name starts with 'foo'.
+#   2. Upper-case options -N, -V, and -T allow specifying NEGATIVE patterns.
+#      For example, '-N ^foo' selects all variables whose name does NOT start
+#      with 'foo'.
+#   3. Multiple occurrences of the same lower-case options -n, -v, and -t are
+#      conjoined with OR. For example, '-n ^foo -n ^bar' selects all variables
+#      whose starts with 'foo' OR starts with 'bar'.
+#   4. Multiple occurrences of the same upper-case options -N, -V, and -T are
+#      conjoined wih AND. For example '-N ^foo -N ^bar' selects all variables
+#      whose does NOT start with 'foo' AND does NOT start with 'bar'.
+#   5. Different types of options (i.e. -n, -N, -v, -V, -t, and -T among each
+#      other) are conjoined with AND. For example, '-n ^foo -t a' selects all
+#      variables whose name starts with 'foo' AND have the 'a' attribute.
+#   6. The above also hold for upper-case options. For example, '-n ^foo -N _'
+#      selects all variables whose name starts with 'foo' AND whose name does
+#      NOT contain an underline. As another example, '-n ^foo -T a' selects all
+#      variables whose name starts with 'foo' AND do NOT have the 'a' attribute.
+#   7. <pat> may be any pattern understood by AWK. Certain characters, such as
+#      '(' and ')' must be escaped to not be interpreted by AWK.
+#   8. In <attr>, the absence of any attribute can be specified with '-'.
+#   9. Text variable values are printed with enclosing "...". Array variable 
+#      values are printed with enclosing (...). These enclosing characters
+#      must be taken into account when creating patterns with -v and -V.
+#  10. The -l option is capped at 2000 characters. Similarly, the -f option
+#      also truncates the variable values at 2000 characters. This limitation
+#      is due to the maximum line length limit of 2048 characters of 'column'
+#      which is used to format the output table.
+#  11. The output rows are sorted alphabetically by variable name. This holds
+#      even if the variable name column (column 3) is not printed.
+_list-vars() {
+  # Capture variables and add line numbers (indices) as first column
+  local -r data=$(
+    declare -p |
+      awk '
+        BEGIN {
+          i = 1
+        }
+        {
+          attr = $2
+          gsub(/--/, "+", attr)
+          gsub(/-/, "", attr)
+          gsub(/+/, "-", attr)
+          match($3, /^[^=]+/)
+          name = substr($3, RSTART, RLENGTH)
+          match($0, /=.*$/)
+          value = substr($0, RSTART+1, RLENGTH)
+          print i "\t" attr "\t" name "\t" value
+          i++
+        }'
+    )
+  # Parse command-line arguments
+  local -a pat_names_arr pat_names_i_arr pat_values_arr pat_values_i_arr attr_arr attr_i_arr columns=(1 2 3 4)
+  local -i max_value_len=100
+  local expect_n expect_N expect_v expect_V expect_t expect_T expect_l expect_c
+  local a
   for a in "$@"; do
-    # Parse colour
     case "$a" in
-      black)    p+=(30); continue ;;
-      red)      p+=(31); continue ;;
-      green)    p+=(32); continue ;;
-      yellow)   p+=(33); continue ;;
-      blue)     p+=(34); continue ;;
-      magenta)  p+=(35); continue ;;
-      cyan)     p+=(36); continue ;;
-      white)    p+=(37); continue ;;
-      black+)   p+=(90); continue ;;
-      red+)     p+=(91); continue ;;
-      green+)   p+=(92); continue ;;
-      yellow+)  p+=(93); continue ;;
-      blue+)    p+=(94); continue ;;
-      magenta+) p+=(95); continue ;;
-      cyan+)    p+=(96); continue ;;
-      white+)   p+=(97); continue ;;
+      -n) expect_n=1 ;;
+      -N) expect_N=1 ;;
+      -v) expect_v=1 ;;
+      -V) expect_V=1 ;;
+      -t) expect_t=1 ;;
+      -T) expect_T=1 ;;
+      -f) max_value_len=2000 ;;
+      -l) expect_l=1 ;;
+      -s) columns=(3) ;;
+      -c) expect_c=1 ;;
+      *)
+        if _is-set "$expect_n"; then
+          pat_names_arr+=("$a")
+          expect_n=
+        elif _is-set "$expect_N"; then
+          pat_names_i_arr+=("$a")
+          expect_N=
+        elif _is-set "$expect_v"; then
+          pat_values_arr+=("$a")
+          expect_v=
+        elif _is-set "$expect_V"; then
+          pat_values_i_arr+=("$a")
+          expect_V=
+        elif _is-set "$expect_t"; then
+          local attr=$(_parse-attributes "$a" '.*')
+          _is-set "$attr" && attr_arr+=(".*$attr.*")
+          expect_t=
+        elif _is-set "$expect_T"; then
+          local attr=$(_parse-attributes "$a" '.*')
+          _is-set "$attr" && attr_i_arr+=(".*$attr.*")
+          expect_T=
+        elif _is-set "$expect_l"; then
+          max_value_len=$([[ "$a" -gt 2000 ]] && echo 2000 || echo "$a")
+          expect_l=
+        elif _is-set "$expect_c"; then
+          columns=($(echo "$a" | tr , '\n' | sort -u | sed -n '/^[1-4]$/p'))
+          expect_c=
+        else
+          _print-error-msg "Invalid option: $a"
+          return  1
+        fi
     esac
-    # Parse modifiers (x, b, i, u, d)
-    a=($(grep -o . <<<"$a"))
-    for i in "${a[@]}"; do
-      case "$i" in
-        x) p+=(0) ;;  # Reset
-        b) p+=(1) ;;  # Bold
-        d) p+=(2) ;;  # Dim
-        i) p+=(3) ;;  # Italic
-        u) p+=(4) ;;  # Underlined
-      esac
-    done
   done
-  # Print escape sequence
-  printf "\e[$(tr ' ' ';' <<<"${p[@]}")m"
+  # Filter variables
+  # Note: the reason that only indices are used is that 'comm' has a line
+  # length limit of ~6000 characters
+  local indices=$(cut -f 1 <<<"$data")
+  [[ "${#attr_arr[@]}" -gt 0 ]] &&
+    indices=$(__list-vars-filter "$data" attr_arr 2 "$indices")
+  [[ "${#attr_i_arr[@]}" -gt 0 ]] &&
+    indices=$(__list-vars-filter-inverted "$data" attr_i_arr 2 "$indices")
+  [[ "${#pat_names_arr[@]}" -gt 0 ]] &&
+    indices=$(__list-vars-filter "$data" pat_names_arr 3 "$indices")
+  [[ "${#pat_names_i_arr[@]}" -gt 0 ]] &&
+    indices=$(__list-vars-filter-inverted "$data" pat_names_i_arr 3 "$indices")
+  [[ "${#pat_values_arr[@]}" -gt 0 ]] &&
+    indices=$(__list-vars-filter "$data" pat_values_arr 4 "$indices")
+  [[ "${#pat_values_i_arr[@]}" -gt 0 ]] &&
+    indices=$(__list-vars-filter-inverted "$data" pat_values_i_arr 4 "$indices")
+  echo "$data" |
+    sed -n "$(for i in $indices; do echo "${i}p;"; done)" |
+    awk -F '\t' -v M="$max_value_len" '{if (length($4)>M) $4=substr($4, 1, M-5)"[...]"; print $2"\t"$3"\t"$4}' |
+    nl -n ln -w "$(($(_log10 $(wc -l <<<"$indices") -i)+1))" |
+    cut -f "$(_array-join "${columns[@]}" ,)" |
+    column -t -s $'\t'
+}
+
+# Get indices of vars matching any of given patterns AND given set of indices
+__list-vars-filter() {
+  local -r __data=$1 __indices=$4
+  local -nr __patterns=$2
+  local -ir __field=$3
+  local __p __new_matches
+  for __p in "${__patterns[@]}"; do
+    __new_matches+=$'\n'$(echo "$__data" | awk -F '\t' '$'"$__field"' ~ /'"$__p"'/ {print $1}')
+  done
+  comm -12 <(echo "$__indices" | sort) <(echo "$__new_matches" | sed '/^$/d' | sort -u)
+}
+
+# Get indices of vars NOT matching given patterns AND matching given indices
+__list-vars-filter-inverted() {
+  local -r __data=$1
+  local -nr __patterns=$2
+  local -ir __field=$3
+  local __indices=$4
+  local __p
+  for __p in "${__patterns[@]}"; do
+    __indices=$(comm -12 <(echo "$__indices" | sort) <(echo "$__data" | awk -F '\t' '$'"$__field"' !~ /'"$__p"'/ {print $1}' | sort -u))
+  done
+  echo "$__indices"
+}
+
+# Print value of a variable (for arrays, print array)
+_get-var-value() {
+  :
+}
+
+# Print the attributes of a variable
+# Usage:
+#   _get-attributes <var-name> [-s]
+# Args:
+#   <var-name>: name of a variable
+#   -s:         print only attribute names without descriptions
+# Notes:
+#   - If the variable has no attributes, the output is empty
+#   - If <var-name> is not a variable, an error is returned
+_get-attributes() {
+  _ensure-variable "$1" || return 1
+  local -n __ref=$1
+  _describe-attributes "${__ref@a}" "$2"
+}
+
+# Print variable attributes
+# Usage:
+#   _describe-attributes [<attr-str>] [-s]
+# Args:
+#   <attr-str>: a string of one or more attributes (examples: 'a', 'iAau')
+#   -s:         print only attribute names without descriptions
+# Notes:
+#   - If <attr-str> is omitted, all attributes are printed
+#   - For the full list and description of attributes, see 'declare' [1]
+# References:
+#   [1] https://www.gnu.org/software/bash/manual/bash.html#index-declare
+# TODO: make default option print all attributes on one line without spaces
+_describe-attributes() {
+  [[ "${@: -1}" = -s ]] && local short=1
+  local data=$(cat <<EOF
+A (associative array)
+a (indexed array)
+i (integer)
+l (lower case)
+n (name reference)
+r (read-only)
+t (trace)
+u (upper case)
+x (export)
+EOF
+  )
+  # Print all attributes
+  if [[ "$#" -eq 0 || ("$#" -eq 1 && "$1" = -s) ]]; then
+    echo "$data"
+  # Print only specified attributes
+  else
+    local -a attributes=($(_parse-attributes "$1" ' '))
+    local a
+    for a in "${attributes[@]}"; do
+      echo "$data" | sed -n "/^$a /p"
+    done
+  fi |
+  # Format as short or normal output based on -s option
+  if _is-set "$short"; then
+    cut -c 1
+  else
+    cat
+  fi
+}
+
+# Parse a variable attribute specification
+# Usage:
+#   _parse-attributes <attr> [<sep>]
+# Args:
+#   <attr>:  a set of one or more attributes (e.g. 'i', 'ir')
+#   <sep>:   separator between attributes in the output (default: "")
+# Description:
+#   Prints all valid attributes in the input in alphabetical order, discarding
+#   any repeated and invalid attributes.
+# Notes:
+#   - Returns 1 if the output is empty (i.e. if there was no valid attribute
+#     in the input).
+#   - The separator may be a string of any length and may include characters
+#     such as '\t' or '\n'.
+_parse-attributes() {
+  local -r attr=$1 sep=${2}
+  echo "$attr" | sed "s/[^Aailnrtux-]//g" | grep -o . | sort -u | paste -s -d ' ' - | sed 's/ /'"$sep"'/g'
+}
+
+# Print a Select Graphic Rendition (SGR) code.
+# Usage:
+#   _sgr [<keyword>...]
+# The available keywords are:
+#    1. red[+]
+#    2. green[+]
+#    3. yellow[+]
+#    4. blue[+]
+#    5. magenta[+]
+#    6. cyan[+]
+#    7. white[+]
+#    8. black[+]
+#    9. bold
+#   10. italic
+#   11. dim
+#   12. underline
+#   13. reset
+# The 8 colours without an appended + are the normal versions of these colours
+# and appending a + means selecting the bright version of this colour. There
+# may be any number of keywords and they may be in any order. However, the
+# corresponding attributes are applied sequentially and a later keyword may
+# override the effect of a previous keyword. For example 'red italic green'
+# results in 'italic' and 'green' being select (the effect of 'red' is undone
+# by the appearance of 'green' later in the list).
+# Notes:
+#   - The 'reset' keyword resets all previously specified attributes.
+#   - If no keywords are specified, it has the same effect as specifying 'reset'
+#     as the only or last keyword.
+# Example:
+#   echo "$(_sgr bold red)This is bold red. $(_sgr)This is normal."
+# References:
+#   - https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
+_sgr() {
+  local -a params
+  local a
+  for a in $@; do
+    case "$a" in
+      # Normal colours
+      black)      params+=(30) ;;
+      red)        params+=(31) ;;
+      green)      params+=(32) ;;
+      yellow)     params+=(33) ;;
+      blue)       params+=(34) ;;
+      magenta)    params+=(35) ;;
+      cyan)       params+=(36) ;;
+      white)      params+=(37) ;;
+      # Bright colours
+      black+)     params+=(90) ;;
+      red+)       params+=(91) ;;
+      green+)     params+=(92) ;;
+      yellow+)    params+=(93) ;;
+      blue+)      params+=(94) ;;
+      magenta+)   params+=(95) ;;
+      cyan+)      params+=(96) ;;
+      white+)     params+=(97) ;;
+      # Modifiers
+      bold)       params+=(1) ;;
+      dim)        params+=(2) ;;
+      italic)     params+=(3) ;;
+      underlined) params+=(4) ;;
+      reset)      params+=(0) ;;
+    esac
+  done
+  local IFS=';'
+  printf "\e[${params[*]}m"
 }
 
 #=-----------------------------------------------------------------------------#
-# Check OS
+# User message functions
 #------------------------------------------------------------------------------#
 
-# Check if running on macOS, Linux, or WSL2 (special case of Linux)
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# These functions print user-facing output messages.
+#
+# CAUTION: these functions are intended to be used in other functions.
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+# Print an error message to stderr.
+# Usage:
+#   _print-error-msg <msg>... [-- <func-stack-index>]
+# The output is highlighed with Select Graphic Rendition (SGR) codes if stderr
+# is directed to the terminal. The <func-stack-index> argument is the index in
+# the function call stack of the function name to print. Its default value is
+# 1, which corresponds to the immediate caller of _print-error-msg.
+# Notes:
+#   - <msg> may include 'echo -e' escape codes such as '\n' and '\t'
+_print-error-msg() {
+  local -a msg_arr index_arr
+  _splitargs msg_arr index_arr -- "$@"
+  _cond-sgr-msg red bold -- \
+    "${FUNCNAME["${index_arr[0]:-1}"]:-<unknown>}: ${msg_arr[@]}\n" -- \
+    2
+}
+
+# Print usage message for a function to stderr.
+# Usage:
+#   _print-usage-msg <msg>... [-- <func-stack-index>]
+# The output is highlighed with Select Graphic Rendition (SGR) codes if stderr
+# is directed to the terminal. The <func-stack-index> argument is the index in
+# the function call stack of the function name to print. Its default value is
+# 1, which corresponds to the immediate caller of _print-usage-msg.
+# Notes:
+#   - <msg> may include 'echo -e' escape codes such as '\n' and '\t'
+_print-usage-msg() {
+  local msg_arr index_arr
+  _splitargs msg_arr index_arr -- "$@"
+  _cond-sgr-msg cyan bold -- \
+    "Usage:\n  ${FUNCNAME["${index_arr[0]:-1}"]:-<unknown>} ${msg_arr[@]}\n" -- \
+    2
+}
+
+#=-----------------------------------------------------------------------------#
+# Conditional functions
+#------------------------------------------------------------------------------#
+
+# Print a message if file descriptor is directed to terminal.
+# Usage:
+#   _cond <msg>... [-- <fd>]
+# The default value for <fd> is 1, which corresponds to stdout. That means, the
+# function prints the message to stdout IF stdout is directed to the terminal.
+# To use stderr instead, append the delimiter -- followed by 2 to the argument
+# list. In that case, the message is written to stderr IF stderr is directed
+# to the terminal.
+# Notes:
+#   - The message is printed without an implicit newline at the end.
+#   - All escape codes understood by 'echo -e' (such as '\n' or '\t') may be
+#     included in the message.
+_cond() {
+  local msg_arr fd_arr
+  _splitargs msg_arr fd_arr -- "$@"
+  local fd=${fd_arr[0]:-1}
+  _ensure-file-descriptor "$fd" || return 1
+  if [[ -t "$fd" ]]; then
+    echo -ne "${msg_arr[@]}" >&"$fd"
+  fi
+}
+
+# Print an SGR code if file descriptor is directed to terminal.
+# Usage:
+#   _cond-sgr <sgr-arg>... [-- <fd>]
+_cond-sgr() {
+  local -a sgr_arr fd_arr
+  _splitargs sgr_arr fd_arr -- "$@"
+  local fd=${fd_arr[0]:-1}
+  _ensure-file-descriptor "$fd" || return 1
+  if [[ -t "$fd" ]]; then
+    _sgr "${sgr_arr[@]}" >&"$fd"
+  fi
+}
+
+# Print an SGR-formatted message if file descriptor is directed to terminal.
+# Usage:
+#   _cond-sgr-msg <sgr-arg>... -- <msg>... [-- <fd>]
+_cond-sgr-msg() {
+  local -a sgr_arr msg_fd_arr msg_arr fd_arr
+  _splitargs sgr_arr msg_fd_arr -- "$@"
+  _splitargs msg_arr fd_arr -- "${msg_fd_arr[@]}"
+  local fd=${fd_arr[0]:-1}
+  _ensure-file-descriptor "$fd" || return 1
+  local msg="${msg_arr[@]}"
+  if [[ -t "$fd" ]]; then
+    msg="$(_sgr "${sgr_arr[@]}")${msg}$(_sgr)"
+  fi
+  echo -ne "$msg" >&"$fd"
+}
+
+#=-----------------------------------------------------------------------------#
+# Predicate funtions
+#------------------------------------------------------------------------------#
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# These functions check a condition and return either 0 (true) or 1 (false).
+#
+# Usage example:
+#
+#   if _is-XXX; then
+#     ...
+#   fi
+#
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+# Check whether running on macOS
 _is-mac() {
   [[ "$OSTYPE" =~ darwin ]]
 }
+
+# Check whether running on Linux
 _is-linux() {
   [[ "$OSTYPE" =~ linux  ]]
 }
+
+# Check whether running on a WSL distribution of Linux
+# References:
+#   - https://learn.microsoft.com/en-us/windows/wsl/install
+#   - https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux
 _is-wsl() {
   _is-linux && [[ -n "$WSL_DISTRO_NAME" ]]
 }
 
-#=-----------------------------------------------------------------------------#
-# Check variables
-#------------------------------------------------------------------------------#
-
-# Check if variable is set (i.e. non-empty) or unset (i.e. empty)?
+# Check whether the provided value is set (i.e. non-empty)
+# Notes:
+#   - Returns 1 (false) if no value is provided.
 _is-set() {
   [[ -n "$1" ]]
 }
-_is-unset() {
+
+# Check whether the provided value is empty (or non-existent)
+# Notes:
+#   - Returns 0 (true) if no value is provided.
+_is-empty() {
   [[ -z "$1" ]]
 }
 
-#=-----------------------------------------------------------------------------#
-# Check commands
-#------------------------------------------------------------------------------#
+# Check whether a number is even
+_is-even() {
+  (($1 % 2 == 0))
+}
 
-# Check whether a given command is a shell function
+# Check whether a number is odd
+_is-odd() {
+  (($1 % 2 != 0))
+}
+
+# Check whether the variable with the provided name is set (i.e. non-empty)
+# Notes:
+#   - Returns 1 (false) if no variable with the provided name exists.
+_has-value() {
+  _is-var-name "$1" || return 1
+  local -n __ref=$1
+  _is-set "$__ref"
+}
+
+# Check whether there is a variable with the provided name
+_is-variable() {
+  declare -p -- "$1" &>/dev/null
+}
+
+# TODO: combine with *-any-of() function and define 'aiu' as AND and 'a' 'i' 'u'
+#       as OR. This allows combinations of AND and OR. Check how easy it is to
+#       implement this.
+# TODO: introduce - as a special attribute to mean "no attributes"
+# Check whether a variable has all of the specified attributes
+# Usage:
+#   _has-attributes <var-name> <attr-str>...
+# Args:
+#   <var-name>: name of a variable
+#   <attr-str>: a string of one or more attributes (examples: 'a', 'iAau')
+# Notes:
+#   - The values of all <attr-str> are concatenated to a unified input, i.e.,
+#     'a' 'i' 'u' is the same as 'aiu'
+#   - If the attribute input is empty, 1 is returned
+_has-attributes() {
+  #_ensure-variable "$1" || return 1
+  local -n __ref=$1
+  shift
+  local -a __input
+  # If input is empty or contains invalid attributes, return 1
+  __input=($(_parse-attributes "$@" ' ')) || return 1
+  local __i
+  for __i in "${__input[@]}"; do
+    [[ "${__ref@a}" =~ "$__i" ]] || return 1
+  done
+}
+complete -v _has-attributes
+
+# TODO: introduce - as a special attribute to mean "no attributes"
+# Check whether a variable has any of the specified attributes
+# Usage:
+#   _has-attributes-any-of <var-name> <attr-str>...
+# Args:
+#   <var-name>: name of a variable
+#   <attr-str>: a string of one or more attributes (examples: 'a', 'iAau')
+# Notes:
+#   - The values of all <attr-str> are concatenated to a unified input, i.e.,
+#     'a' 'i' 'u' is the same as 'aiu'
+#   - If the attribute input is empty, 1 is returned
+_has-attributes-any-of() {
+  _ensure-variable "$1" || return 1
+  local -n __ref=$1
+  shift
+  local __a
+  for __a in $(_parse-attributes "$@" ' '); do
+    [[ "${__ref@a}" =~ "$__a" ]] && return 0
+  done
+  return 1
+}
+complete -v _has-attributes-any-of
+
+# Check whether a variable is an indexed array
+# Usage:
+#   _is-indexed-array <var-name>
+_is-indexed-array() {
+  _has-attributes "$1" a
+}
+
+# Check whether a variable is an associative array
+# Usage:
+#   _is-associative-array <var-name>
+_is-associative-array() {
+  _ensure-variable "$1" || return 1
+  _has-attributes "$1" A
+}
+
+# Check whether a variable is either an indexed or an associative array 
+# Usage:
+#   _is-array <var-name>
+_is-array() {
+  _ensure-variable "$1" || return 1
+  _has-attributes-any-of "$1" Aa
+}
+
+# Check whether a variable is read-only
+# Usage:
+#   _is-read-only <var-name>
+_is-read-only() {
+  _ensure-variable "$1" || return 1
+  _has-attributes "$1" r
+}
+
+# Check whether the argument is the name of a shell function
 _is-function() {
   [[ "$(type -t "$1")" = function ]]
 }
@@ -270,6 +643,99 @@ _is-cmd() {
 }
 complete -c _is-cmd
 
+# Check whether a given Homebrew formula or cask is installed
+# Note: also checks whether Homebrew is installed, and aborts otherwise
+_is-homebrew-poured() {
+  _ensure-installed brew || return 1
+  brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
+}
+
+#=-----------------------------------------------------------------------------#
+# Enforcement funtions
+#------------------------------------------------------------------------------#
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# These functions enforce a specific condition by printing an error message
+# and returning 1, if the condition is not met.
+#
+# CAUTION: these functions are intended to be used in other functions.
+#
+# Example usage (in other function):
+#   
+#   _ensure-XXX || return 1
+# 
+# In the above example, the function aborts if the condition is not met.
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+# Ensure that the argument is a valid command.
+_ensure-installed() {
+  if ! _is-cmd "$1"; then
+    _print-error-msg "'$1' is not installed" -- 2
+    return 1
+  fi
+}
+
+# Ensure that argument is a valid file descriptor.
+# Note: the list of accepted file descriptors is hardcoded to 0, 1, and 3.
+_ensure-file-descriptor() {
+  if [[ ! "$1" =~ 0|1|2 ]]; then
+    _print-error-msg "'$1' is not a valid file descriptor" -- 2 
+    return 1
+  fi
+}
+
+_ensure-array() {
+  if ! _is-array "$1"; then
+    _print-error-msg "'$1' is not an array" -- 2 
+    return 1
+  fi
+}
+
+# Ensure that exactly one argument is given.
+# Usage:
+#   _ensure-argc-1 <argc> <usage-msg>...
+_ensure-argc-1() {
+  local argc=$1
+  shift
+  if [[ "$argc" -ne 1 ]]; then
+    _print-usage-msg "$@" -- 2
+    return 1
+  fi
+}
+
+# Ensure that the argument is a valid variable name.
+_ensure-var-name() {
+  if ! _is-var-name "$1"; then
+    _print-error-msg "'$1' is not a valid variable name" -- 2 
+    return 1
+  fi
+}
+
+# Ensure that the provided NAME is a declared variable
+_ensure-variable() {
+  if ! _is-variable "$1"; then
+    _print-error-msg "'$1' is not a variable" -- 2
+    return 1
+  fi
+}
+
+# TODO: change to _is-identifier()
+# Check whether the argument is a valid variable name.
+# Usage:
+#   _is-var-name <name>
+# Note: this function just checks whether the name adheres to the naming
+# restrictions, not whether a variable with that name is declared or assigned.
+_is-var-name() {
+  [[ "$1" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]
+}
+
+
+
+
+#=-----------------------------------------------------------------------------#
+# Miscellaneous functions
+#------------------------------------------------------------------------------#
+
 # List all the types of a command.
 # Usage:
 #   _type [-s] <cmd>
@@ -282,7 +748,7 @@ complete -c _is-cmd
 #   - This function is similar to 'type -a', however, it does NOT list function
 #     and alias bodies (use 'doc' for this), but in turn it lists file names
 #     and line numbers for functions and aliases.
-#   - Alias definitions are parsed from the .bashrc.* files (see '_bashrc').
+#   - Alias definitions are parsed from the .bashrc.* files (see '_get-bashrc').
 #     In order to be parsed correctly, alias definitions must only have white-
 #     space between the 'alias' keyword and the beginning of the line.
 _type() {
@@ -308,7 +774,7 @@ _type() {
         __type-print function "$([[ "$file" =~ ^/ ]] && echo "$file:$line")"
         ;;
       alias)
-        __type-print alias "$(grep -nE "^[ ]*alias[ ]+$cmd=" $(_bashrc) /dev/null | tail -n 1 | cut -d : -f 1-2)"
+        __type-print alias "$(grep -nE "^[ ]*alias[ ]+$cmd=" $(_get-bashrc) /dev/null | tail -n 1 | cut -d : -f 1-2)"
         ;;
       file)
         ((file_i++))
@@ -321,28 +787,8 @@ _type() {
   done
 }
 complete -c _type
-__type-print() {
-  echo "$1,${2:-null}"
-}
+__type-print() { echo "$1,${2:-null}"; }
 
-# Print an error message and return 1 if the given command does NOT exist
-# Usage example:
-#   my-function() {
-#     _ensure-installed <cmd> || return 1
-#   }
-_ensure-installed() {
-  if ! _is-cmd "$1"; then
-    _print-error-msg "'$1' is not installed" 2
-    return 1
-  fi
-}
-
-# Check whether a given Homebrew formula or cask is installed
-# Note: also checks whether Homebrew is installed, and aborts otherwise
-_is-homebrew-poured() {
-  _ensure-installed brew || return 1
-  brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
-}
 
 #=-----------------------------------------------------------------------------#
 # Text processing
@@ -415,11 +861,17 @@ _to-kebab-case() {
 #     are read from stdin.
 #   - If a string to pad is longer than <length>, it is printed unchanged.
 _pad-left() {
-  [[ "$#" -lt 2 ]] && _print-error-msg "must provide length and padding character" && return 1
+  if [[ "$#" -lt 2 ]]; then
+    _print-usage-msg "<length> <char> [<args>...]"
+    return 1
+  fi
   __pad l "$1" "$2" $(shift 2 && _get-input "$@")
 }
 _pad-right() {
-  [[ "$#" -lt 2 ]] && _print-error-msg "must provide length and padding character" && return 1
+  if [[ "$#" -lt 2 ]]; then
+    _print-usage-msg "<length> <char> [<args>...]"
+    return 1
+  fi
   __pad r "$1" "$2" $(shift 2 && _get-input "$@")
 }
 __pad() {
@@ -455,15 +907,82 @@ _wrap() {
 }
 
 #=-----------------------------------------------------------------------------#
+# Number processing
+#------------------------------------------------------------------------------#
+
+# Calculate the logarithm of a given number to a given base
+# Usage:
+#   log <base> <n> [-i]
+# Description:
+#   Prints the logarithm of <n> with respect to <base>. If -i is supplied as
+#   the last argument, the result rounded to the nearest integer that is lower
+#   than the result.
+_log() {
+  local base=$1 n=$2
+  local result=$(bc -l <<<"l($n) / l($base)")
+  if [[ "${@: -1}" = -i ]]; then
+    _floor "$result"
+  else
+    echo "$result"
+  fi
+}
+
+# Calculate the logarithm of two for a given number
+# Usage:
+#   log2 <n> [-i]
+# Description:
+#   Prints the logarithm of 2 of <n>. If -i is supplied as the last argument,
+#   the result is rounded to the nearest integer that is lower than the result.
+_log2() {
+  _log 2 "$@"
+}
+
+# Calculate the logarithm of ten for a given number
+# Usage:
+#   log10 <n> [-i]
+# Description:
+#   Prints the logarithm of 10 of <n>. If -i is supplied as the last argument,
+#   the result is rounded to the nearest integer that is lower than the result.
+_log10() {
+  _log 10 "$@"
+}
+
+# Round number ($1) to specific number of digits ($2) after decimal point
+_round() {
+  printf "%.$2f\n" "$1"
+}
+
+# Round number down to nearest integer
+_floor() {
+  bc <<<"$1/1"
+}
+
+#=-----------------------------------------------------------------------------#
 # Array processing
 #------------------------------------------------------------------------------#
 
-# Print the elements of an array with indices (alternative to 'declare -p <a>')
 _array-print() {
-  [[ "$#" -eq 0 ]] && return
-  for i in $(seq "$#"); do
-    echo "[$(($i-1))]: ${!i}"
+  _ensure-argc-1 "$#" "<array-name>" && _ensure-var-name "$1" && _ensure-array "$1" || return 1
+  echo "$(_array-type "$1" | _to-title-case):"
+  local -n __ref=$1
+  local i
+  for i in ${!__ref[@]}; do
+    echo "[$i]=${__ref[$i]}"
   done
+}
+
+# Return the type of an array variable.
+# Usage:
+#   _array-type <array-name>
+# Returns either 'indexed' or 'associative'. If the passed name does not belong
+# to an array variable, the function returns an error.
+_array-type() {
+  _ensure-argc-1 "$#" "<array-name>" && _ensure-var-name "$1" && _ensure-array "$1" || return 1
+  local -n __ref=$1
+  case "${__ref@a}" in
+    a) echo indexed ;;
+    A) echo associative ;;
+  esac
 }
 
 # Test if an array contains a specific element.
@@ -472,7 +991,10 @@ _array-print() {
 # Example:
 #   _array-has "${myarr[@]}" foo
 _array-has() {
-  [[ "$#" -lt 1 ]] && _print-error-msg "must specify array and element to check for" && return 1
+  if [[ "$#" -lt 1 ]]; then
+    _print-usage-msg "<array> <element>"
+    return 1
+  fi
   local array=("${@:1:$#-1}")
   local element=${@:$#}
   for i in "${!array[@]}"; do
@@ -553,6 +1075,7 @@ _splitargs() {
   local -n __ref1=$1 __ref2=$2
   local d=$3
   shift 3
+  local i
   for i in $(seq "$#"); do
     if [[ "${!i}" = "$d" ]]; then
       __ref1=("${@:1:$(($i-1))}")  # Arguments before delimiter
@@ -577,6 +1100,7 @@ _splitargs() {
 _insert-basename-suffix() {
   local suffix=$1
   local file=$2
+  echo "${file/%.+([^.])/$suffix&}"  # TODO: replace below with this (requires shopt options patsub_replacement for & and extglob for +())
   echo "${file%.*}${suffix}.${file##*.}"
 }
 

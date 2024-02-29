@@ -79,7 +79,7 @@ lbr() {
 #   - In order for the documentation to be recognised, the corresponding
 #     comment lines must be adjacent to the function or alias definition
 #     without any empty lines between them.
-d() {
+doc() {
   local name=$1
   local all=$2
   local result=$(_type -s "$name")
@@ -91,8 +91,8 @@ d() {
   echo -e "$location"
   local file=$(echo "$location" | cut -d : -f 1)
   local line_nr=$(echo "$location" | cut -d : -f 2)
+  _cond-sgr cyan bold
   # Print comment block from line_nr-1 backwards
-  _sgr-cond-out cyan b
   tac "$file" | awk -v start_line_nr="$(($(wc -l <"$file")-line_nr+2))" '
     BEGIN {
       while ((getline line) > 0) {
@@ -107,26 +107,28 @@ d() {
         }
       }
     }' | tac
-  _sgr-cond-out
-  # Print function or alias body
-  _sgr-cond-out yellow
+  _cond-sgr reset yellow
   if [[ "$type" = function ]]; then
     local max_lines=10
     local body=$(type "$name" | tail -n +2)
-    if [[ -n "$all" || $(echo "$body" | wc -l) -le "$max_lines" ]]; then
+    if [[ -n "$all" ]]; then
       echo "$body"
     else
       echo "$body" | head -n "$max_lines"
-      _print-cond-sgr-out "[...]"
+      if [[ $(echo "$body" | wc -l) -gt  "$max_lines" ]]; then
+        _cond-sgr
+        echo  "[...]"
+      fi
     fi
   elif [[ "$type" = alias ]]; then
     command -v "$name"
   fi
-  _sgr-cond-out
+  _cond-sgr
 }
-complete -c d
+complete -c doc
 
 # Shorthand wrapper for _type.
+# TODO: rename to 'inspect()'
 t() {
   _type "$@"
 }
@@ -155,10 +157,10 @@ __set-prompt() {
   local exit_code=$?
   # Different colours for root and non-root users
   if [[ "$USER" = root ]]; then
-    local colour=$(_sgr red b)
+    local colour=$(_sgr red bold)
     local user="root|"
   else
-    local colour=$(_sgr green b)
+    local colour=$(_sgr green bold)
   fi
   # Include OS name and version on Linux
   if _is-linux; then
@@ -168,7 +170,7 @@ __set-prompt() {
   PS1="\[$colour\]$$|$os$user\w\$ \[$(_sgr)\]"
   # Prepend exit code of previous command if it was non-zero
   if [[ "$exit_code" -ne 0 ]]; then
-    PS1="\[$(_sgr red b)\]$exit_code|$(_sgr)$PS1"
+    PS1="\[$(_sgr red bold)\]$exit_code|$(_sgr)$PS1"
   fi
 }
 
@@ -604,32 +606,6 @@ enc-type() {
 # Number processing
 #------------------------------------------------------------------------------#
 
-log2() {
-  bc -l <<<"l($1) / l(2)"
-}
-log10() {
-  bc -l <<<"l($1) / l(10)"
-}
-
-# Round number ($1) to specific number of digits ($2) after decimal point
-round() {
-  printf "%.$2f\n" "$1"
-}
-
-# Round number down to nearest integer
-floor() {
-  bc <<<"$1/1"
-}
-
-# Check whether a number is even
-is-even() {
-  (($1 % 2 == 0))
-}
-
-# Check whether a number is odd
-is-odd() {
-  (($1 % 2 != 0))
-}
 
 # Convert numbers between numeral systems. Input read from stdin or arg list.
 # Convert a list of numbers between numeral systems

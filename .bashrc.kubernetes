@@ -229,11 +229,11 @@ kann() {
     end
     | .metadata
     | if (.name | test("'"$regex"'")) then
-        "'$(_sgr yellow+ b)'\(.name)'$(_sgr)'",
+        "'$(_sgr yellow+ bold)'\(.name)'$(_sgr)'",
         if .annotations then
-          .annotations | to_entries[] | "  '$(_sgr b)'\(.key)'$(_sgr)'\n    \(.value)"
+          .annotations | to_entries[] | "  '$(_sgr bold)'\(.key)'$(_sgr)'\n    \(.value)"
         else
-          "  '$(_sgr d)'<none>'$(_sgr)'"
+          "  '$(_sgr dim)'<none>'$(_sgr)'"
         end
       else
         empty
@@ -261,7 +261,7 @@ klab() {
     | tr -s ' ' \
     | tr ' ' '\n' \
     | sed '/:/s/^/  /' \
-    | awk -F : '!/^ / {print "'$(_sgr b)'"$0"'$(_sgr)'"} /^ / {print "'$(_sgr)'"$1":'$(_sgr)'"$2"'$(_sgr)'"}' \
+    | awk -F : '!/^ / {print "'$(_sgr bold)'"$0"'$(_sgr)'"} /^ / {print "'$(_sgr)'"$1":'$(_sgr)'"$2"'$(_sgr)'"}' \
     | column -s : -t 
     # Fill space between name and value with dots. Note that this prevents
     # selection of name or value by double-clicking in iTerm2.
@@ -301,7 +301,7 @@ kim() {
   [[ -z "$out" ]] && { echo "No pods found"; return; }
   # Make first two columns bold, if stdout is terminal or pipe (i.e. not file)
   if [[ ! -f /dev/stdout ]]; then
-    out=$(echo "$out" | sed "s/^\([^,]*,[^,]*\)/\1$(_sgr)/;s/^\([^,]*,\)/\1$(_sgr b)/;s/^\([^,]*\)/\1$(_sgr)/;s/^/$(_sgr b)/")
+    out=$(echo "$out" | sed "s/^\([^,]*,[^,]*\)/\1$(_sgr)/;s/^\([^,]*,\)/\1$(_sgr bold)/;s/^\([^,]*\)/\1$(_sgr)/;s/^/$(_sgr bold)/")
   fi
   # Remove first column, if pods are only from single namespace
   if [[ ! "${args1[@]}" =~ --all-namespaces|-A ]]; then
@@ -336,7 +336,7 @@ kcon() {
 # Note: requires GNU sed as gsed
 kncond() {
   for n in $(kubectl get nodes -o name | cut -d / -f 2); do
-    echo "$(_sgr b)$n$(_sgr)";
+    echo "$(_sgr bold)$n$(_sgr)";
     command kubectl describe node "$n" \
       | gsed -n '/Conditions:/{:a;N;/Addresses:/!ba;p}' \
       | sed '1d;$d';
@@ -379,7 +379,7 @@ kf() {
     if result=$(kubectl get "$kind" "$name" -n "$namespace" -o yaml | grep -n --color=always "${grep_args[@]}" "$regex"); then
       resource="$kind/$name"
       _array-has "${kubectl_args[@]}" --all-namespaces && resource="$namespace/$resource"
-      echo "$(_sgr b)$resource$(_sgr)"
+      echo "$(_sgr bold)$resource$(_sgr)"
       echo "$result" | sed 's/^/  /'
     fi
   done
@@ -424,7 +424,7 @@ kvol() {
       {{- else if .emptyDir }}{{ printf "EmptyDir: %s\n" .name }}
       {{- else }}{{ printf "EmptyDir: %s\n" .name }}{{ end }}
     {{- end }}' \
-    | sed -E 's/^([^ ].*)/'$(_sgr b)'\1'$(_sgr)'/'
+    | sed -E 's/^([^ ].*)/'$(_sgr bold)'\1'$(_sgr)'/'
 } 
 
 # kubectl-aliases (https://github.com/ahmetb/kubectl-aliases)
