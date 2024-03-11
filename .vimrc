@@ -587,6 +587,13 @@ highlight PmenuSbar ctermbg=grey
 "=============================================================================="
 " Functions
 
+" Convert Markdown top-level list items to second-level sections
+function! MarkdownListToSections()
+  %s/^- /## /
+  %s/^  //
+  g/^## /normal! O
+  g/^## /normal! o
+endfunction
 
 "=============================================================================="
 "   _   _ ___        _                           _       
