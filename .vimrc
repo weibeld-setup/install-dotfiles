@@ -5,7 +5,9 @@
 " which is the default in Vim, but is explicitly configured for Neovim here.
 "------------------------------------------------------------------------------"
 
-"=============================================================================="
+source ~/.vimrc.core
+
+"++============================================================================"
 "  __     _____ __  __    ___   _ _____ _____     _____ __  __ 
 "  \ \   / /_ _|  \/  |  / / \ | | ____/ _ \ \   / /_ _|  \/  |
 "   \ \ / / | || |\/| | / /|  \| |  _|| | | \ \ / / | || |\/| |
@@ -20,11 +22,6 @@ if !has('nvim')
 
   " Disable vi-compatibility mode (also default in Vim, except when -u is used)
   set nocompatible
-
-  " Enable incremental search with highlighting
-  set incsearch
-  set hlsearch
-  nohlsearch
 
   " Display number and index of search results
   set shortmess-=S
@@ -59,7 +56,7 @@ else
 endif 
 
 
-"=============================================================================="
+"++============================================================================"
 "   ____  _    _   _  ____ ___ _   _ ____  
 "  |  _ \| |  | | | |/ ___|_ _| \ | / ___| 
 "  | |_) | |  | | | | |  _ | ||  \| \___ \ 
@@ -176,7 +173,7 @@ Plug 'Bryley/neoai.nvim'
 call plug#end()
 
 
-"=============================================================================="
+"++============================================================================"
 "    ____ _____ _   _ _____ ____      _    _     
 "   / ___| ____| \ | | ____|  _ \    / \  | |    
 "  | |  _|  _| |  \| |  _| | |_) |  / _ \ | |    
@@ -198,12 +195,6 @@ set hidden
 " Shell-like completion in wildmenu (complete to longest common match)
 set wildmode=longest:full,full
 
-" Number of lines to scroll with Ctrl-U and Ctrl-D (default is half the screen)
-set scroll=2
-
-" Minimum number of lines below or above the cursor when scrolling
-set scrolloff=5
-
 " Disable all auto-formatting of text (see :help fo-table)
 set formatoptions=
 
@@ -216,7 +207,7 @@ let g:is_bash=1
 " autocmd InsertLeave * if col('.') != CursorColumnI | call cursor(0, col('.')+1) | endif
 
 
-"=============================================================================="
+"++============================================================================"
 "   __  __    _    ____  ____ ___ _   _  ____ ____  
 "  |  \/  |  / \  |  _ \|  _ \_ _| \ | |/ ___/ ___| 
 "  | |\/| | / _ \ | |_) | |_) | ||  \| | |  _\___ \ 
@@ -230,21 +221,8 @@ let g:is_bash=1
 let mapleader = "\<Space>"
 
 " Leader key mappings
-nnoremap <leader>w :w<CR>
-nnoremap <leader>W :wa<CR>
-nnoremap <leader>q :q<CR>
-nnoremap <leader>Q :qa<CR>
-nnoremap <leader>c :tabclose<CR>
-nnoremap <leader>z :q!<CR>
-nnoremap <leader>Z :qa!<CR>
-nnoremap <leader>n :set number!<CR>
-nnoremap <leader>, :nohlsearch<CR>
+" => More in .vimrc.core
 nnoremap <leader>G :set spell!<CR>
-nnoremap <leader>d :bdelete<CR>
-nnoremap <leader>D :bdelete!<CR>
-nnoremap <leader>l :ls<CR>
-nnoremap <leader>L :ls!<CR>
-nnoremap <leader>p :pwd<CR>
 nnoremap <leader>f :echo @%<CR>
 nnoremap <leader>F :echo expand('%:p')<CR>
 nnoremap <leader>i :echo 'B=' . bufnr() . ', W=' . winnr() . ', T=' . tabpagenr()<CR>
@@ -252,28 +230,6 @@ nnoremap <leader>v :source ~/.vimrc<CR>
 nnoremap <leader>V :edit ~/.vimrc<CR>
 nnoremap <leader>r :redir 
 nnoremap <leader>R :redir END<CR>
-
-" Navigation by multiple lines/columns in normal and visual mode
-nnoremap <C-j> 5j
-nnoremap <C-k> 5k
-nnoremap <C-h> 5h
-nnoremap <C-l> 5l
-nnoremap J 10j
-nnoremap K 10k
-nnoremap H 20h
-nnoremap L 20l
-vnoremap <C-j> 5j
-vnoremap <C-k> 5k
-vnoremap <C-h> 5h
-vnoremap <C-l> 5l
-vnoremap J 10j
-vnoremap K 10k
-vnoremap H 20h
-vnoremap L 20l
-
-" Treat wrapped lines like hard lines when navigating up/down
-nnoremap j gj
-nnoremap k gk
 
 " Remap command-line window commands to prevent mistyping :q (see ':h cmdwin')
 nnoremap q: <Nop>
@@ -297,35 +253,15 @@ inoremap <C-e> <C-X><C-F>
 " Yank to system clipboard
 vnoremap Y "*y
 
-" Macro recording and replaying
-nnoremap @ q
-nnoremap q <Nop>
-nnoremap + @
-
 " Search and replace the word under cursor
 " For WORD instead of word (see ':h WORD'), use <C-a> instead of <C-w>
 nnoremap <leader>s :%s/<C-r><C-w>//gn<CR>n
 nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
 
-" Disable various default mappings
-nnoremap <Left> <Nop>
-inoremap <Left> <Nop>
-vnoremap <Left> <Nop>
-nnoremap <Right> <Nop>
-inoremap <Right> <Nop>
-vnoremap <Right> <Nop>
-nnoremap <Up> <Nop>
-inoremap <Up> <Nop>
-vnoremap <Up> <Nop>
-nnoremap <Down> <Nop>
-inoremap <Down> <Nop>
-vnoremap <Down> <Nop>
-nnoremap ZZ <Nop>
-
 " Yank to system clipboard
 vnoremap Y "*y
 
-"------------------------------------------------------------------------------"
+"++----------------------------------------------------------------------------"
 "   ____         __  __               
 "  | __ ) _   _ / _|/ _| ___ _ __ ___ 
 "  |  _ \| | | | |_| |_ / _ \ '__/ __|
@@ -341,14 +277,11 @@ vnoremap Y "*y
 nnoremap <leader>b :call OpenBuffer(input('BUF: ', '', 'buffer'))<CR>
 nnoremap <leader>B :call DeleteBuffers(input('DELETE BUF: '))<CR>
 
-" Switch to next and previous buffer (only listed buffers)
-nnoremap <C-n> :bnext<CR>
-nnoremap <C-p> :bprevious<CR>
-
 " Toggle previously open buffer
-nnoremap <C-w>b :b#<CR>
+"nnoremap <C-w>b :b#<CR>
+nnoremap <leader>e :b#<CR>
 
-"------------------------------------------------------------------------------"
+"++----------------------------------------------------------------------------"
 "  __        ___           _                   
 "  \ \      / (_)_ __   __| | _____      _____ 
 "   \ \ /\ / /| | '_ \ / _` |/ _ \ \ /\ / / __|
@@ -358,23 +291,11 @@ nnoremap <C-w>b :b#<CR>
 "------------------------------------------------------------------------------"
 " Windows
 
-" Create a new window to the right (vertical split) or below (horizontal split)
-nnoremap <C-w>, <C-w>v
-nnoremap <C-w>- <C-w>s
-
-" This has the effect of moving the cursor to the new window after splitting
-set splitbelow
-set splitright
-
 " Switch to or close a specific window by number. Abort with Ctrl-C.
 " Vim compat: only :[count]wincmd {arg}, not :wincmd [count] {arg}
 nnoremap <leader>a :<C-u>execute input('Switch to window: ')..'wincmd w'<CR>
 " TODO: prevent closing of current window when typing <Esc> in prompt
 nnoremap <leader>A :<C-u>execute 'close '..input('Close window: ')<CR>
-
-" Toggle to the last active window
-nnoremap <C-w><w> <C-w>p
-nnoremap <C-w><space> <C-w>p
 
 " TODO: create mapping for toggling maximising a window, i.e. hide all other
 " windows when pressing the mapping again, the previous state is restored,
@@ -409,7 +330,7 @@ call submode#map('resize-win', 'n', '', 'K', '5<C-w>+')
 call submode#enter_with('resize-win', 'n', '', '<C-w>J', '5<C-w>-')
 call submode#map('resize-win', 'n', '', 'J', '5<C-w>-')
 
-"------------------------------------------------------------------------------"
+"++----------------------------------------------------------------------------"
 "   _____     _         
 "  |_   _|_ _| |__  ___ 
 "    | |/ _` | '_ \/ __|
@@ -457,7 +378,7 @@ call submode#enter_with('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 call submode#map('move-tab', 'n', '', 'P', ':-tabmove<CR>')
 call submode#map('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 
-"------------------------------------------------------------------------------"
+"++----------------------------------------------------------------------------"
 "   _____                   _             _                       _      
 "  |_   _|__ _ __ _ __ ___ (_)_ __   __ _| |  _ __ ___   ___   __| | ___ 
 "    | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | | | '_ ` _ \ / _ \ / _` |/ _ \
@@ -495,7 +416,7 @@ tnoremap <C-w>k <C-\><C-N><C-w>k
 tnoremap <C-w>l <C-\><C-N><C-w>l
 
 
-"=============================================================================="
+"++============================================================================"
 "   _   _ ___    ______ ___  _     ___  _   _ ____  ____  
 "  | | | |_ _|  / / ___/ _ \| |   / _ \| | | |  _ \/ ___| 
 "  | | | || |  / / |  | | | | |  | | | | | | | |_) \___ \ 
@@ -577,7 +498,7 @@ highlight PmenuSbar ctermbg=grey
 "   A tab page is a collection of windows.
 
 
-"=============================================================================="
+"++============================================================================"
 "   _____ _   _ _   _  ____ _____ ___ ___  _   _ ____  
 "  |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___| 
 "  | |_  | | | |  \| | |     | |  | | | | |  \| \___ \ 
@@ -595,7 +516,7 @@ function! MarkdownListToSections()
   g/^## /normal! o
 endfunction
 
-"=============================================================================="
+"++============================================================================"
 "   _   _ ___        _                           _       
 "  | | | |_ _|   ___| | ___ _ __ ___   ___ _ __ | |_ ___ 
 "  | | | || |   / _ \ |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
@@ -653,7 +574,7 @@ function! MyStatusLine()
   return '[%{winnr()}] %{MakeBufferMainIndicator(bufnr(), " ")}%< %{MakeBufferFileTypeIndicator(bufnr(), "", " ", 1)}%f %R %= [C=%c] [L=%l]#%L [%p%%] '
 endfunction
 
-"------------------------------------------------------------------------------"
+"++----------------------------------------------------------------------------"
 "   ____         __   __         _          ___        _     
 "  | __ ) _   _ / _| / /_      _(_)_ __    / / |_ __ _| |__  
 "  |  _ \| | | | |_ / /\ \ /\ / / | '_ \  / /| __/ _` | '_ \ 
@@ -1010,7 +931,7 @@ function! DeleteBuffers(str)
   echo MakePluralisedMessage('Deleted %n %w', i, 'buffer', 'buffers')
 endfunction
 
-"------------------------------------------------------------------------------#
+"++----------------------------------------------------------------------------#
 "   ____  _           _             
 "  |  _ \(_)___ _ __ | | __ _ _   _ 
 "  | | | | / __| '_ \| |/ _` | | | |
@@ -1048,7 +969,7 @@ function! MakeBufferFileTypeIndicator(buf, prefix = '', postfix = '', allcaps = 
   return !empty(buf) && !empty(buf.filetype) ? a:prefix..(a:allcaps ? toupper(buf.filetype) : buf.filetype)..a:postfix : ''
 endfunction
 
-"------------------------------------------------------------------------------#
+"++----------------------------------------------------------------------------#
 "   _____         _                                       _             
 "  |_   _|____  _| |_   _ __  _ __ ___   ___ ___  ___ ___(_)_ __   __ _ 
 "    | |/ _ \ \/ / __| | '_ \| '__/ _ \ / __/ _ \/ __/ __| | '_ \ / _` |
@@ -1073,7 +994,7 @@ function! MakePluralisedMessage(msg, n, singular, plural)
 endfunction
 
 
-"=============================================================================="
+"++============================================================================"
 "   __  __ ___ ____   ____ 
 "  |  \/  |_ _/ ___| / ___|
 "  | |\/| || |\___ \| |    

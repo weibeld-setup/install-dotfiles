@@ -1,0 +1,100 @@
+" .vimrc.core
+" Notes:
+" - Set of basic Vim commands that is compatible with most Vim versions and
+"   Vim emulations (for example, Vim modes in IDEs and other text editors).
+" - The commands are mainly limited to navigation, simple command mappings,
+"   and some buffer and window handling. These are features that can be
+"   expected to be implemented in most Vim versions and emulations.
+" - This file is sourced in ~/.vimrc
+"------------------------------------------------------------------------------"
+
+"++----------------------------------------------------------------------------"
+" Settings
+"------------------------------------------------------------------------------"
+set incsearch
+set hlsearch
+nohlsearch
+" Number of lines to scroll with Ctrl-U and Ctrl-D (default is half screen)
+set scroll=2
+" Minimum number of lines below/above cursor
+set scrolloff=5
+" Macro (start/stop recording with @, replay with +)
+nnoremap @ q
+nnoremap q <Nop>
+nnoremap + @
+
+"++----------------------------------------------------------------------------"
+" Mappings
+"------------------------------------------------------------------------------"
+let mapleader = "\<Space>"
+nnoremap <leader>w :w<CR>
+nnoremap <leader>W :wa<CR>
+nnoremap <leader>q :q<CR>
+nnoremap <leader>Q :qa<CR>
+nnoremap <leader>c :tabclose<CR>
+nnoremap <leader>z :q!<CR>
+nnoremap <leader>Z :qa!<CR>
+nnoremap <leader>n :set number!<CR>
+nnoremap <leader>, :nohlsearch<CR>
+nnoremap <leader>d :bdelete<CR>
+nnoremap <leader>D :bdelete!<CR>
+nnoremap <leader>l :ls<CR>
+nnoremap <leader>L :ls!<CR>
+nnoremap <leader>p :pwd<CR>
+" Disable various default mappings
+nnoremap <Left> <Nop>
+nnoremap <Right> <Nop>
+nnoremap <Up> <Nop>
+nnoremap <Down> <Nop>
+inoremap <Left> <Nop>
+inoremap <Right> <Nop>
+inoremap <Up> <Nop>
+inoremap <Down> <Nop>
+vnoremap <Left> <Nop>
+vnoremap <Right> <Nop>
+vnoremap <Up> <Nop>
+vnoremap <Down> <Nop>
+nnoremap ZZ <Nop>
+
+"++----------------------------------------------------------------------------"
+" Navigation
+"------------------------------------------------------------------------------"
+nnoremap <C-j> 5j
+nnoremap <C-k> 5k
+nnoremap <C-h> 5h
+nnoremap <C-l> 5l
+nnoremap J 10j
+nnoremap K 10k
+nnoremap H 20h
+nnoremap L 20l
+vnoremap <C-j> 5j
+vnoremap <C-k> 5k
+vnoremap <C-h> 5h
+vnoremap <C-l> 5l
+vnoremap J 10j
+vnoremap K 10k
+vnoremap H 20h
+vnoremap L 20l
+" Treat wrapped lines like hard lines when navigating up/down
+nnoremap j gj
+nnoremap k gk
+
+"++----------------------------------------------------------------------------"
+" Buffers
+"------------------------------------------------------------------------------"
+nnoremap <C-n> :bnext<CR>
+nnoremap <C-p> :bprevious<CR>
+" Toggle previous buffer
+nnoremap <C-d> :b#<CR>
+
+"++----------------------------------------------------------------------------"
+" Windows
+"------------------------------------------------------------------------------"
+" Split window right/below
+nnoremap <C-w>, <C-w>v
+nnoremap <C-w>- <C-w>s
+" Toggle previous window
+nnoremap <C-w><w> <C-w>p
+" Move cursor to new window after splitting
+set splitright
+set splitbelow
