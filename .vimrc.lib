@@ -1,0 +1,395 @@
+" .vimrc.lib
+"
+" Library of non-user-facing functions.
+"------------------------------------------------------------------------------"
+
+" Extract custom buffer info from a bufinfo() response.
+" Args:
+"   bufinfo: the result of an arbitrary call to the bufinfo() function
+" Returns:
+"   A list with selected information about buffers passed as argument.
+" Notes:
+"   - Terminal buffers can only be deleted with :bd! (see [1,2]): For this
+"     reason, they are indicated separately in the extracted information.
+"   - For an overview of buffer types, see ':h buftype'.
+" Resources:
+"   [1] https://github.com/neovim/neovim/issues/4683
+"   [2] https://github.com/neovim/neovim/pull/15402
+function! _ExtractBufInfo(bufinfo)
+  let res = []
+  for b in a:bufinfo
+    let buf_nr = b.bufnr
+    let buf_type = getbufvar(buf_nr, '&buftype')
+    let buf_file_type = getbufvar(buf_nr, '&filetype')
+    let res = add(res, {
+        \ 'nr': buf_nr,
+        \ 'name': b.name,
+        \ 'listed': b.listed,
+        \ 'loaded': b.loaded,
+        \ 'modified': b.changed,
+        \ 'normal': buf_type == '',
+        \ 'terminal': buf_type == 'terminal',
+        \ 'filetype': buf_file_type
+      \ })
+  endfor
+  return res
+endfunction
+
+" Extract custom windows info from a getwininfo() response.
+" Args:
+"   wininfo: the result of an arbitrary call to the getwininfo() function
+" Returns:
+"   A list with selected information about the windows passed as argument.
+function! _ExtractWinInfo(wininfo)
+  let res = []
+  for w in a:wininfo
+    let res = add(res, {
+        \ 'id': w.winid,
+        \ 'nr': w.winnr,
+        \ 'tab': w.tabnr,
+        \ 'buf': w.bufnr
+      \ })
+  endfor
+  return res
+endfunction
+
+" Extract custom tab info from a gettabinfo() response.
+" Args:
+"   tabinfo: the result of an arbitrary call to the gettabinfo() function
+" Returns:
+"   A list with selected information about the tabs passed as argument.
+function! _ExtractTabInfo(tabinfo)
+  let res = []
+  for t in a:tabinfo
+    let res = add(res, {
+        \ 'nr': t.tabnr,
+        \ 'wins': t.windows,
+      \ })
+  endfor
+  return res
+endfunction
+
+"------------------------------------------------------------------------------"
+" Get
+"------------------------------------------------------------------------------"
+
+" Return info about a specific buffer.
+" Args:
+"   buf: a buffer number or name
+" Returns:
+"   Dictionary
+" Notes:
+"   - If the buffer is not found, an empty string is returned.
+"   - Finds listed, loaded, and unloaded buffers.
+function! GetBuffer(buf)
+  let bufinfo = getbufinfo(a:buf)
+  return len(bufinfo) > 0 ? _ExtractBufInfo(bufinfo)[0] : ''
+endfunction
+
+" Return selected info about the specified window.
+" Args:
+"   win_id: ID of a window
+" Notes:
+"   - If the window is not found, an empty string is returned
+function! GetWindowByID(win_id)
+  let wininfo = getwininfo(a:win_id)
+  return !empty(wininfo) ? _ExtractWinInfo(wininfo)[0] : ''
+endfunction
+
+" Return selected info about the specified window in the specified tab.
+" Args:
+"   win_nr: number of a window in the specified tab
+"   tab_nr: number of a tab (optional: current tab is used if omitted)
+" Notes:
+"   - If the tab_nr argument is omitted, the current tab is used.
+"   - If the window is not found, an empty string is returned
+function! GetWindowByNumber(win_nr, tab_nr = '')
+  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
+  let wininfo = getwininfo(win_getid(a:win_nr, tab_nr))
+  return !empty(wininfo) ? _ExtractWinInfo(wininfo)[0] : ''
+endfunction
+
+" Return selected info about the specified tab.
+" Args:
+"   tab_nr: number of a tab
+" Notes:
+"   - If the specified tab does not exist, and empty string is returned.
+function! GetTab(tab_nr)
+  let tabinfo = gettabinfo(a:tab_nr)
+  return !empty(tabinfo) ? _ExtractTabInfo(tabinfo)[0] : ''
+endfunction
+
+"------------------------------------------------------------------------------"
+" List
+"------------------------------------------------------------------------------"
+
+" Return list with info about all buffers.
+function! ListBuffers()
+  return _ExtractBufInfo(getbufinfo())
+endfunction
+
+" Return list with info about listed buffers.
+function! ListListedBuffers()
+  return _ExtractBufInfo(getbufinfo({'buflisted': 1}))
+endfunction
+
+" Return list with info about loaded buffers.
+function! ListLoadedBuffers()
+  return _ExtractBufInfo(getbufinfo({'bufloaded': 1}))
+endfunction
+
+" Return list with info about unloaded buffers.
+function! ListUnloadedBuffers()
+  return filter(_ExtractBufInfo(getbufinfo()), {_, buf -> !buf.loaded})
+endfunction
+
+" Return list with info about modified buffers.
+" Note:
+"   In Neovim, terminal buffers are always in the modified state and can't be 
+"   saved, thus they are removed from the results.
+function! ListModifiedBuffers()
+  return filter(_ExtractBufInfo(getbufinfo({'bufmodified': 1})), {_, buf -> !buf.terminal})
+endfunction
+
+" Return selected info about all windows.
+function! ListWindows()
+  return _ExtractWinInfo(getwininfo())
+endfunction
+
+" Return selected info about all windows in the specified tab.
+" Args:
+"   tab_nr: number of a tab
+" Notes:
+"   - If the tab_nr argument is omitted, the current tab is used.
+"   - If the specified tab does not exist, an empty string is returned.
+function! ListWindowsInTab(tab_nr = '')
+  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
+  let wins = filter(_ExtractWinInfo(getwininfo()), {_, win -> win.tab == tab_nr})
+  return empty(wins) ? '' : wins
+endfunction
+
+" Return selected info about all tabs.
+function! ListTabs()
+  return _ExtractTabInfo(gettabinfo())
+endfunction
+
+"------------------------------------------------------------------------------"
+" Check existence
+"------------------------------------------------------------------------------"
+
+" Check wether the specified buffer exists.
+" Args:
+"   buf: a buffer number or name
+function! IsBuffer(buf)
+  return !empty(GetBuffer(a:buf))
+endfunction
+
+" Check wether the specified buffer exists and is a listed buffer.
+" Args:
+"   buf: a buffer number or name
+function! IsListedBuffer(buf)
+  let buf = GetBuffer(a:buf)
+  return !empty(buf) && buf.listed
+endfunction
+
+" Check wether the specified buffer exists and is a loaded buffer.
+" Args:
+"   buf: a buffer number or name
+function! IsLoadedBuffer(buf)
+  let buf = GetBuffer(a:buf)
+  return !empty(buf) && buf.loaded
+endfunction
+
+" Check wether the specified buffer exists and is an unloaded buffer.
+" Args:
+"   buf: a buffer number or name
+function! IsUnloadedBuffer(buf)
+  let buf = GetBuffer(a:buf)
+  return !empty(buf) && !buf.loaded
+endfunction
+
+" Check wether the specified buffer exists and is modified.
+" Args:
+"   buf: a buffer number or name
+function! IsModifiedBuffer(buf)
+  let buf = GetBuffer(a:buf)
+  return !empty(buf) && buf.modified
+endfunction
+
+" Check whether a window with the specified ID exists.
+" Args:
+"   win_id: ID of a window
+function! IsWindowID(win_id)
+  return !empty(GetWindowByID(a:win_id))
+endfunction
+
+" Check whether a window with the specified number exists in the specified tab.
+" Args:
+"   win_nr: number of a window in the specified tab
+"   tab_nr: number of the tab to check (optional: current tab used if omitted)
+" Notes:
+"   - If the tab_nr argument is omitted, the current tab is used.
+function! IsWindowNumber(win_nr, tab_nr = '')
+  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
+  return !empty(GetWindowByNumber(a:win_nr, tab_nr))
+endfunction
+
+" Check whether the tab with the specified number exists.
+" Args:
+"   tab_nr: number of a tab
+function! IsTab(tab_nr)
+  return !empty(GetTab(a:tab_nr))
+endfunction
+
+"------------------------------------------------------------------------------"
+" Open/switch
+"------------------------------------------------------------------------------"
+
+" Open the specified buffer in the current window.
+" Args:
+"   buf: number or name of a buffer
+" Notes:
+"   - Any buffer that's printed by 'ls!' can be opened, this includes listed,
+"     loaded, and unloaded buffers
+function! OpenBuffer(buf)
+  if empty(a:buf)
+    echo
+  elseif !IsBuffer(a:buf)
+    redraw
+    echo "Error: buffer '"..a:buf.."' does not exist"
+  else
+    execute 'buffer '..a:buf
+  endif
+endfunction
+
+" Switch to the window with the specified ID.
+" Args:
+"   win_id: ID of a window
+" Notes:
+"   - If the target window is in another tab, then the tab is also switched.
+function! SwitchToWindowByID(win_id)
+  if empty(a:win_id)
+    echo
+  elseif !IsWindowID(a:win_id)
+    redraw
+    echo "Error: window with ID '"..a:win_id.."' does not exist"
+  else
+    call win_gotoid(a:win_id)
+  endif
+endfunction
+
+" Switch to the window with the specified number in the specified tab.
+" Args:
+"   win_nr: number of a window in the specified tab
+"   tab_nr: number of a tab (optional: current tab is used if omitted)
+" Notes:
+"  - If the tab_nr argument is omitted, then the current tab is used
+function! SwitchToWindowByNumber(win_nr, tab_nr = '')
+  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
+  if empty(a:win_nr)
+    echo
+  elseif !IsWindowNumber(a:win_nr, tab_nr)
+    redraw
+    echo "Error: window with number '"..a:win_nr.."' in tab '"..tab_nr.."' does not exist"
+  else
+    let win = GetWindowByNumber(a:win_nr, tab_nr)
+    call win_gotoid(win.id)
+  endif
+endfunction
+
+" Switch to the specified tab.
+" Args:
+"   tab_nr: number of a tab
+" Notes:
+"   - This switches to the currently active window in the specified tab
+function! SwitchToTab(tab_nr)
+  if empty(a:tab_nr)
+    echo
+  elseif !IsTab(a:tab_nr)
+    redraw
+    echo "Error: tab '"..a:tab_nr.."' does not exist"
+  else
+    execute 'tabnext '..a:tab_nr
+  endif
+endfunction
+
+"------------------------------------------------------------------------------"
+" Delete
+"------------------------------------------------------------------------------"
+
+" TODO: function to delete a list of windows in the current tab by window number
+
+" TODO: function to delete a list of windows by window ID
+
+" TODO: function to delete a list of tabs
+
+" Delete the specified buffers.
+" Args:
+"   str: a string specifying one or more whitespace-separated buffer IDs or
+"        names. IDs and names may be freely mixed.
+" Notes:
+"   - If a supplied buffer does not exist, it is silently ignored.
+"   - The function is idempotent, i.e. specifying a buffer multiple times in
+"     the input has the same effect as specifying it a single time.
+" TODO: only loaded buffers can be deleted (unloaded buffers can't)
+" TODO: correctly split buffer names with spaces (escaped with '\' )
+function! DeleteBuffers(str)
+  let i = 0
+  for buf in sort(split(a:str))
+    if IsLoadedBuffer(buf)
+      execute 'bdelete '..buf
+      let i += 1
+    endif
+  endfor
+  redraw
+  redrawtabline
+  echo MakePluralisedMessage('Deleted %n %w', i, 'buffer', 'buffers')
+endfunction
+
+"------------------------------------------------------------------------------#
+" Display
+"------------------------------------------------------------------------------#
+"
+" TODO: display function to list all windows in all tabs with IDs (similar to :ls, :tabs). See :windo, :tabdo
+
+" Make indicator showing number, type, and modified state of a specific buffer.
+" Args:
+"   buf: number or name of a buffer
+"   sep: separator between buffer number and type/modification indicator
+" Notes:
+"   - If the buffer is not found, an empty string is returned.
+function! MakeBufferMainIndicator(buf, sep = '')
+  let buf = GetBuffer(a:buf)
+  return !empty(buf) ? buf.nr..a:sep..(buf.normal ? (buf.modified ? '🔴' : '🟢') : (buf.terminal ? '🟣':  '⚪️')) : ''
+endfunction
+
+" Make indicator showing file type of specified buffer.
+" Args:
+"   buf:     number or name of a buffer
+"   prefix:  string to prepend to the file type (optional)
+"   postfix: string to append to the file type (optional)
+"   allcaps: wether to format the file type with all-caps or not (optional)
+" Notes:
+"   - If the buffer is not found, an empty string is returned.
+"   - If the buffer has no file type, an empty string is returned.
+function! MakeBufferFileTypeIndicator(buf, prefix = '', postfix = '', allcaps = 0)
+  let buf = GetBuffer(a:buf)
+  return !empty(buf) && !empty(buf.filetype) ? a:prefix..(a:allcaps ? toupper(buf.filetype) : buf.filetype)..a:postfix : ''
+endfunction
+
+"------------------------------------------------------------------------------#
+" Text processing
+"------------------------------------------------------------------------------#
+
+" Format a message with the correct pluralised form of a word.
+" Args:
+"   msg:      message containing %n and %w placeholders for number and word
+"   n:        number
+"   singular: singular form of the word
+"   plural:   plural form of the word
+" Example:
+"   MakePluralisedMessage('Deleted %n %w', 3, 'buffer', 'buffers')
+"   ==> 'Deleted 3 buffers '
+function! MakePluralisedMessage(msg, n, singular, plural)
+  return substitute(substitute(a:msg, '%w', (a:n == 1 ? a:singular : a:plural), 'g'), '%n', a:n, 'g')
+endfunction

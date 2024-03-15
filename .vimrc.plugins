@@ -1,0 +1,108 @@
+" .vimrc.plugins
+"
+" Plugin declarations and configurations using vim-plug [1,2]
+" Notes:
+" - Installing a plugin: 
+"     1. Declare          Plug '<plugin>'
+"     2. Reload .vimrc    :source ~/.vimrc
+"     3. Install          :PlugInstall
+"     4. Add submodule    $ dotfiles submodule add <url> .vim/plugged/<plugin>
+"     5. Commit           $ dotfiles add ~/.vimrc && dotfiles commit
+" - Uninstalling a plugin:
+" References:
+"   [1] https://github.com/junegunn/vim-plug
+"   [2] https://github.com/junegunn/vim-plug/wiki
+"------------------------------------------------------------------------------"
+
+" Set plugin directory (Neovim default is ~/.local/share/nvim/plugged)
+call plug#begin('~/.vim/plugged')
+
+"=============================================================================="
+"++https://github.com/bkad/CamelCaseMotion
+"=============================================================================="
+Plug 'bkad/CamelCaseMotion'
+" Make 'w', 'b', and 'e' consider CamelCase and snake_case as word boundaries
+map <silent> w <Plug>CamelCaseMotion_w
+map <silent> b <Plug>CamelCaseMotion_b
+map <silent> e <Plug>CamelCaseMotion_e
+
+"=============================================================================="
+"++https://github.com/kana/vim-submode
+"=============================================================================="
+" Notes:
+"   - Due to a current design flaw [1], the concatenation of submode name
+"     and LHS mapping must not exceed a certain limit in the submode#enter_with
+"     and submode#map functions, otherwise the plugin fails. Read more in [2].
+"   - It's sometimes  useful to include the enter mapping (submode#enter_with)
+"     also in the submode itself (submode#map). This avoids confusion when
+"     accidentially pressing the enter mapping when already in the submode. 
+"     Thus, some submode mapping definitions have two submode#map commands.
+" References:
+"   [1] https://github.com/kana/vim-submode/issues/33
+"   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
+Plug 'kana/vim-submode'
+
+"=============================================================================="
+"++https://github.com/dhruvasagar/vim-table-mode
+"=============================================================================="
+Plug 'dhruvasagar/vim-table-mode'
+let g:table_mode_map_prefix = '<leader>m'
+let g:table_mode_corner='|'
+
+"=============================================================================="
+"++https://github.com/godlygeek/tabular
+"=============================================================================="
+Plug 'godlygeek/tabular'
+
+"=============================================================================="
+"++https://github.com/mzlogin/vim-markdown-toc
+"=============================================================================="
+Plug 'mzlogin/vim-markdown-toc'
+" Caution: don't use multi-char strings (e.g. '1.'), otherwise, nested lists
+" will be broken (see https://github.com/mzlogin/vim-markdown-toc/issues/23)
+let g:vmt_list_item_char = '-'
+
+"=============================================================================="
+"++https://github.com/lervag/wiki.vim
+"=============================================================================="
+Plug 'lervag/wiki.vim'
+" Enable wiki.vim for all Markdown and YAML files
+let g:wiki_filetypes = ['md', 'yaml']
+" TODO: set this to the directory of the file
+let g:wiki_root = '.'
+" Disable automatic link creation
+let g:wiki_link_transform_on_follow = 0
+" Define custom mappings (disable defaults)
+let g:wiki_mappings_use_defaults = 'none'
+let g:wiki_mappings_local = {
+  \ '<plug>(wiki-link-next)' : '<Tab>',
+  \ '<plug>(wiki-link-prev)' : '<S-Tab>',
+  \ '<plug>(wiki-link-follow)' : '<C-]>',
+  \ '<plug>(wiki-link-return)' : '<BS>',
+  \ }
+" TODO: made obsolete by g:wiki_link_creation
+" See https://github.com/lervag/wiki.vim/commit/62d63bcaad768717d9b6447e057e4d7a927ced99
+"let g:wiki_link_extension = 'md'
+
+"=============================================================================="
+"++https://github.com/hashivim/vim-terraform
+"=============================================================================="
+Plug 'hashivim/vim-terraform'
+
+"=============================================================================="
+"++https://github.com/carlsmedstad/vim-bicep
+"=============================================================================="
+Plug 'carlsmedstad/vim-bicep'
+
+"=============================================================================="
+"++https://github.com/Exafunction/codeium.vim
+"=============================================================================="
+Plug 'Exafunction/codeium.vim'
+
+"=============================================================================="
+"++https://github.com/Bryley/neoai.nvim
+"=============================================================================="
+Plug 'MunifTanjim/nui.nvim'
+Plug 'Bryley/neoai.nvim'
+
+call plug#end()

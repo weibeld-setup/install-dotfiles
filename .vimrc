@@ -1,31 +1,42 @@
-" .vimrc file for Vim and Neovim
+" .vimrc
 "
-" This file is intended to have the same effect on Vim and Neovim and to be
-" fully compatible with both. The config directory is assumed to be ~/.vim
-" which is the default in Vim, but is explicitly configured for Neovim here.
+" Main .vimrc file.
+" Notes:
+" - This and all sourced files are compatible with both Vim and Neovim
 "------------------------------------------------------------------------------"
 
 source ~/.vimrc.core
+source ~/.vimrc.plugins
+source ~/.vimrc.lib
 
-"++============================================================================"
-"  __     _____ __  __    ___   _ _____ _____     _____ __  __ 
-"  \ \   / /_ _|  \/  |  / / \ | | ____/ _ \ \   / /_ _|  \/  |
-"   \ \ / / | || |\/| | / /|  \| |  _|| | | \ \ / / | || |\/| |
-"    \ V /  | || |  | |/ / | |\  | |__| |_| |\ V /  | || |  | |
-"     \_/  |___|_|  |_/_/  |_| \_|_____\___/  \_/  |___|_|  |_|
-"                                                            
 "=============================================================================="
-" Vim/Neovim
+"++Settings
+" => More in ~/.vimrc.core
+"=============================================================================="
 
-" General settings for Vim only (most of these are default in Neovim
+set number
+set expandtab
+set linebreak
+set nofoldenable
+set noswapfile
+" Allow opening another buffer without saving current buffer
+set hidden
+" Shell-like completion in wildmenu (complete to longest common match)
+set wildmode=longest:full,full
+" Disable all auto-formatting of text (see :help fo-table)
+set formatoptions=
+" Use Bash instead of sh for default shell syntax (see :h ft-sh-syntax)
+let g:is_bash=1
+" Do not move cursor one position back when exiting insert mode
+" autocmd InsertEnter * let CursorColumnI = col('.')
+" autocmd CursorMovedI * let CursorColumnI = col('.')
+" autocmd InsertLeave * if col('.') != CursorColumnI | call cursor(0, col('.')+1) | endif
+" Vim (most of these settings are default in Neovim
 if !has('nvim')
-
   " Disable vi-compatibility mode (also default in Vim, except when -u is used)
   set nocompatible
-
   " Display number and index of search results
   set shortmess-=S
-
   " Enable popup menu for command completion
   set wildmenu
   if v:version >= 900
@@ -33,195 +44,30 @@ if !has('nvim')
   else
     set wildoptions=tagfile
   endif
-
   " Enable the Backspace key in insert mode
   set backspace=indent,eol,start
-
   " Always display the status line
   set laststatus=2
-
   " Align with default non-printable character set of Neovim
   set listchars=tab:>\ ,trail:-,nbsp:+
-
   " Disable strict Ex mode (use gQ instead, Neovim has only gQ)
   nnoremap Q <Nop>
-
-" General settings for Neovim only 
+" Neovim
 else
   " Use ~/.vim as main config directory (this is the default in Vim)
   set runtimepath+=~/.vim
-
   " Disable displaying of normal mode command below status line
   set noshowcmd
 endif 
 
-
-"++============================================================================"
-"   ____  _    _   _  ____ ___ _   _ ____  
-"  |  _ \| |  | | | |/ ___|_ _| \ | / ___| 
-"  | |_) | |  | | | | |  _ | ||  \| \___ \ 
-"  |  __/| |__| |_| | |_| || || |\  |___) |
-"  |_|   |_____\___/ \____|___|_| \_|____/ 
-"                                         
 "=============================================================================="
-" Plugins
-
-"------------------------------------------------------------------------------"
-" Installing a new plugin: 
-" 1. Declare plugin:  Plug '<plugin>'
-" 1. Reload .vimrc:   :source ~/.vimrc
-" 2. Install plugin:  :PlugInstall
-" 3. Add submodule:   $ dotfiles submodule add <url> .vim/plugged/<plugin>
-" 4. Commit:          $ dotfiles add ~/.vimrc && dotfiles commit
-"------------------------------------------------------------------------------"
-
-" Neovim default for plugin directory is ~/.local/share/nvim/plugged
-call plug#begin('~/.vim/plugged')
-
-"------------------------------------------------------------------------------"
-" CamelCaseMotion (https://github.com/bkad/CamelCaseMotion)
-"------------------------------------------------------------------------------"
-Plug 'bkad/CamelCaseMotion'
-" Make 'w', 'b', and 'e' consider CamelCase and snake_case as word boundaries
-map <silent> w <Plug>CamelCaseMotion_w
-map <silent> b <Plug>CamelCaseMotion_b
-map <silent> e <Plug>CamelCaseMotion_e
-
-"------------------------------------------------------------------------------"
-" vim-submode (https://github.com/kana/vim-submode)
-"------------------------------------------------------------------------------"
-" Notes:
-"   - Due to a current design flaw [1], the concatenation of submode name
-"     and LHS mapping must not exceed a certain limit in the submode#enter_with
-"     and submode#map functions, otherwise the plugin fails. Read more in [2].
-"   - It's sometimes  useful to include the enter mapping (submode#enter_with)
-"     also in the submode itself (submode#map). This avoids confusion when
-"     accidentially pressing the enter mapping when already in the submode. 
-"     Thus, some submode mapping definitions have two submode#map commands.
-" References:
-"   [1] https://github.com/kana/vim-submode/issues/33
-"   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
-Plug 'kana/vim-submode'
-
-"------------------------------------------------------------------------------"
-" vim-table-mode (https://github.com/dhruvasagar/vim-table-mode)
-"------------------------------------------------------------------------------"
-Plug 'dhruvasagar/vim-table-mode'
-let g:table_mode_map_prefix = '<leader>m'
-let g:table_mode_corner='|'
-
-"------------------------------------------------------------------------------"
-" tabular (https://github.com/godlygeek/tabular)
-"------------------------------------------------------------------------------"
-Plug 'godlygeek/tabular'
-
-"------------------------------------------------------------------------------"
-" vim-markdown-toc (https://github.com/mzlogin/vim-markdown-toc)
-"------------------------------------------------------------------------------"
-Plug 'mzlogin/vim-markdown-toc'
-" Caution: don't use multi-char strings (e.g. '1.'), otherwise, nested lists
-" will be broken (see https://github.com/mzlogin/vim-markdown-toc/issues/23)
-let g:vmt_list_item_char = '-'
-
-"------------------------------------------------------------------------------"
-" wiki.vim (https://github.com/lervag/wiki.vim)
-"------------------------------------------------------------------------------"
-Plug 'lervag/wiki.vim'
-" Enable wiki.vim for all Markdown and YAML files
-let g:wiki_filetypes = ['md', 'yaml']
-
-" TODO: set this to the directory of the file
-let g:wiki_root = '.'
-
-" Disable automatic link creation
-let g:wiki_link_transform_on_follow = 0
-
-" Define custom mappings (disable defaults)
-let g:wiki_mappings_use_defaults = 'none'
-let g:wiki_mappings_local = {
-  \ '<plug>(wiki-link-next)' : '<Tab>',
-  \ '<plug>(wiki-link-prev)' : '<S-Tab>',
-  \ '<plug>(wiki-link-follow)' : '<C-]>',
-  \ '<plug>(wiki-link-return)' : '<BS>',
-  \ }
-
-" TODO: made obsolete by g:wiki_link_creation
-" See https://github.com/lervag/wiki.vim/commit/62d63bcaad768717d9b6447e057e4d7a927ced99
-"let g:wiki_link_extension = 'md'
-
-"------------------------------------------------------------------------------"
-" vim-terraform (https://github.com/hashivim/vim-terraform)
-"------------------------------------------------------------------------------"
-Plug 'hashivim/vim-terraform'
-
-"------------------------------------------------------------------------------"
-" vim-bicep (https://github.com/carlsmedstad/vim-bicep)
-"------------------------------------------------------------------------------"
-Plug 'carlsmedstad/vim-bicep'
-
-"------------------------------------------------------------------------------"
-" Codeium (https://github.com/Exafunction/codeium.vim)
-"------------------------------------------------------------------------------"
-Plug 'Exafunction/codeium.vim'
-
-"------------------------------------------------------------------------------"
-" NeoAI (https://github.com/Bryley/neoai.nvim)
-"------------------------------------------------------------------------------"
-Plug 'MunifTanjim/nui.nvim'
-Plug 'Bryley/neoai.nvim'
-
-call plug#end()
-
-
-"++============================================================================"
-"    ____ _____ _   _ _____ ____      _    _     
-"   / ___| ____| \ | | ____|  _ \    / \  | |    
-"  | |  _|  _| |  \| |  _| | |_) |  / _ \ | |    
-"  | |_| | |___| |\  | |___|  _ <  / ___ \| |___ 
-"   \____|_____|_| \_|_____|_| \_\/_/   \_\_____|
-"                                                
+"++Mappings
+" => More in .vimrc.core
 "=============================================================================="
-" General
-
-set number
-set expandtab
-set linebreak
-set nofoldenable
-set noswapfile
-
-" Allow opening another buffer without saving the current buffer
-set hidden
-
-" Shell-like completion in wildmenu (complete to longest common match)
-set wildmode=longest:full,full
-
-" Disable all auto-formatting of text (see :help fo-table)
-set formatoptions=
-
-" Use Bash instead of sh for default shell syntax (see :h ft-sh-syntax)
-let g:is_bash=1
-
-" Do not move cursor one position back when exiting insert mode
-" autocmd InsertEnter * let CursorColumnI = col('.')
-" autocmd CursorMovedI * let CursorColumnI = col('.')
-" autocmd InsertLeave * if col('.') != CursorColumnI | call cursor(0, col('.')+1) | endif
-
-
-"++============================================================================"
-"   __  __    _    ____  ____ ___ _   _  ____ ____  
-"  |  \/  |  / \  |  _ \|  _ \_ _| \ | |/ ___/ ___| 
-"  | |\/| | / _ \ | |_) | |_) | ||  \| | |  _\___ \ 
-"  | |  | |/ ___ \|  __/|  __/| || |\  | |_| |___) |
-"  |_|  |_/_/   \_\_|   |_|  |___|_| \_|\____|____/ 
-"                                                   
-"=============================================================================="
-" Mappings
 
 " Leader key
 let mapleader = "\<Space>"
-
 " Leader key mappings
-" => More in .vimrc.core
 nnoremap <leader>G :set spell!<CR>
 nnoremap <leader>f :echo @%<CR>
 nnoremap <leader>F :echo expand('%:p')<CR>
@@ -230,46 +76,60 @@ nnoremap <leader>v :source ~/.vimrc<CR>
 nnoremap <leader>V :edit ~/.vimrc<CR>
 nnoremap <leader>r :redir 
 nnoremap <leader>R :redir END<CR>
-
-" Remap command-line window commands to prevent mistyping :q (see ':h cmdwin')
+" Prevent mistyping :q as q: (command-line window -> :h cmdwin)
 nnoremap q: <Nop>
 nnoremap q/ <Nop>
 nnoremap q? <Nop>
 nnoremap C: q:
 nnoremap C/ q/
 nnoremap C? q?
-
 " Entering Ex mode
 nnoremap X gQ
-
 " Allow inserting new lines from normal mode
 "nnoremap <CR> o<Esc>
 "nnoremap <BS> i<BS><Esc>l
-
 " Omni-completion trigger (https://vim.fandom.com/wiki/Omni_completion)
 inoremap <C-n> <C-X><C-O>
 inoremap <C-e> <C-X><C-F>
-
 " Yank to system clipboard
 vnoremap Y "*y
-
 " Search and replace the word under cursor
 " For WORD instead of word (see ':h WORD'), use <C-a> instead of <C-w>
 nnoremap <leader>s :%s/<C-r><C-w>//gn<CR>n
 nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
-
 " Yank to system clipboard
 vnoremap Y "*y
 
-"++----------------------------------------------------------------------------"
-"   ____         __  __               
-"  | __ ) _   _ / _|/ _| ___ _ __ ___ 
-"  |  _ \| | | | |_| |_ / _ \ '__/ __|
-"  | |_) | |_| |  _|  _|  __/ |  \__ \
-"  |____/ \__,_|_| |_|  \___|_|  |___/
-"                                    
-"------------------------------------------------------------------------------"
-" Buffers
+"=============================================================================="
+"++File types
+"=============================================================================="
+
+autocmd BufNewFile,BufRead .bashrc* set filetype=sh
+autocmd BufNewFile,BufRead .vimrc* set filetype=vim
+
+"=============================================================================="
+"++Buffers
+" => More in ~/.vimrc.core
+"=============================================================================="
+" Notes:
+" - A tab contains one or more windows
+" - A window displays exactly one buffer
+" - A buffer can be displayed in any number of windows (including zero)
+" - Tabs are enumerated consecutively starting at 1 (tab number)
+"   - The tab number of a tab may change: for example, if there are three tabs
+"     numbered T1, T2, and T3, and T2 is deleted, then T3 becomes T2
+" - Windows of a tab are enumerated consecutively starting at 1 (win number)
+"   - The window number of a window may change: for example, if there are three
+"     windows numbered W1, W2, and W3, and W2 is deleted, then W3 becomes W2
+" - Buffers have global immutable IDs that are the same across all tabs and
+"   windows and never change
+" References:
+"   [1] :h window
+"   [2] :h tab-pages
+" From ':h window':
+"   A buffer is the in-memory text of a file.
+"   A window is a viewport on a buffer.
+"   A tab page is a collection of windows.
 
 " TODO: create some mappings for opening new buffers (e.g. new empty buffer,
 " new empty buffer in split window, etc.).
@@ -281,15 +141,10 @@ nnoremap <leader>B :call DeleteBuffers(input('DELETE BUF: '))<CR>
 "nnoremap <C-w>b :b#<CR>
 nnoremap <leader>e :b#<CR>
 
-"++----------------------------------------------------------------------------"
-"  __        ___           _                   
-"  \ \      / (_)_ __   __| | _____      _____ 
-"   \ \ /\ / /| | '_ \ / _` |/ _ \ \ /\ / / __|
-"    \ V  V / | | | | | (_| | (_) \ V  V /\__ \
-"     \_/\_/  |_|_| |_|\__,_|\___/ \_/\_/ |___/
-"                                              
-"------------------------------------------------------------------------------"
-" Windows
+"=============================================================================="
+"++Windows
+" => More in ~/.vimrc.core
+"=============================================================================="
 
 " Switch to or close a specific window by number. Abort with Ctrl-C.
 " Vim compat: only :[count]wincmd {arg}, not :wincmd [count] {arg}
@@ -330,15 +185,9 @@ call submode#map('resize-win', 'n', '', 'K', '5<C-w>+')
 call submode#enter_with('resize-win', 'n', '', '<C-w>J', '5<C-w>-')
 call submode#map('resize-win', 'n', '', 'J', '5<C-w>-')
 
-"++----------------------------------------------------------------------------"
-"   _____     _         
-"  |_   _|_ _| |__  ___ 
-"    | |/ _` | '_ \/ __|
-"    | | (_| | |_) \__ \
-"    |_|\__,_|_.__/|___/
-"
-"------------------------------------------------------------------------------"
-" Tabs
+"=============================================================================="
+"++Tabs
+"=============================================================================="
 
 " Create a new tab at the end of the tabline
 nnoremap <C-w>t :$tabnew<CR>
@@ -378,15 +227,9 @@ call submode#enter_with('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 call submode#map('move-tab', 'n', '', 'P', ':-tabmove<CR>')
 call submode#map('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 
-"++----------------------------------------------------------------------------"
-"   _____                   _             _                       _      
-"  |_   _|__ _ __ _ __ ___ (_)_ __   __ _| |  _ __ ___   ___   __| | ___ 
-"    | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | | | '_ ` _ \ / _ \ / _` |/ _ \
-"    | |  __/ |  | | | | | | | | | | (_| | | | | | | | | (_) | (_| |  __/
-"    |_|\___|_|  |_| |_| |_|_|_| |_|\__,_|_| |_| |_| |_|\___/ \__,_|\___|
-" 
-"------------------------------------------------------------------------------"
-" Terminal mode
+"=============================================================================="
+"++Terminal mode
+"=============================================================================="
 
 " Open a terminal in a horizontal split window
 nnoremap <leader>x :terminal<CR>
@@ -415,16 +258,9 @@ tnoremap <C-w>j <C-\><C-N><C-w>j
 tnoremap <C-w>k <C-\><C-N><C-w>k
 tnoremap <C-w>l <C-\><C-N><C-w>l
 
-
-"++============================================================================"
-"   _   _ ___    ______ ___  _     ___  _   _ ____  ____  
-"  | | | |_ _|  / / ___/ _ \| |   / _ \| | | |  _ \/ ___| 
-"  | | | || |  / / |  | | | | |  | | | | | | | |_) \___ \ 
-"  | |_| || | / /| |__| |_| | |__| |_| | |_| |  _ < ___) |
-"   \___/|___/_/  \____\___/|_____\___/ \___/|_| \_\____/ 
-"  
 "=============================================================================="
-" UI/Colours
+"++UI elements
+"=============================================================================="
 
 " Status line
 set statusline=%!MyStatusLine()
@@ -473,58 +309,15 @@ highlight PmenuSel ctermbg=5 ctermfg=black cterm=bold
 highlight PmenuThumb ctermbg=darkblue
 highlight PmenuSbar ctermbg=grey
 
-"------------------------------------------------------------------------------"
-" Tabs, windows, and buffers
-"------------------------------------------------------------------------------"
-
+" Custom status line.
 " Notes:
-" - A tab contains one or more windows
-" - A window displays exactly one buffer
-" - A buffer can be displayed in any number of windows (including zero)
-" - Tabs are enumerated consecutively starting at 1 (tab number)
-"   - The tab number of a tab may change: for example, if there are three tabs
-"     numbered T1, T2, and T3, and T2 is deleted, then T3 becomes T2
-" - Windows of a tab are enumerated consecutively starting at 1 (win number)
-"   - The window number of a window may change: for example, if there are three
-"     windows numbered W1, W2, and W3, and W2 is deleted, then W3 becomes W2
-" - Buffers have global immutable IDs that are the same across all tabs and
-"   windows and never change
-" References:
-"   [1] :h window
-"   [2] :h tab-pages
-" From ':h window':
-"   A buffer is the in-memory text of a file.
-"   A window is a viewport on a buffer.
-"   A tab page is a collection of windows.
-
-
-"++============================================================================"
-"   _____ _   _ _   _  ____ _____ ___ ___  _   _ ____  
-"  |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___| 
-"  | |_  | | | |  \| | |     | |  | | | | |  \| \___ \ 
-"  |  _| | |_| | |\  | |___  | |  | | |_| | |\  |___) |
-"  |_|    \___/|_| \_|\____| |_| |___\___/|_| \_|____/ 
-"
-"=============================================================================="
-" Functions
-
-" Convert Markdown top-level list items to second-level sections
-function! MarkdownListToSections()
-  %s/^- /## /
-  %s/^  //
-  g/^## /normal! O
-  g/^## /normal! o
+"   - See ':h statusline'
+" CAUTION:
+"   Window-specific values (e.g. window number) must not be saved in a local
+"   variable because they get overwritten by different function calls.
+function! MyStatusLine()
+  return '[%{winnr()}] %{MakeBufferMainIndicator(bufnr(), " ")}%< %{MakeBufferFileTypeIndicator(bufnr(), "", " ", 1)}%f %R %= [C=%c] [L=%l]#%L [%p%%] '
 endfunction
-
-"++============================================================================"
-"   _   _ ___        _                           _       
-"  | | | |_ _|   ___| | ___ _ __ ___   ___ _ __ | |_ ___ 
-"  | | | || |   / _ \ |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
-"  | |_| || |  |  __/ |  __/ | | | | |  __/ | | | |_\__ \
-"   \___/|___|  \___|_|\___|_| |_| |_|\___|_| |_|\__|___/
-"                                                       
-"=============================================================================="
-" UI elements
 
 " Custom tab line.
 " Notes:
@@ -564,444 +357,14 @@ function! MyTabLine()
   return tabline
 endfunction
 
-" Custom status line.
-" Notes:
-"   - See ':h statusline'
-" CAUTION:
-"   Window-specific values (e.g. window number) must not be saved in a local
-"   variable because they get overwritten by different function calls.
-function! MyStatusLine()
-  return '[%{winnr()}] %{MakeBufferMainIndicator(bufnr(), " ")}%< %{MakeBufferFileTypeIndicator(bufnr(), "", " ", 1)}%f %R %= [C=%c] [L=%l]#%L [%p%%] '
-endfunction
-
-"++----------------------------------------------------------------------------"
-"   ____         __   __         _          ___        _     
-"  | __ ) _   _ / _| / /_      _(_)_ __    / / |_ __ _| |__  
-"  |  _ \| | | | |_ / /\ \ /\ / / | '_ \  / /| __/ _` | '_ \ 
-"  | |_) | |_| |  _/ /  \ V  V /| | | | |/ / | || (_| | |_) |
-"  |____/ \__,_|_|/_/    \_/\_/ |_|_| |_/_/   \__\__,_|_.__/ 
-"                                                            
-"------------------------------------------------------------------------------"
-" Buf/win/tab
-
-"------------------------------------------------------------------------------"
-" Helpers
-"------------------------------------------------------------------------------"
-
-" Extract custom buffer info from a bufinfo() response.
-" Args:
-"   bufinfo: the result of an arbitrary call to the bufinfo() function
-" Returns:
-"   A list with selected information about buffers passed as argument.
-" Notes:
-"   - Terminal buffers can only be deleted with :bd! (see [1,2]): For this
-"     reason, they are indicated separately in the extracted information.
-"   - For an overview of buffer types, see ':h buftype'.
-" Resources:
-"   [1] https://github.com/neovim/neovim/issues/4683
-"   [2] https://github.com/neovim/neovim/pull/15402
-function! _ExtractBufInfo(bufinfo)
-  let res = []
-  for b in a:bufinfo
-    let buf_nr = b.bufnr
-    let buf_type = getbufvar(buf_nr, '&buftype')
-    let buf_file_type = getbufvar(buf_nr, '&filetype')
-    let res = add(res, {
-        \ 'nr': buf_nr,
-        \ 'name': b.name,
-        \ 'listed': b.listed,
-        \ 'loaded': b.loaded,
-        \ 'modified': b.changed,
-        \ 'normal': buf_type == '',
-        \ 'terminal': buf_type == 'terminal',
-        \ 'filetype': buf_file_type
-      \ })
-  endfor
-  return res
-endfunction
-
-" Extract custom windows info from a getwininfo() response.
-" Args:
-"   wininfo: the result of an arbitrary call to the getwininfo() function
-" Returns:
-"   A list with selected information about the windows passed as argument.
-function! _ExtractWinInfo(wininfo)
-  let res = []
-  for w in a:wininfo
-    let res = add(res, {
-        \ 'id': w.winid,
-        \ 'nr': w.winnr,
-        \ 'tab': w.tabnr,
-        \ 'buf': w.bufnr
-      \ })
-  endfor
-  return res
-endfunction
-
-" Extract custom tab info from a gettabinfo() response.
-" Args:
-"   tabinfo: the result of an arbitrary call to the gettabinfo() function
-" Returns:
-"   A list with selected information about the tabs passed as argument.
-function! _ExtractTabInfo(tabinfo)
-  let res = []
-  for t in a:tabinfo
-    let res = add(res, {
-        \ 'nr': t.tabnr,
-        \ 'wins': t.windows,
-      \ })
-  endfor
-  return res
-endfunction
-
-"------------------------------------------------------------------------------"
-" Get
-"------------------------------------------------------------------------------"
-
-" Return info about a specific buffer.
-" Args:
-"   buf: a buffer number or name
-" Returns:
-"   Dictionary
-" Notes:
-"   - If the buffer is not found, an empty string is returned.
-"   - Finds listed, loaded, and unloaded buffers.
-function! GetBuffer(buf)
-  let bufinfo = getbufinfo(a:buf)
-  return len(bufinfo) > 0 ? _ExtractBufInfo(bufinfo)[0] : ''
-endfunction
-
-" Return selected info about the specified window.
-" Args:
-"   win_id: ID of a window
-" Notes:
-"   - If the window is not found, an empty string is returned
-function! GetWindowByID(win_id)
-  let wininfo = getwininfo(a:win_id)
-  return !empty(wininfo) ? _ExtractWinInfo(wininfo)[0] : ''
-endfunction
-
-" Return selected info about the specified window in the specified tab.
-" Args:
-"   win_nr: number of a window in the specified tab
-"   tab_nr: number of a tab (optional: current tab is used if omitted)
-" Notes:
-"   - If the tab_nr argument is omitted, the current tab is used.
-"   - If the window is not found, an empty string is returned
-function! GetWindowByNumber(win_nr, tab_nr = '')
-  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
-  let wininfo = getwininfo(win_getid(a:win_nr, tab_nr))
-  return !empty(wininfo) ? _ExtractWinInfo(wininfo)[0] : ''
-endfunction
-
-" Return selected info about the specified tab.
-" Args:
-"   tab_nr: number of a tab
-" Notes:
-"   - If the specified tab does not exist, and empty string is returned.
-function! GetTab(tab_nr)
-  let tabinfo = gettabinfo(a:tab_nr)
-  return !empty(tabinfo) ? _ExtractTabInfo(tabinfo)[0] : ''
-endfunction
-
-"------------------------------------------------------------------------------"
-" List
-"------------------------------------------------------------------------------"
-
-" Return list with info about all buffers.
-function! ListBuffers()
-  return _ExtractBufInfo(getbufinfo())
-endfunction
-
-" Return list with info about listed buffers.
-function! ListListedBuffers()
-  return _ExtractBufInfo(getbufinfo({'buflisted': 1}))
-endfunction
-
-" Return list with info about loaded buffers.
-function! ListLoadedBuffers()
-  return _ExtractBufInfo(getbufinfo({'bufloaded': 1}))
-endfunction
-
-" Return list with info about unloaded buffers.
-function! ListUnloadedBuffers()
-  return filter(_ExtractBufInfo(getbufinfo()), {_, buf -> !buf.loaded})
-endfunction
-
-" Return list with info about modified buffers.
-" Note:
-"   In Neovim, terminal buffers are always in the modified state and can't be 
-"   saved, thus they are removed from the results.
-function! ListModifiedBuffers()
-  return filter(_ExtractBufInfo(getbufinfo({'bufmodified': 1})), {_, buf -> !buf.terminal})
-endfunction
-
-" Return selected info about all windows.
-function! ListWindows()
-  return _ExtractWinInfo(getwininfo())
-endfunction
-
-" Return selected info about all windows in the specified tab.
-" Args:
-"   tab_nr: number of a tab
-" Notes:
-"   - If the tab_nr argument is omitted, the current tab is used.
-"   - If the specified tab does not exist, an empty string is returned.
-function! ListWindowsInTab(tab_nr = '')
-  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
-  let wins = filter(_ExtractWinInfo(getwininfo()), {_, win -> win.tab == tab_nr})
-  return empty(wins) ? '' : wins
-endfunction
-
-" Return selected info about all tabs.
-function! ListTabs()
-  return _ExtractTabInfo(gettabinfo())
-endfunction
-
-"------------------------------------------------------------------------------"
-" Check existence
-"------------------------------------------------------------------------------"
-
-" Check wether the specified buffer exists.
-" Args:
-"   buf: a buffer number or name
-function! IsBuffer(buf)
-  return !empty(GetBuffer(a:buf))
-endfunction
-
-" Check wether the specified buffer exists and is a listed buffer.
-" Args:
-"   buf: a buffer number or name
-function! IsListedBuffer(buf)
-  let buf = GetBuffer(a:buf)
-  return !empty(buf) && buf.listed
-endfunction
-
-" Check wether the specified buffer exists and is a loaded buffer.
-" Args:
-"   buf: a buffer number or name
-function! IsLoadedBuffer(buf)
-  let buf = GetBuffer(a:buf)
-  return !empty(buf) && buf.loaded
-endfunction
-
-" Check wether the specified buffer exists and is an unloaded buffer.
-" Args:
-"   buf: a buffer number or name
-function! IsUnloadedBuffer(buf)
-  let buf = GetBuffer(a:buf)
-  return !empty(buf) && !buf.loaded
-endfunction
-
-" Check wether the specified buffer exists and is modified.
-" Args:
-"   buf: a buffer number or name
-function! IsModifiedBuffer(buf)
-  let buf = GetBuffer(a:buf)
-  return !empty(buf) && buf.modified
-endfunction
-
-" Check whether a window with the specified ID exists.
-" Args:
-"   win_id: ID of a window
-function! IsWindowID(win_id)
-  return !empty(GetWindowByID(a:win_id))
-endfunction
-
-" Check whether a window with the specified number exists in the specified tab.
-" Args:
-"   win_nr: number of a window in the specified tab
-"   tab_nr: number of the tab to check (optional: current tab used if omitted)
-" Notes:
-"   - If the tab_nr argument is omitted, the current tab is used.
-function! IsWindowNumber(win_nr, tab_nr = '')
-  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
-  return !empty(GetWindowByNumber(a:win_nr, tab_nr))
-endfunction
-
-" Check whether the tab with the specified number exists.
-" Args:
-"   tab_nr: number of a tab
-function! IsTab(tab_nr)
-  return !empty(GetTab(a:tab_nr))
-endfunction
-
-"------------------------------------------------------------------------------"
-" Open/switch
-"------------------------------------------------------------------------------"
-
-" Open the specified buffer in the current window.
-" Args:
-"   buf: number or name of a buffer
-" Notes:
-"   - Any buffer that's printed by 'ls!' can be opened, this includes listed,
-"     loaded, and unloaded buffers
-function! OpenBuffer(buf)
-  if empty(a:buf)
-    echo
-  elseif !IsBuffer(a:buf)
-    redraw
-    echo "Error: buffer '"..a:buf.."' does not exist"
-  else
-    execute 'buffer '..a:buf
-  endif
-endfunction
-
-" Switch to the window with the specified ID.
-" Args:
-"   win_id: ID of a window
-" Notes:
-"   - If the target window is in another tab, then the tab is also switched.
-function! SwitchToWindowByID(win_id)
-  if empty(a:win_id)
-    echo
-  elseif !IsWindowID(a:win_id)
-    redraw
-    echo "Error: window with ID '"..a:win_id.."' does not exist"
-  else
-    call win_gotoid(a:win_id)
-  endif
-endfunction
-
-" Switch to the window with the specified number in the specified tab.
-" Args:
-"   win_nr: number of a window in the specified tab
-"   tab_nr: number of a tab (optional: current tab is used if omitted)
-" Notes:
-"  - If the tab_nr argument is omitted, then the current tab is used
-function! SwitchToWindowByNumber(win_nr, tab_nr = '')
-  let tab_nr = empty(a:tab_nr) ? tabpagenr() : a:tab_nr
-  if empty(a:win_nr)
-    echo
-  elseif !IsWindowNumber(a:win_nr, tab_nr)
-    redraw
-    echo "Error: window with number '"..a:win_nr.."' in tab '"..tab_nr.."' does not exist"
-  else
-    let win = GetWindowByNumber(a:win_nr, tab_nr)
-    call win_gotoid(win.id)
-  endif
-endfunction
-
-" Switch to the specified tab.
-" Args:
-"   tab_nr: number of a tab
-" Notes:
-"   - This switches to the currently active window in the specified tab
-function! SwitchToTab(tab_nr)
-  if empty(a:tab_nr)
-    echo
-  elseif !IsTab(a:tab_nr)
-    redraw
-    echo "Error: tab '"..a:tab_nr.."' does not exist"
-  else
-    execute 'tabnext '..a:tab_nr
-  endif
-endfunction
-
-"------------------------------------------------------------------------------"
-" Delete
-"------------------------------------------------------------------------------"
-
-" TODO: function to delete a list of windows in the current tab by window number
-
-" TODO: function to delete a list of windows by window ID
-
-" TODO: function to delete a list of tabs
-
-" Delete the specified buffers.
-" Args:
-"   str: a string specifying one or more whitespace-separated buffer IDs or
-"        names. IDs and names may be freely mixed.
-" Notes:
-"   - If a supplied buffer does not exist, it is silently ignored.
-"   - The function is idempotent, i.e. specifying a buffer multiple times in
-"     the input has the same effect as specifying it a single time.
-" TODO: only loaded buffers can be deleted (unloaded buffers can't)
-" TODO: correctly split buffer names with spaces (escaped with '\' )
-function! DeleteBuffers(str)
-  let i = 0
-  for buf in sort(split(a:str))
-    if IsLoadedBuffer(buf)
-      execute 'bdelete '..buf
-      let i += 1
-    endif
-  endfor
-  redraw
-  redrawtabline
-  echo MakePluralisedMessage('Deleted %n %w', i, 'buffer', 'buffers')
-endfunction
-
-"++----------------------------------------------------------------------------#
-"   ____  _           _             
-"  |  _ \(_)___ _ __ | | __ _ _   _ 
-"  | | | | / __| '_ \| |/ _` | | | |
-"  | |_| | \__ \ |_) | | (_| | |_| |
-"  |____/|_|___/ .__/|_|\__,_|\__, |
-"              |_|            |___/
-" 
-"------------------------------------------------------------------------------#
-" Display
-
-" TODO: display function to list all windows in all tabs with IDs (similar to :ls, :tabs). See :windo, :tabdo
-
-" Make indicator showing number, type, and modified state of a specific buffer.
-" Args:
-"   buf: number or name of a buffer
-"   sep: separator between buffer number and type/modification indicator
-" Notes:
-"   - If the buffer is not found, an empty string is returned.
-function! MakeBufferMainIndicator(buf, sep = '')
-  let buf = GetBuffer(a:buf)
-  return !empty(buf) ? buf.nr..a:sep..(buf.normal ? (buf.modified ? '🔴' : '🟢') : (buf.terminal ? '🟣':  '⚪️')) : ''
-endfunction
-
-" Make indicator showing file type of specified buffer.
-" Args:
-"   buf:     number or name of a buffer
-"   prefix:  string to prepend to the file type (optional)
-"   postfix: string to append to the file type (optional)
-"   allcaps: wether to format the file type with all-caps or not (optional)
-" Notes:
-"   - If the buffer is not found, an empty string is returned.
-"   - If the buffer has no file type, an empty string is returned.
-function! MakeBufferFileTypeIndicator(buf, prefix = '', postfix = '', allcaps = 0)
-  let buf = GetBuffer(a:buf)
-  return !empty(buf) && !empty(buf.filetype) ? a:prefix..(a:allcaps ? toupper(buf.filetype) : buf.filetype)..a:postfix : ''
-endfunction
-
-"++----------------------------------------------------------------------------#
-"   _____         _                                       _             
-"  |_   _|____  _| |_   _ __  _ __ ___   ___ ___  ___ ___(_)_ __   __ _ 
-"    | |/ _ \ \/ / __| | '_ \| '__/ _ \ / __/ _ \/ __/ __| | '_ \ / _` |
-"    | |  __/>  <| |_  | |_) | | | (_) | (_|  __/\__ \__ \ | | | | (_| |
-"    |_|\___/_/\_\\__| | .__/|_|  \___/ \___\___||___/___/_|_| |_|\__, |
-"                      |_|                                        |___/ 
-" 
-"------------------------------------------------------------------------------#
-" Text processing
-
-" Format a message with the correct pluralised form of a word.
-" Args:
-"   msg:      message containing %n and %w placeholders for number and word
-"   n:        number
-"   singular: singular form of the word
-"   plural:   plural form of the word
-" Example:
-"   MakePluralisedMessage('Deleted %n %w', 3, 'buffer', 'buffers')
-"   ==> 'Deleted 3 buffers '
-function! MakePluralisedMessage(msg, n, singular, plural)
-  return substitute(substitute(a:msg, '%w', (a:n == 1 ? a:singular : a:plural), 'g'), '%n', a:n, 'g')
-endfunction
-
-
-"++============================================================================"
-"   __  __ ___ ____   ____ 
-"  |  \/  |_ _/ ___| / ___|
-"  | |\/| || |\___ \| |    
-"  | |  | || | ___) | |___ 
-"  |_|  |_|___|____/ \____|
-"                          
+"=============================================================================="
+"++User functions
 "=============================================================================="
 
-" Explicitly setting file types for specific file name patterns
-autocmd BufNewFile,BufRead .bashrc* set filetype=sh
+" Convert Markdown top-level list items to second-level sections
+function! MarkdownListToSections()
+  %s/^- /## /
+  %s/^  //
+  g/^## /normal! O
+  g/^## /normal! o
+endfunction

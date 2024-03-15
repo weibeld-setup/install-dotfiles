@@ -1,16 +1,21 @@
 " .vimrc.core
+"
+" Set of basic Vim commands compatible with most Vim versions and emulations.
 " Notes:
-" - Set of basic Vim commands that is compatible with most Vim versions and
-"   Vim emulations (for example, Vim modes in IDEs and other text editors).
-" - The commands are mainly limited to navigation, simple command mappings,
-"   and some buffer and window handling. These are features that can be
-"   expected to be implemented in most Vim versions and emulations.
-" - This file is sourced in ~/.vimrc
+" - The idea is to bundle the greatest common denominator of Vim configuration
+"   that can be applied across a broad range of Vim environments ranging from
+"   Vim itself to restricted Vim emulations in IDEs and other text editors.
+" - Consequently, this file can ideally be used as-is for Vim modes in IDEs,
+"   such as VSCode, IntelliJ IDEA, or Android Studio.
+" - The commands in this file cover navigation, basic command mappings, and
+"   some basic buffer and window handling. The goal is to include the most
+"   central and salient parts of the Vim configuration in order to provide an
+"   as complete as possible Vim experience.
 "------------------------------------------------------------------------------"
 
-"++----------------------------------------------------------------------------"
-" Settings
-"------------------------------------------------------------------------------"
+"=============================================================================="
+"++Settings
+"=============================================================================="
 set incsearch
 set hlsearch
 nohlsearch
@@ -23,9 +28,9 @@ nnoremap @ q
 nnoremap q <Nop>
 nnoremap + @
 
-"++----------------------------------------------------------------------------"
-" Mappings
-"------------------------------------------------------------------------------"
+"=============================================================================="
+"++Mappings
+"=============================================================================="
 let mapleader = "\<Space>"
 nnoremap <leader>w :w<CR>
 nnoremap <leader>W :wa<CR>
@@ -56,9 +61,9 @@ vnoremap <Up> <Nop>
 vnoremap <Down> <Nop>
 nnoremap ZZ <Nop>
 
-"++----------------------------------------------------------------------------"
-" Navigation
-"------------------------------------------------------------------------------"
+"=============================================================================="
+"++Navigation
+"=============================================================================="
 nnoremap <C-j> 5j
 nnoremap <C-k> 5k
 nnoremap <C-h> 5h
@@ -79,17 +84,17 @@ vnoremap L 20l
 nnoremap j gj
 nnoremap k gk
 
-"++----------------------------------------------------------------------------"
+"=============================================================================="
 " Buffers
-"------------------------------------------------------------------------------"
+"=============================================================================="
 nnoremap <C-n> :bnext<CR>
 nnoremap <C-p> :bprevious<CR>
 " Toggle previous buffer
 nnoremap <C-d> :b#<CR>
 
-"++----------------------------------------------------------------------------"
+"=============================================================================="
 " Windows
-"------------------------------------------------------------------------------"
+"=============================================================================="
 " Split window right/below
 nnoremap <C-w>, <C-w>v
 nnoremap <C-w>- <C-w>s
