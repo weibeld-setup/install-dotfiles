@@ -12,8 +12,9 @@
 #------------------------------------------------------------------------------#
 
 #=-----------------------------------------------------------------------------#
-# .bashrc* files
+# Dotfiles
 #------------------------------------------------------------------------------#
+
 
 # Open a .bashrc* file in Vim
 br() {
@@ -28,6 +29,17 @@ br() {
 
 # Source all .bashrc* files
 alias sbr='. ~/.bashrc'
+
+# Open a .vimrc* file in Vim
+vr() {
+  _ensure-installed fzf || return 1
+  local select=$(basename ~/.vimrc* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
+  if _is-set "$select"; then
+    vim "$select"
+  else
+    echo "No selection"
+  fi
+}
 
 # List the function and alias names defined in a .bashrc.* file
 # Notes:
@@ -497,8 +509,6 @@ fi
 #=-----------------------------------------------------------------------------#
 # Vim/Neovim
 #------------------------------------------------------------------------------#
-
-alias vr='vim ~/.vimrc'
 
 # Vim order of precedence: Neovim > Homebrew Vim > native Vim
 if _is-cmd nvim; then
