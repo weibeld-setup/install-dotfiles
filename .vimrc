@@ -76,7 +76,7 @@ nnoremap <leader>v :source ~/.vimrc<CR>
 nnoremap <leader>V :edit ~/.vimrc<CR>
 nnoremap <leader>r :redir 
 nnoremap <leader>R :redir END<CR>
-" Prevent mistyping :q as q: (command-line window -> :h cmdwin)
+" Prevent mistyping  :q as q: (command-line window -> :h cmdwin)
 nnoremap q: <Nop>
 nnoremap q/ <Nop>
 nnoremap q? <Nop>
@@ -91,12 +91,6 @@ nnoremap X gQ
 " Omni-completion trigger (https://vim.fandom.com/wiki/Omni_completion)
 inoremap <C-n> <C-X><C-O>
 inoremap <C-e> <C-X><C-F>
-" Yank to system clipboard
-vnoremap Y "*y
-" Search and replace the word under cursor
-" For WORD instead of word (see ':h WORD'), use <C-a> instead of <C-w>
-nnoremap <leader>s :%s/<C-r><C-w>//gn<CR>n
-nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
 " Yank to system clipboard
 vnoremap Y "*y
 

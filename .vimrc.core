@@ -41,11 +41,16 @@ nnoremap <leader>z :q!<CR>
 nnoremap <leader>Z :qa!<CR>
 nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
+nnoremap <leader>. :let @/=''<CR>
 nnoremap <leader>d :bdelete<CR>
 nnoremap <leader>D :bdelete!<CR>
 nnoremap <leader>l :ls<CR>
 nnoremap <leader>L :ls!<CR>
 nnoremap <leader>p :pwd<CR>
+" Find all occurrences of word under cursor
+nnoremap <leader>s *N
+" Replace all occurrences of word under cursor (<C-w> = word, <C-a> = WORD)
+nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
 " Disable various default mappings
 nnoremap <Left> <Nop>
 nnoremap <Right> <Nop>
