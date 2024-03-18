@@ -31,3 +31,6 @@
 [submodule ".vim/plugged/nui.nvim"]
 	path = .vim/plugged/nui.nvim
 	url = https://github.com/MunifTanjim/nui.nvim
+[submodule ".vim/plugged/kotlin-vim"]
+	path = .vim/plugged/kotlin-vim
+	url = https://github.com/udalov/kotlin-vim

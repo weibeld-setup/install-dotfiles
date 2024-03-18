@@ -6,8 +6,10 @@
 "     1. Declare          Plug '<plugin>'
 "     2. Reload .vimrc    :source ~/.vimrc
 "     3. Install          :PlugInstall
-"     4. Add submodule    $ dotfiles submodule add <url> .vim/plugged/<plugin>
-"     5. Commit           $ dotfiles add ~/.vimrc && dotfiles commit
+"     4. Change to $HOME  $ cd ~
+"     5. Add submodule    $ df submodule add <url> .vim/plugged/<plugin>
+"     6. Commit           $ df add ~/.vimrc.plugins
+"                         $ df commit
 " - Uninstalling a plugin:
 " References:
 "   [1] https://github.com/junegunn/vim-plug
@@ -83,6 +85,11 @@ let g:wiki_mappings_local = {
 " TODO: made obsolete by g:wiki_link_creation
 " See https://github.com/lervag/wiki.vim/commit/62d63bcaad768717d9b6447e057e4d7a927ced99
 "let g:wiki_link_extension = 'md'
+
+"=============================================================================="
+"++https://github.com/udalov/kotlin-vim
+"=============================================================================="
+Plug 'udalov/kotlin-vim'
 
 "=============================================================================="
 "++https://github.com/hashivim/vim-terraform
