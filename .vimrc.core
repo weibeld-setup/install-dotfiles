@@ -50,7 +50,7 @@ nnoremap <leader>p :pwd<CR>
 " Find all occurrences of word under cursor
 nnoremap <leader>s *N
 " Replace all occurrences of word under cursor (<C-w> = word, <C-a> = WORD)
-nnoremap <leader>S :%s/\<<C-r><C-w>\>//g<left><left>
+nnoremap <leader>r :%s/\<<C-r><C-w>\>//g<left><left>
 " Disable various default mappings
 nnoremap <Left> <Nop>
 nnoremap <Right> <Nop>
