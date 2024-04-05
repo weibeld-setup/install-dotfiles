@@ -5,7 +5,7 @@
 " - This and all sourced files are compatible with both Vim and Neovim
 "------------------------------------------------------------------------------"
 
-source ~/.vimrc.core
+source ~/.vimrc.core  " TODO: rename to .vimrc.compat
 source ~/.vimrc.plugins
 source ~/.vimrc.lib
 
@@ -76,6 +76,8 @@ nnoremap <leader>v :source ~/.vimrc<CR>
 nnoremap <leader>V :edit ~/.vimrc<CR>
 nnoremap <leader>r :redir 
 nnoremap <leader>R :redir END<CR>
+nnoremap <leader>> i→
+nnoremap <leader>< i←
 " Prevent mistyping  :q as q: (command-line window -> :h cmdwin)
 nnoremap q: <Nop>
 nnoremap q/ <Nop>
