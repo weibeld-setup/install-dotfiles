@@ -76,8 +76,11 @@ nnoremap <leader>v :source ~/.vimrc<CR>
 nnoremap <leader>V :edit ~/.vimrc<CR>
 nnoremap <leader>r :redir 
 nnoremap <leader>R :redir END<CR>
-nnoremap <leader>> i→
-nnoremap <leader>< i←
+" Special characters
+nnoremap <leader>> i→<ESC>
+nnoremap <leader>< i←<ESC>
+nnoremap <leader>o i⌥<ESC>
+nnoremap <leader>c i⌘<ESC>
 " Prevent mistyping  :q as q: (command-line window -> :h cmdwin)
 nnoremap q: <Nop>
 nnoremap q/ <Nop>
