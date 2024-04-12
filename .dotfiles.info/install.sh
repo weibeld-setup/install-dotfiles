@@ -11,7 +11,9 @@ echo "> Cloning repository..."
 git clone --quiet --bare https://github.com/weibeld-setup/install-dotfiles "$git_dir"
 
 # List files/dirs that will be replaced by checkout
-repo_files=($(git --git-dir="$git_dir" --work-tree="$work_tree" ls-tree --name-only HEAD))
+# If --work-tree is present, output is empty
+#repo_files=($(git --git-dir="$git_dir" --work-tree="$work_tree" ls-tree --name-only HEAD))
+repo_files=($(git --git-dir="$git_dir" ls-tree --name-only HEAD))
 conflict_files=()
 for f in "${repo_files[@]}"; do
   [[ -e ~/"$f" ]] && conflict_files+=("$f")
