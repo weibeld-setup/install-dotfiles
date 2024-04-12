@@ -8,7 +8,7 @@ git_dir=$HOME/.dotfiles.git
 work_tree=$HOME
 
 echo "> Cloning repository..."
-git clone --quiet --bare https://github.com/weibeld-setup/install-dotfiles-test "$git_dir"
+git clone --quiet --bare https://github.com/weibeld-setup/install-dotfiles "$git_dir"
 
 # List files/dirs that will be replaced by checkout
 repo_files=($(git --git-dir="$git_dir" --work-tree="$work_tree" ls-tree --name-only HEAD))
