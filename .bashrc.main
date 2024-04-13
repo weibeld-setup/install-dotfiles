@@ -150,14 +150,14 @@ complete -c t
 # Dotfiles
 #------------------------------------------------------------------------------#
 
-alias df='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
-alias ds='df status'
-alias dl='df log'
-alias da='df add'
-alias dr='df rm'
-alias dco='df commit'
-alias dp='df push'
-alias ddi='df diff'
+alias df='git --git-dir "$HOME"/.dotfiles.git --work-tree "$HOME"'
+alias dfs='df status'
+alias dfl='df log'
+alias dfa='df add'
+alias dfr='df rm'
+alias dfc='df commit'
+alias dfp='df push'
+alias dfd='df diff'
 
 #=------------------------------------------------------------------------------#
 # Prompt
@@ -357,8 +357,15 @@ clip() {
 }
 
 #=-----------------------------------------------------------------------------#
-# Shell input
+# Shell setup
 #------------------------------------------------------------------------------#
+
+# Works with tmux (xterm-256color-italic may cause tmux to fail)
+export TERM=xterm-256color
+export EDITOR=vim
+# Increase history size (default is 500)
+export HISTSIZE=5000
+export HISTFILESIZE=5000
 
 # Readline configuration
 # https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
@@ -377,14 +384,6 @@ vi-mode-off() {
   bind 'set editing-mode emacs'  # Equivalent to 'set +o vi'
   bind 'set show-mode-in-prompt off'
 }
-
-#=-----------------------------------------------------------------------------#
-# Shell history
-#------------------------------------------------------------------------------#
-
-# Increase history size (default is 500)
-export HISTSIZE=5000
-export HISTFILESIZE=5000
 
 # Search through the central history file (see PROMPT_COMMAND) and either
 # print or directly execute the selected command

@@ -21,6 +21,10 @@ if [[ -f ~/.bashrc.lib ]]; then
   . ~/.bashrc.lib
 fi
 
+# TODO:
+# - Put content of .bashrc.main here
+# - Rename .bashrc.path and .bashrc.lib to .bashrc.init.path and .bashrc.init.lib
+# - Rename other .bashrc.* files to .bashrc.topic.*
 # Source general .bashrc.* file
 if [[ -f ~/.bashrc.main ]]; then
   . ~/.bashrc.main
