@@ -26,16 +26,16 @@ append-to-path()  {
   fi
 }
 
-# Remove duplicated entries and non-existing directories from the PATH
+# Remove duplicated and non-existing items from PATH
 # Usage: PATH=$(clean-path)
 clean-path() {
-  declare -A a
-  echo "$PATH" | tr : '\n' | while read e; do
-    if [[ -z "${a[$e]}" && -d "$e" ]]; then
-      echo "$e"
-      a["$e"]=1
-    else
-      echo "Duplicate or invalid PATH entry: $e" 1>&2
+  declare -A seen
+  echo "$PATH" | tr : '\n' | while read item; do
+    if [[ -z "${seen[$item]}" && -d "$item" ]]; then
+      echo "$item"
+      seen["$item"]=1
+    #else
+    #  echo "Detected duplicate or invalid PATH item: $item" 1>&2
     fi
   done | tr '\n' : | sed 's/:$/\n/'
 }
