@@ -19,6 +19,12 @@ git_dir=$HOME/.dotfiles.git
 # Workspace directory (where files are checked out)
 work_tree=$HOME
 
+if [[ -d "$git_dir" ]]; then
+  echo "Error: the directory '$git_dir' already exists"
+  echo "Are the dotfiles already installed?"
+  exit 1
+fi
+
 echo "> Cloning repository..."
 git clone --quiet --bare https://github.com/weibeld-setup/install-dotfiles "$git_dir"
 
