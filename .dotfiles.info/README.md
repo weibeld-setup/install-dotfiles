@@ -10,6 +10,9 @@ Dotfiles repository with support for Git submodules.
 ![macOS](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/macos.svg)
 ![Linux](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/linux.svg)
 
+
+> TODO: must download and execute the script, otherwise the interactive prompt doesn't work (gets auto-approved).
+
 Run the [`install.sh`](.dotfiles.info/install.sh) script with Bash from anywhere on the system:
 
 ```bash
