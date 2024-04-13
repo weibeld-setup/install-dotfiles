@@ -9,6 +9,7 @@
         # Convert CRLF to LF on commit, but not the other way around on checkout
         # https://git-scm.com/docs/git-config#Documentation/git-config.txt-coreautocrlf
         autocrlf = input
+	editor = vim
 [mergetool]
         # Don't keep file with conflict markers in case of merge conflict
         # https://git-scm.com/docs/git-config#Documentation/git-config.txt-mergetoolkeepBackup
