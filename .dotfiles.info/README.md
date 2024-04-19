@@ -10,13 +10,12 @@ Dotfiles repository with support for Git submodules.
 ![macOS](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/macos.svg)
 ![Linux](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/linux.svg)
 
-
-> TODO: must download and execute the script, otherwise the interactive prompt doesn't work (gets auto-approved).
-
 Run the [`install.sh`](.dotfiles.info/install.sh) script with Bash from anywhere on the system:
 
 ```bash
-curl -s https://raw.githubusercontent.com/weibeld-setup/install-dotfiles/master/.dotfiles.info/install.sh | bash
+curl -s https://raw.githubusercontent.com/weibeld-setup/install-dotfiles/master/.dotfiles.info/install.sh >install.sh
+chmod +x install.sh
+./install.sh
 ```
 
 > **Note:** if there are name conflicts with existing files on the system, the `install.sh` script pauses and prompts you to back up these files before proceeding. Any local files and directories in the `$HOME` directory with the same name as a file or directory in this repository will be deleted and replaced by the version from this repository.

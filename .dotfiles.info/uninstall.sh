@@ -12,8 +12,8 @@ git_dir=$HOME/.dotfiles.git
 work_tree=$HOME
 
 if [[ ! -d "$git_dir" ]]; then
-  echo "Error: no dotfiles repository at '$git_dir' detected"
-  echo "Are the dotfiles really installed?"
+  echo "Error: the dotfiles repository '$git_dir' doesn't exist"
+  echo "> Are the dotfiles not installed?"
   exit 1  
 fi
 
@@ -21,19 +21,19 @@ fi
 echo "> Deleting files..."
 git --git-dir "$git_dir" ls-files |
   while read f; do
-    echo "  - $f"
+    echo "    $f"
     # ls-files also lists submodule directories, hence 'rm -rf' must be used
     rm -rf "$work_tree/$f"
   done
 
 # Delete directories that don't contain any files
 echo "> Deleting empty directories..."
-git ls-tree -rd --format '%(objecttype) %(path)' HEAD |
+git --git-dir "$git_dir" ls-tree -rd --format '%(objecttype) %(path)' HEAD |
   grep '^tree ' |
   sed 's/^tree //' |
   while read d; do
     if [[ -d "$work_tree/$d" && -z $(find "$work_tree/$d" -not -type d) ]]; then
-      echo "  - $d"
+      echo "    $d"
       rm -rf "$work_tree/$d"
     fi
   done
