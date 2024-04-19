@@ -12,8 +12,8 @@ git_dir=$HOME/.dotfiles.git
 work_tree=$HOME
 
 if [[ ! -d "$git_dir" ]]; then
-  echo "Error: the dotfiles repository '$git_dir' doesn't exist"
-  echo "> Are the dotfiles not installed?"
+  echo "Error: dotfiles repository '$git_dir' not found"
+  echo "> Are the dotfiles actually installed?"
   exit 1  
 fi
 
@@ -41,3 +41,5 @@ git --git-dir "$git_dir" ls-tree -rd --format '%(objecttype) %(path)' HEAD |
 # Delete repository directory
 echo "> Deleting repository '~/.dotfiles.git'"
 rm -rf "$git_dir"
+
+echo "✅ UNINSTALLATION COMPLETE"

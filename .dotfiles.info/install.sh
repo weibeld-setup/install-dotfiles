@@ -13,33 +13,38 @@ check-name-conflicts() {
     for f in "${conflict_files[@]}"; do
       echo "    $f"
     done
-    echo "> You have the following options:"
-    echo "  1) Overwrite conflicting files (directories will be merged)"
-    echo "  2) Launch dialog to back up conflicting files, then proceed with (1)"
-    echo "  3) Rerun the name conflicts check"
-    echo "  4) Abort the installation (no changes will be applied)"
     prompt
   fi
 }
 
 prompt() {
+  echo "> You have the following options:"
+  echo "  1) Overwrite conflicting files (directories will be merged)"
+  echo "  2) Launch dialog to back up conflicting files, then proceed with (1)"
+  echo "  3) Rerun the name conflicts check"
+  echo "  4) Abort the installation (no changes will be applied)"
   read -p "> Reponse: " response
   case "$response" in
     1) ;;
     2)
-      read -p "> Backup directory (default '$work_tree/.dotfiles.backup'): " response
-      backup_dir=${response:-$work_tree/.dotfiles.backup}
-      echo "> Copying directories/files to '$backup_dir':"
-      mkdir -p "$backup_dir" || { echo "> Error creating backup directory"; prompt; }
+      default_backup_dir=$work_tree/dotfiles.backup
+      read -p "  > Backup directory (default '$default_backup_dir'): " response
+      backup_dir=${response:-$default_backup_dir}
+      echo "  > Copying directories/files to '$backup_dir':"
+      rm -rf "$backup_dir" && mkdir -p "$backup_dir" || { echo "  > Error creating backup directory"; prompt; }
       for f in "${conflict_files[@]}"; do
-        echo "    $work_tree/$f => $backup_dir/$f"
+        echo "      $work_tree/$f => $backup_dir/$f"
         cp -r "$work_tree/${f%/}" "$backup_dir" 2>/dev/null
       done
+      backup_readme=$backup_dir/README
+      date -Iseconds >"$backup_readme"
+      echo "Backed up by https://github.com/weibeld-setup/install-dotfiles/blob/master/.dotfiles.info/install.sh" >>"$backup_readme"
       ;;
     3) check-name-conflicts ;;
     4)
-      echo "> Aborting..."
+      echo "> Deleting repository '$git_dir'..."
       rm -rf "$git_dir"
+      echo "❌ INSTALLATION ABORTED"
       exit
       ;;
     *) prompt ;;
@@ -86,3 +91,5 @@ fi
 
 # Set config option for local repo to omit untracked files from 'git status'
 git --git-dir="$git_dir" --work-tree="$work_tree" config status.showUntrackedFiles no
+
+echo "✅ INSTALLATION COMPLETE"
