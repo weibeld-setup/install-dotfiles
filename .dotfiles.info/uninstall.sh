@@ -4,11 +4,18 @@
 #------------------------------------------------------------------------------#
 
 set -e
+set -o pipefail
 
 # Git repository directory (.git directory)
 git_dir=$HOME/.dotfiles.git
 # Workspace directory (where files are checked out)
 work_tree=$HOME
+
+if [[ ! -d "$git_dir" ]]; then
+  echo "Error: no dotfiles repository at '$git_dir' detected"
+  echo "Are the dotfiles really installed?"
+  exit 1  
+fi
 
 # Delete all files and submodule directories
 echo "> Deleting files..."
