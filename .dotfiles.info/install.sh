@@ -30,6 +30,7 @@ prompt() {
       default_backup_dir=$work_tree/dotfiles.backup
       read -p "  > Backup directory (default '$default_backup_dir'): " response
       backup_dir=${response:-$default_backup_dir}
+      backup_dir=${backup_dir/#\~/$HOME}
       echo "  > Copying directories/files to '$backup_dir':"
       rm -rf "$backup_dir" && mkdir -p "$backup_dir" || { echo "  > Error creating backup directory"; prompt; }
       for f in "${conflict_files[@]}"; do
