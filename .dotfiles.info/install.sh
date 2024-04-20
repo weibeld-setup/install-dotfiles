@@ -78,19 +78,19 @@ echo "> Checking out files and directories to '$work_tree':"
 for f in "${repo_files[@]}"; do
   echo "    $f"
 done
-git --git-dir="$git_dir" --work-tree="$work_tree" checkout -f
+git --git-dir "$git_dir" --work-tree "$work_tree" checkout -f
 
 # Check out submodules
-submodules=($(git --git-dir="$git_dir" --work-tree="$work_tree" submodule status | awk '{print $2}'))
+submodules=($(git -C "$work_tree" --git-dir "$git_dir" --work-tree "$work_tree" submodule status | awk '{print $2}'))
 if [[ "${#submodules[@]}" -gt 0 ]]; then
-  echo "> Checking out submodules:" 
+  echo "> Checking out submodules in '$work_tree':" 
   for s in "${submodules[@]}"; do
-    echo "    $(basename $s)"
-    git --git-dir="$git_dir" --work-tree="$work_tree" submodule --quiet update --init "$s"
+    echo "    $s"
+    git -C "$work_tree" --git-dir "$git_dir" --work-tree "$work_tree" submodule --quiet update --init "$s"
   done
 fi
 
 # Set config option for local repo to omit untracked files from 'git status'
-git --git-dir="$git_dir" --work-tree="$work_tree" config status.showUntrackedFiles no
+git --git-dir "$git_dir" --work-tree "$work_tree" config status.showUntrackedFiles no
 
 echo "✅ INSTALLATION COMPLETE"
