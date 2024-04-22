@@ -19,9 +19,6 @@
 [submodule ".vim/plugged/tabular"]
 	path = .vim/plugged/tabular
 	url = https://github.com/godlygeek/tabular
-[submodule ".vim/plugged/neoai.nvim"]
-	path = .vim/plugged/neoai.nvim
-	url = https://github.com/Bryley/neoai.nvim
 [submodule ".vim/plugged/kotlin-vim"]
 	path = .vim/plugged/kotlin-vim
 	url = https://github.com/udalov/kotlin-vim
