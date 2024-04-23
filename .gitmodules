@@ -4,30 +4,15 @@
 [submodule ".vim/plugged/vim-table-mode"]
 	path = .vim/plugged/vim-table-mode
 	url = https://github.com/dhruvasagar/vim-table-mode
-[submodule ".vim/plugged/wiki.vim"]
-	path = .vim/plugged/wiki.vim
-	url = https://github.com/lervag/wiki.vim
 [submodule ".vim/plugged/vim-terraform"]
 	path = .vim/plugged/vim-terraform
 	url = https://github.com/hashivim/vim-terraform
-[submodule ".vim/plugged/vim-bicep"]
-	path = .vim/plugged/vim-bicep
-	url = https://github.com/carlsmedstad/vim-bicep
 [submodule ".vim/plugged/vim-markdown-toc"]
 	path = .vim/plugged/vim-markdown-toc
 	url = https://github.com/mzlogin/vim-markdown-toc
-[submodule ".vim/plugged/tabular"]
-	path = .vim/plugged/tabular
-	url = https://github.com/godlygeek/tabular
-[submodule ".vim/plugged/codeium.vim"]
-	path = .vim/plugged/codeium.vim
-	url = https://github.com/Exafunction/codeium.vim
-[submodule ".vim/plugged/neoai.nvim"]
-	path = .vim/plugged/neoai.nvim
-	url = https://github.com/Bryley/neoai.nvim
-[submodule ".vim/plugged/nui.nvim"]
-	path = .vim/plugged/nui.nvim
-	url = https://github.com/MunifTanjim/nui.nvim
 [submodule ".vim/plugged/kotlin-vim"]
 	path = .vim/plugged/kotlin-vim
 	url = https://github.com/udalov/kotlin-vim
+[submodule ".vim/plugged/tabular"]
+	path = .vim/plugged/tabular
+	url = https://github.com/godlygeek/tabular

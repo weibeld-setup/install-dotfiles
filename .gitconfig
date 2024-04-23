@@ -6,7 +6,7 @@
         useConfigOnly = true
 [core]
 	excludesfile = ~/.gitignore_global
-        # Convert CRLF to LF on commit, but not the other way around on checkout
+        # Convert CR/LF to LF on commit, but not the other way around on checkout
         # https://git-scm.com/docs/git-config#Documentation/git-config.txt-coreautocrlf
         autocrlf = input
 	editor = vim
@@ -24,3 +24,6 @@
 	helper = /usr/local/bin/git-credential-manager
 [credential "https://dev.azure.com"]
 	useHttpPath = true
+[alias]
+	co = checkout
+        sm = submodule
