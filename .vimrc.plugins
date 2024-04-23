@@ -1,26 +1,40 @@
 " .vimrc.plugins
 "
-" Plugin declarations and configurations using vim-plug [1,2]
-" Notes:
-" - Installing a plugin: 
-"     1. Declare plugin in this file
-"          Plug '<plugin>'
-"     2. Reload .vimrc file
-"     3. Install the plugin
-"          :PlugInstall
-"     4. Add submodule
-"     TODO: improve
-"     4. Change to $HOME  $ cd ~
-"     5. Add submodule    $ df submodule add <url> .vim/plugged/<plugin>
-"     6. Commit           $ df add ~/.vimrc.plugins
-"                         $ df commit
-" - Uninstalling a plugin:
-"   1. Remove corresponding section from this file
-"   2. $ df rm <submodule-path>
+" Plugin management with vim-plug (https://github.com/junegunn/vim-plug).
 "
-" References:
-"   [1] https://github.com/junegunn/vim-plug
-"   [2] https://github.com/junegunn/vim-plug/wiki
+" Install a new plugin:
+"
+"   1. Declare plugin in this file
+"   2. Reload .vimrc file:
+"      ```
+"      :source ~/.vimrc
+"      ```
+"   3. Install the plugin (clones repository to ~/.vim/plugged/<plugin-dir>):
+"      ```
+"      :PlugInstall
+"      ```
+"   4. Add submodule to dotfiles repository:
+"      ```
+"      df -C "$HOME" submodule add <repo-url> .vim/plugged/<plugin-dir>
+"      ```
+"   5. Commit all changes
+"      ```
+"      df add ...
+"      df commit
+"      ```
+"
+" Delete an existing plugin:
+"
+"   1. Delete plugin declaration in this file
+"   2. Delete the submodule:
+"      ```
+"      df rm <submodule-path>
+"      ```
+"   3. Commit all changes
+"      ```
+"      df add ...
+"      df commit
+"      ```
 "------------------------------------------------------------------------------"
 
 " Set plugin directory (Neovim default is ~/.local/share/nvim/plugged)
