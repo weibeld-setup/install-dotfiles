@@ -15,6 +15,9 @@
 "     6. Commit           $ df add ~/.vimrc.plugins
 "                         $ df commit
 " - Uninstalling a plugin:
+"   1. Remove corresponding section from this file
+"   2. $ df rm <submodule-path>
+"
 " References:
 "   [1] https://github.com/junegunn/vim-plug
 "   [2] https://github.com/junegunn/vim-plug/wiki
@@ -45,11 +48,6 @@ Plug 'kana/vim-submode'
 Plug 'dhruvasagar/vim-table-mode'
 let g:table_mode_map_prefix = '<leader>m'
 let g:table_mode_corner='|'
-
-"=============================================================================="
-"++https://github.com/godlygeek/tabular
-"=============================================================================="
-Plug 'godlygeek/tabular'
 
 "=============================================================================="
 "++https://github.com/mzlogin/vim-markdown-toc
