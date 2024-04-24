@@ -26,6 +26,9 @@ bash <(curl https://raw.githubusercontent.com/weibeld-setup/install-dotfiles/mas
 
 ## Usage
 
+![macOS](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/macos.svg)
+![Linux](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/linux.svg)
+
 The dotfiles repository is installed as a [bare Git repository](https://git-scm.com/book/en/v2/Git-on-the-Server-Getting-Git-on-a-Server) in `$HOME/.dotfiles.git` with the workspace in `$HOME` (see [_Installation method_](#installation-method) for more details).
 
 This requires specifying the location of both the repository directory and the workspace directory to Git, which can be done as follows:
