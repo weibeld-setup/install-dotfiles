@@ -19,11 +19,11 @@ check-name-conflicts() {
 
 prompt() {
   echo "> You have the following options:"
-  echo "  1) Overwrite conflicting files (directories will be merged)"
-  echo "  2) Launch dialog to back up conflicting items, then proceed with (1)"
-  echo "  3) Rerun the name conflicts check"
-  echo "  4) Abort the installation (all changes will be reverted)"
-  read -p "> Reponse: " response
+  echo "    1) Overwrite conflicting files (directories will be merged)"
+  echo "    2) Launch dialog to back up conflicting items, then proceed with (1)"
+  echo "    3) Rerun the name conflicts check"
+  echo "    4) Abort the installation (all changes will be reverted)"
+  read -p "> Response: " response
   case "$response" in
     1) ;;
     2)
