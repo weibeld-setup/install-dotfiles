@@ -3,7 +3,7 @@
 ![macOS](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/macos.svg)
 ![Linux](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/linux.svg)
 
-Dotfiles covering Bash, Vim, and tmux, with support for Git submodules.
+Dotfiles covering Bash, Vim, tmux, and Git—compatible with macOS and Linux.
 
 ![Bash](https://github.com/weibeld-setup/.github/blob/main/img/logos/bash-small.png)&nbsp;&nbsp;&nbsp;&nbsp;
 ![Vim](https://github.com/weibeld-setup/.github/blob/main/img/logos/vim-small.png)&nbsp;&nbsp;&nbsp;&nbsp;
@@ -34,21 +34,7 @@ bash <(curl https://raw.githubusercontent.com/weibeld-setup/install-dotfiles/mas
 ![macOS](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/macos.svg)
 ![Linux](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/linux.svg)
 
-The dotfiles repository is installed as a [bare Git repository](https://git-scm.com/book/en/v2/Git-on-the-Server-Getting-Git-on-a-Server) in `$HOME/.dotfiles.git` with the workspace in `$HOME` (see [_Installation method_](#installation-method) for more details).
-
-This requires specifying the location of both the repository directory and the workspace directory to Git, which can be done as follows:
-
-```bash
-git --git-dir="$HOME"/.dotfiles.git --work-tree="$HOME"
-```
-
-The [`.bashrc.main`](../.bashrc.main) file in this repository defines the alias `df` for exactly that command:
-
-```bash
-alias df='git --git-dir="$HOME"/.dotfiles.git --work-tree="$HOME"'
-```
-
-This alias is the **recommended way** to interact with the dotfiles repository. It can be used in a similar way as the `git` command on its own, for example:
+To manage the installed dotfiles through the dotfiles Git repository, use the `df` alias just like the `git` command:
 
 ```bash
 df status
@@ -58,22 +44,38 @@ df push
 df pull
 ```
 
-> **Note:** thanks to the fact that all paths are explicitly declared in the alias command, the above alias can be used **from anywhere on the system**.
+The `df` alias can be used as-is from any working directory of the system.
+
+> **Note:** to manage the Git submodules in the dotfiles repository, see [_Git submodules and Vim plugins_](#git-submodules-and-vim-plugins).
+
+### Background
+
+The dotfiles repository is installed as a [bare Git repository](https://git-scm.com/book/en/v2/Git-on-the-Server-Getting-Git-on-a-Server) in `$HOME/.dotfiles.git` with the workspace directory in `$HOME` (that is, the dotfiles themselves are checked out to `$HOME`).
+
+The `df` alias is defined in [`.bashrc.main`](../.bashrc.main) as follows:
+
+```bash
+git --git-dir="$HOME"/.dotfiles.git --work-tree="$HOME"
+```
+
+That means, the `df` command is essentially a `git` command where the location of the Git repository directory (`$HOME/.dotfiles.git`) and the workspace directory (`$HOME`) are explicitly specified (which is required for bare Git repositories).
 
 ## Notes
 
 ### Installation method
 
-The dotfiles repository is installed as a [bare Git repository](https://git-scm.com/book/en/v2/Git-on-the-Server-Getting-Git-on-a-Server) with the following directories:
+The [`install.sh`](install.sh) script clones this repository as a [bare Git repository](https://git-scm.com/book/en/v2/Git-on-the-Server-Getting-Git-on-a-Server) to **`$HOME/.dotfiles.git`** and checks out the dotfiles to **`$HOME`**.
 
-- The **repository directory** is **`$HOME/.dotfiles.git`**
-- The **workspace directory** is **`$HOME`**
+That means that, after installation, the dotfiles repository exists a bare Git repository with:
+
+- The **repository directory** in **`$HOME/.dotfiles.git`**
+- The **workspace directory** in **`$HOME`**
 
 > **Note:** `$HOME` is the home directory of the user who executes the `install.sh` script.
 
 The **repository directory** is the directory where the internal Git repository files reside. The **workspace directory** is the directory where the repository files are checked out and tracked.
 
-Essentially, this means that the dotfiles are checked out to the user's `$HOME` directory, and the repository itself is managed in `$HOME/.dotfiles.git`.
+This installation method allows managing the installed dotfiles directly in the dotfiles Git repository, without any exports/imports, symlinks, etc.
 
 > **Note:** see [_Frequently asked questions (FAQ)_](#frequently-asked-questions-faq) for more information about bare Git repositories, and why a bare Git repository is used.
 
