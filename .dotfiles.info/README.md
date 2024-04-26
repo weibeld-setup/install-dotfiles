@@ -5,6 +5,11 @@
 
 Dotfiles covering Bash, Vim, and tmux, with support for Git submodules.
 
+![Bash](https://github.com/weibeld-setup/.github/blob/main/img/logos/bash-small.png)&nbsp;&nbsp;&nbsp;&nbsp;
+![Vim](https://github.com/weibeld-setup/.github/blob/main/img/logos/vim-small.png)&nbsp;&nbsp;&nbsp;&nbsp;
+![tmux](https://github.com/weibeld-setup/.github/blob/main/img/logos/tmux-small.png)&nbsp;&nbsp;&nbsp;&nbsp;
+![Git](https://github.com/weibeld-setup/.github/blob/main/img/logos/git-small.png)&nbsp;&nbsp;&nbsp;&nbsp;
+
 ## Installation
 
 ![macOS](https://raw.githubusercontent.com/weibeld-setup/.github/main/badge/macos.svg)
