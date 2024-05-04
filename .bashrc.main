@@ -360,6 +360,10 @@ clip() {
 # Shell setup
 #------------------------------------------------------------------------------#
 
+# Set locale
+# Note: see all available locales with 'locale -a'
+export LC_ALL=en_GB.UTF-8
+
 # Works with tmux (xterm-256color-italic may cause tmux to fail)
 export TERM=xterm-256color
 export EDITOR=vim
@@ -572,7 +576,7 @@ rand() {
   fi
   local length=${1:-8}
   if [[ ! "$length" =~ [0-9]+ ]]; then
-    _print-error-msg "Length must be a number but found '$length'"
+    _err "Length must be a number but found '$length'"
     return 1
   fi
   local str
@@ -594,7 +598,7 @@ rand() {
 unicode() {
   local char=$(_get-input "$@")
   if [[ "${#char}" -ne 1 ]]; then
-    _print-error-msg "Argument must be a single character"
+    _err "Argument must be a single character"
     return 1
   fi
   echo -n "$char" | iconv -f UTF-8 -t UTF-32BE | xxd -p | sed -r 's/^0+/0x/' | xargs printf 'U+%04X\n'
@@ -610,6 +614,10 @@ enc() {
 enc-type() {
   echo $LC_CTYPE
 }
+
+# TODO: set LC_* variables:
+#   - Display values with `locale`
+#   - Display all available locales with `locale -a | sort`
 
 #=-----------------------------------------------------------------------------#
 # Number processing

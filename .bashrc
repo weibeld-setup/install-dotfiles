@@ -11,14 +11,14 @@ shopt -s direxpand
 shopt -s histappend
 set -o pipefail
 
-# Source PATH setup
-if [[ -f ~/.bashrc.path ]]; then
-  . ~/.bashrc.path
-fi
-
 # Source shell function library
 if [[ -f ~/.bashrc.lib ]]; then
   . ~/.bashrc.lib
+fi
+
+# Source PATH setup
+if [[ -f ~/.bashrc.path ]]; then
+  . ~/.bashrc.path
 fi
 
 # TODO:
@@ -34,8 +34,5 @@ fi
 for f in ~/.bashrc.!(path|lib|main); do
   [[ -f "$f" ]] && . "$f"
 done
-
-# Clean PATH
-PATH=$(clean-path)
 
 # Auto-added code below this line

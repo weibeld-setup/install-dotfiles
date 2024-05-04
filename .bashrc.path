@@ -3,53 +3,12 @@
 # PATH setup
 #------------------------------------------------------------------------------#
 
-#------------------------------------------------------------------------------#
-# PATH manipulation functions
-#------------------------------------------------------------------------------#
+# TODO: add to .bashrc
 
-# Check whether a specific PATH entry exists
-has-path() {
-  [[ ":$PATH:" =~ ":$1:" ]]
-}
+# Can't use 'brew --prefix' because 'brew' is not yet in the PATH
+_path-prepend /opt/homebrew/bin
+#_path-append "$HOME"/google-cloud-sdk/bin
 
-# Prepend entry to PATH if it's a valid directory and isn't already in the PATH
-prepend-to-path() {
-  if [[ -d "$1" ]] && ! has-path "$1"; then
-    PATH="$1:$PATH"
-  fi
-}
-
-# Append entry to PATH if it's a valid directory and isn't already in the PATH
-append-to-path()  {
-  if [[ -d "$1" ]] && ! has-path "$1"; then
-    PATH="$PATH:$1"
-  fi
-}
-
-# Remove duplicated and non-existing items from PATH
-# Usage: PATH=$(clean-path)
-clean-path() {
-  declare -A seen
-  echo "$PATH" | tr : '\n' | while read item; do
-    if [[ -z "${seen[$item]}" && -d "$item" ]]; then
-      echo "$item"
-      seen["$item"]=1
-    #else
-    #  echo "Detected duplicate or invalid PATH item: $item" 1>&2
-    fi
-  done | tr '\n' : | sed 's/:$/\n/'
-}
-
-#------------------------------------------------------------------------------#
-# PATH entries
-#------------------------------------------------------------------------------#
-
-prepend-to-path "$HOME"/.local/bin
-prepend-to-path /opt/homebrew/bin
-append-to-path "$HOME"/google-cloud-sdk/bin
-
-#------------------------------------------------------------------------------#
-# Clean PATH
-#------------------------------------------------------------------------------#
-
-PATH=$(clean-path)
+# Delete duplicate and invalid PATH entries (non-existing directories)
+_path-uniq
+_path-rectify
