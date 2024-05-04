@@ -11,9 +11,13 @@ shopt -s direxpand
 shopt -s histappend
 set -o pipefail
 
+declare file
+
 # Source shell function library
-if [[ -f ~/.bashrc.lib ]]; then
-  . ~/.bashrc.lib
+if [[ -d ~/.bashrc.lib ]]; then
+  for file in ~/.bashrc.lib/*.bash; do
+    . "$file"
+ done
 fi
 
 # Source PATH setup
@@ -31,8 +35,10 @@ if [[ -f ~/.bashrc.main ]]; then
 fi
 
 # Source all other .bashrc.* files
-for f in ~/.bashrc.!(path|lib|main); do
-  [[ -f "$f" ]] && . "$f"
+for file in ~/.bashrc.!(path|lib|main); do
+  [[ -f "$file" ]] && . "$file"
 done
+
+unset file
 
 # Auto-added code below this line
