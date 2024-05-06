@@ -1,7 +1,5 @@
 # Array processing (indexed arrays only)
 
-echo "Sourcing ~/.bashrc.lib/array.bash"
-
 # TODO: complete argument checks for all functions:
 #   - type of arguments
 #   - number or arguments
