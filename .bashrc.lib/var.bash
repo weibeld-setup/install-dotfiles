@@ -1,3 +1,8 @@
+#==============================================================================#
+## Indicate sourcing of file
+#==============================================================================#
+export SOURCED_BASHRC_LIB_VAR=1
+
 # List and filter variables
 # Usage:
 #   _list-vars [-nNvV <pat>] [-tT <attr>] [-l <len>] [-fs] [-c <cols>]

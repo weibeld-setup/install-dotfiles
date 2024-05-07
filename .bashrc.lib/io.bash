@@ -1,3 +1,8 @@
+#==============================================================================#
+## Indicate sourcing of file
+#==============================================================================#
+export SOURCED_BASHRC_LIB_IO=1
+
 # If no arguments are provided, print stdin, else print the arguments.
 # Usage:
 #   _get-input [<args>...]

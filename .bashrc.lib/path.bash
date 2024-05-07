@@ -1,11 +1,16 @@
+#==============================================================================#
+## Indicate sourcing of file
+#==============================================================================#
+export SOURCED_BASHRC_LIB_PATH=1
+
 #------------------------------------------------------------------------------#
-#= PATH manipulation
+## PATH manipulation
 #------------------------------------------------------------------------------#
 
 # Print the current value of PATH
 # Usage:
 #   _path
-_path() {
+_path-get() {
   echo "$PATH"
 }
 
@@ -20,23 +25,6 @@ _path() {
 _path-parse() {
   # TODO: check that $1 is a valid variable name
   _array-parse "$1" : <<<"$PATH"
-}
-
-# Check whether PATH contains an entry that matches the specified pattern
-# Usage:
-#   _path-has <pat>
-# Args:
-#   <pat>: regex pattern 
-# Notes:
-#   - The value of <pat> may be any valid regex. The regex is automatically
-#     anchored with ^ and $ at the beginning and end, respectively.
-# Examples:
-#   Test whether PATH contains any entries containing the substring 'homebrew':
-#     _path-has '.*homebrew.*'
-_path-has() {
-  local -a path
-  _path-parse path
-  _array-has path "$1"
 }
 
 # Delete duplicate entries from PATH
@@ -139,4 +127,3 @@ _path-rm() {
   _array-rm path path "$@"
   PATH=$(_array-ls path :)
 }
-

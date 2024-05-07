@@ -1,13 +1,7 @@
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
-# These functions check a condition and return either 0 (true) or 1 (false).
-#
-# Usage example:
-#
-#   if _is-XXX; then
-#     ...
-#   fi
-#
-#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+#==============================================================================#
+## Indicate sourcing of file
+#==============================================================================#
+export SOURCED_BASHRC_LIB_BOOLEAN=1
 
 # Check whether running on macOS
 _is-mac() {
@@ -32,6 +26,20 @@ _is-wsl() {
 #     of a command to use than _is-mac and _is-linux
 #   - Create _is-debian (and _is-homebrew) to check for which package management
 #     solution is used
+
+
+# TODO:
+#   - _is-set: take variable name
+#   - _is-value: take value
+
+# Check whether the variable with the provided name is set (i.e. non-empty)
+# Notes:
+#   - Returns 1 (false) if no variable with the provided name exists.
+_has-value() {
+  _is-var-name "$1" || return 1
+  local -n __ref=$1
+  _is-set "$__ref"
+}
 
 # Check whether the provided value is set (i.e. non-empty)
 # Notes:
@@ -70,15 +78,6 @@ _is-pos-int() {
 # Check whether a number is a negative integer
 _is-neg-int() {
   [[ "$1" =~ ^-[0-9]+$ ]]
-}
-
-# Check whether the variable with the provided name is set (i.e. non-empty)
-# Notes:
-#   - Returns 1 (false) if no variable with the provided name exists.
-_has-value() {
-  _is-var-name "$1" || return 1
-  local -n __ref=$1
-  _is-set "$__ref"
 }
 
 # Check whether there is a variable with the provided name
@@ -163,4 +162,52 @@ _is-homebrew-poured() {
 # restrictions, not whether a variable with that name is declared or assigned.
 _is-var-name() {
   [[ "$1" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]
+}
+
+# Check whether PATH contains an entry matching the specified pattern
+# Usage:
+#   _is-in-path <pat>
+# Args:
+#   <pat>: regex pattern 
+# Notes:
+#   - The value of <pat> may be any valid regex. The regex is automatically
+#     anchored with ^ and $. That means, "foo" matches the exact entry "foo".
+#     To match any substring "foo", use ".*foo.*".
+# Examples:
+#   Test whether PATH contains any entries containing the substring 'homebrew':
+#     _is-in-path '.*homebrew.*'
+_is-in-path() {
+  local -a path
+  _path-parse path
+  _array-has path "$1"
+}
+
+# Check whether a bashrc file has been sourced in the current shell
+# Usage:
+#   _is-sourced-bashrc <path>
+# Args:
+#   <path>: path to the bashrc file
+# Notes:
+#   - An absolute or relative path may be supplied for <path>
+#   - If <path> is a non-existing file or not a bashrc file, false is returned
+_is-sourced-bashrc() {
+  # Note: this function depends on:
+  #   1. The SOURCED_* environment variable being set by every bashrc file
+  #   2. The directory and file naming convention for all bashrc files
+  _ensure-installed realpath || return 1
+  # TODO: check exactly one argument
+  # If non-existing file or not a bashrc file, return false
+  path=$(realpath -q "$1") && _bashrc-list | grep -q "^$path$" || return 1
+  # Extract bashrc base name (e.g. .bashrc => "bashrc", foo.bash => "foo")
+  local bashrc_name=$(basename "$path" | sed 's/^\.//;s/\..*$//')
+  local var_name=SOURCED_BASHRC
+  case "$path" in
+    */.bashrc.lib/*)
+      var_name=${var_name}_LIB_${bashrc_name^^}
+      ;;
+    */.bashrc.topic/*)
+      var_name=${var_name}_TOPIC_${bashrc_name^^}
+      ;;
+  esac
+  _has-value "$var_name"
 }

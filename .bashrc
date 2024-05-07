@@ -7,7 +7,12 @@
 #==============================================================================#
 
 #==============================================================================#
-#=: Function library .bashrc files
+## Indicate sourcing of file
+#==============================================================================#
+export SOURCED_BASHRC=1
+
+#==============================================================================#
+## Function library .bashrc files
 #==============================================================================#
 
 for f in ~/.bashrc.lib/*.bash; do
@@ -16,7 +21,7 @@ done
 unset f
 
 #==============================================================================#
-#=: PATH
+## PATH
 #==============================================================================#
 
 # Homebrew (can't use 'brew --prefix' because 'brew' is not yet in the PATH)
@@ -27,7 +32,7 @@ _path-uniq
 _path-rectify
 
 #==============================================================================#
-#=: Shell options
+## Shell options
 #==============================================================================#
 
 #==============================================================================#
@@ -52,7 +57,7 @@ shopt -s histappend
 set -o pipefail
 
 #==============================================================================#
-#=: Shell setup
+## Shell setup
 #==============================================================================#
 
 # Set locale
@@ -99,7 +104,7 @@ hist() {
 }
 
 #==============================================================================#
-#=: Miscellaneous functions
+## Miscellaneous functions
 #==============================================================================#
 
 # List all the types of a command.
@@ -227,8 +232,54 @@ doc() {
 }
 complete -c doc
 
+
 #==============================================================================#
-#=: Dotfiles
+## bashrc files
+#==============================================================================#
+
+# Select and open a bashrc file in Vim
+# Usage:
+#   bre
+# Prerequisites:
+#   - fzf
+bre() {
+  _ensure-installed fzf || return 1
+  local f=$(_bashrc-list | _filepath-insert-tilde | fzf -e --tac | _filepath-expand-tilde)
+  if _is-set "$f"; then
+    vim "$f"
+  fi
+}
+
+# Source all bashrc files
+# Usage:
+#   brs
+brs() {
+  . ~/.bashrc
+}
+
+# Print all bashrc files including their status
+# Usage:
+#   br
+# Notes:
+#   - The function indicates for each bashrc file whether it has been sourced
+#     or not.
+br() {
+  # TODO: find solution for omitting colours when output is not terminal
+  local f out
+  for f in $(_bashrc-list); do
+    local status
+    if _is-sourced-bashrc "$f"; then
+      status=$(_sgr green)SOURCED$(_sgr)
+    else
+      status=$(_sgr red)SKIPPED$(_sgr)
+    fi
+    out+="$(_filepath-cut-prefix "$HOME"/ <<<"$f") $status"$'\n'
+  done
+  echo -e "${out%$'\n'}" | column -t -s ' '
+}
+
+#==============================================================================#
+## Dotfiles
 #==============================================================================#
 
 alias df='git --git-dir "$HOME"/.dotfiles.git --work-tree "$HOME"'
@@ -239,20 +290,6 @@ alias dfr='df rm'
 alias dfc='df commit'
 alias dfp='df push'
 alias dfd='df diff'
-
-# Open a .bashrc* file in Vim
-br() {
-  _ensure-installed fzf || return 1
-  local select=$(_bashrc | _path-include-tilde | fzf -e --tac | _path-expand-tilde)
-  if _is-set "$select"; then
-    vim "$select"
-  else
-    echo "No selection"
-  fi
-}
-
-# Source all .bashrc* files
-alias sbr='. ~/.bashrc'
 
 # Open a .vimrc* file in Vim
 vr() {
@@ -305,7 +342,7 @@ lbr() {
 }
 
 #==============================================================================#
-#=: Prompt
+## Prompt
 #==============================================================================#
 
 PROMPT_COMMAND='__set-prompt; __dump_history'
@@ -340,7 +377,7 @@ __dump_history() {
 }
 
 #==============================================================================#
-#=: File system operations
+## File system operations
 #==============================================================================#
 
 alias rmf='rm -rf'
@@ -452,7 +489,7 @@ __find-x-dirs() {
 }
 
 #==============================================================================#
-#=: Miscellaneous tools and settings
+## Miscellaneous tools and settings
 #==============================================================================#
 
 alias curl='curl -s'
@@ -502,7 +539,7 @@ clip() {
 }
 
 #==============================================================================#
-#=: Command completion
+## Command completion
 #==============================================================================#
 
 # bash-completion (https://github.com/scop/bash-completion)
@@ -526,7 +563,7 @@ fi
 source ~/.complete_alias
 
 #==============================================================================#
-#=: Terminal colours
+## Terminal colours
 #==============================================================================#
 
 # Print the 8 base colours of this terminal (black, red, green, yellow, blue,
@@ -583,7 +620,7 @@ c256() {
 }
 
 #==============================================================================#
-#=: Package management
+## Package management
 #==============================================================================#
 
 if _is-cmd brew; then
@@ -609,7 +646,7 @@ fi
 
 # TODO: move to ~/.bashrc.topic/?
 #==============================================================================#
-#=: Vim/Neovim
+## Vim/Neovim
 #==============================================================================#
 
 # Vim order of precedence: Neovim > Homebrew Vim > native Vim
@@ -624,7 +661,7 @@ export EDITOR=${BASH_ALIASES[vim]}
 
 # TODO: move to ~/.bashrc.topic/?
 #==============================================================================#
-#=: Git
+## Git
 #==============================================================================#
 
 alias gl='git log --decorate --graph' 
@@ -644,7 +681,7 @@ alias gpu="git pull"
 alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
 
 #==============================================================================#
-#=: Text processing
+## Text processing
 #==============================================================================#
 
 alias sed='sed -E'
@@ -720,7 +757,7 @@ enc-type() {
 #   - Display all available locales with `locale -a | sort`
 
 #==============================================================================#
-#=: Number processing
+## Number processing
 #==============================================================================#
 
 # TODO:
@@ -809,7 +846,7 @@ n() {
 }
 
 #==============================================================================#
-#=: Date and time processing
+## Date and time processing
 #==============================================================================#
 
 # Convert a number of seconds to a "<X>m <Y>s" representation.
@@ -855,7 +892,7 @@ elif _is-linux; then
 fi
 
 #==============================================================================#
-#=: Networking
+## Networking
 #==============================================================================#
 
 # Get public IP address of local machine
@@ -876,7 +913,7 @@ change_mac() {
 
 # TODO: move to Misc
 #==============================================================================#
-#=: macOS
+## macOS
 #==============================================================================#
 
 if _is-mac; then
@@ -901,7 +938,7 @@ fi
 
 # TODO: move to ~/.bashrc.topic/
 #==============================================================================#
-#=: Terraform
+## Terraform
 #==============================================================================#
 
 if _is-cmd terraform; then
@@ -922,7 +959,7 @@ fi
 
 # TODO: move to ~/.bashrc.topic/
 #==============================================================================#
-#=: Prometheus
+## Prometheus
 #==============================================================================#
 
 # Display only the distinct metric names from a page of Prometheus metrics
@@ -943,7 +980,7 @@ prometheus-clean() {
 }
 
 #==============================================================================#
-#=: Misc
+## Misc
 #==============================================================================#
 
 # Open a JMESPath Terminal
@@ -957,16 +994,18 @@ alias minicom='minicom -c on'
 
 
 #==============================================================================#
-#=: Topic .bashrc files
+## Topic .bashrc files
 #==============================================================================#
 
-# TODO: hardcode files in ~/.bashrc.topic/* to allow for easy outcommenting
-for f in ~/.bashrc.topic/*.bash; do
-  . "$f"
-done
-unset f
+# Outcomment unneeded topics
+. ~/.bashrc.topic/multimedia.bash
+#. ~/.bashrc.topic/aws.bash
+#. ~/.bashrc.topic/azure.bash
+#. ~/.bashrc.topic/docker.bash
+#. ~/.bashrc.topic/kubernetes.bash
+#. ~/.bashrc.topic/terminfo.bash
 
 #==============================================================================#
-#=: Auto-added code
+## Auto-added code
 #==============================================================================#
 

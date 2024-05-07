@@ -1,3 +1,8 @@
+#==============================================================================#
+## Indicate sourcing of file
+#==============================================================================#
+export SOURCED_BASHRC_LIB_ARRAY=1
+
 # Array processing (indexed arrays only)
 
 # TODO: complete argument checks for all functions:
