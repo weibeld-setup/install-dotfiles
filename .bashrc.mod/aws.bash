@@ -3,11 +3,6 @@
 # Utility functions and settings for the AWS CLI.
 #------------------------------------------------------------------------------#
 
-#==============================================================================#
-## Indicate sourcing of file
-#==============================================================================#
-export SOURCED_BASHRC_TOPIC_AWS=1
-
 # Enable command completion
 if _is-mac && _is-cmd brew; then
   complete -C $(brew --prefix)/bin/aws_completer aws

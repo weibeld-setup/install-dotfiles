@@ -1,10 +1,5 @@
 # ~/.bashrc.terminfo
 
-#==============================================================================#
-## Indicate sourcing of file
-#==============================================================================#
-export SOURCED_BASHRC_TOPIC_TERMINFO=1
-
 # Location of the terminfo capabilities database, used by TODO and TODO.
 export INFODB=~/.infodb
 

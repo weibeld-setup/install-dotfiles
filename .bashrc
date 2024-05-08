@@ -7,12 +7,32 @@
 #==============================================================================#
 
 #==============================================================================#
-## Indicate sourcing of file
+## Shell options
 #==============================================================================#
-export SOURCED_BASHRC=1
+
+#------------------------------------------------------------------------------#
+# The 'set' builtin [1] comes from sh, is POSIX-compatible, and can be used
+# for various things (setting shell options, setting and displaying variables,
+# setting positional parameters). The 'shopt' builtin [2] is Bash-specific and
+# is used only for setting shell options [3].
+# [1] https://www.gnu.org/software/bash/manual/bash.html#The-Set-Builtin
+# [2] https://www.gnu.org/software/bash/manual/bash.html#The-Shopt-Builtin
+# [3] https://unix.stackexchange.com/a/305256/317243
+#------------------------------------------------------------------------------#
+
+# Enable extended glob patterns (e.g. '!(...)', etc.)
+shopt -s extglob
+# If a glob has no matches, expand to "" rather than verbatim of the glob
+shopt -s nullglob
+# Make filename completion expand directory names (e.g. variables)
+shopt -s direxpand
+# Append to $HISTFILE rather than overwriting it
+shopt -s histappend
+# Exit code of pipe is rightmost non-zero command rather than last command
+set -o pipefail
 
 #==============================================================================#
-## Function library .bashrc files
+## Standard library
 #==============================================================================#
 
 for f in ~/.bashrc.lib/*.bash; do
@@ -30,31 +50,6 @@ _path-prepend /opt/homebrew/bin
 # Delete duplicate and non-existing directories from PATH
 _path-uniq
 _path-rectify
-
-#==============================================================================#
-## Shell options
-#==============================================================================#
-
-#==============================================================================#
-# The 'set' builtin [1] comes from sh, is POSIX-compatible, and can be used
-# for various things (setting shell options, setting and displaying variables,
-# setting positional parameters). The 'shopt' builtin [2] is Bash-specific and
-# is used only for setting shell options [3].
-# [1] https://www.gnu.org/software/bash/manual/bash.html#The-Set-Builtin
-# [2] https://www.gnu.org/software/bash/manual/bash.html#The-Shopt-Builtin
-# [3] https://unix.stackexchange.com/a/305256/317243
-#==============================================================================#
-
-# Enable extended glob patterns (e.g. '!(...)', etc.)
-shopt -s extglob
-# If a glob has no matches, expand to "" rather than verbatim of the glob
-shopt -s nullglob
-# Make filename completion expand directory names (e.g. variables)
-shopt -s direxpand
-# Append to $HISTFILE rather than overwriting it
-shopt -s histappend
-# Exit code of pipe is rightmost non-zero command rather than last command
-set -o pipefail
 
 #==============================================================================#
 ## Shell setup
@@ -240,14 +235,11 @@ complete -c doc
 # Select and open a bashrc file in Vim
 # Usage:
 #   bre
-# Prerequisites:
-#   - fzf
 bre() {
   _ensure-installed fzf || return 1
-  local f=$(_bashrc-list | _filepath-insert-tilde | fzf -e --tac | _filepath-expand-tilde)
-  if _is-set "$f"; then
-    vim "$f"
-  fi
+  local f=$(_bashrc-list | _filepath-insert-tilde | fzf -e | _filepath-expand-tilde)
+  ! _is-set "$f" && return
+  vim "$f"
 }
 
 # Source all bashrc files
@@ -257,25 +249,15 @@ brs() {
   . ~/.bashrc
 }
 
-# Print all bashrc files including their status
+# List all bashrc modules including their sourcing status
 # Usage:
-#   br
+#   brm
 # Notes:
-#   - The function indicates for each bashrc file whether it has been sourced
-#     or not.
-br() {
-  # TODO: find solution for omitting colours when output is not terminal
-  local f out
-  for f in $(_bashrc-list); do
-    local status
-    if _is-sourced-bashrc "$f"; then
-      status=$(_sgr green)SOURCED$(_sgr)
-    else
-      status=$(_sgr red)SKIPPED$(_sgr)
-    fi
-    out+="$(_filepath-cut-prefix "$HOME"/ <<<"$f") $status"$'\n'
-  done
-  echo -e "${out%$'\n'}" | column -t -s ' '
+#   - The sourcing status of a module indicates whether the module file has
+#     been sourced or not
+brm() {
+  # TODO: find solution for colouring output when output is terminal
+  _bashrc-mod-status | _filepath-insert-tilde | sed 's/0$/FALSE/;s/1$/TRUE/' | column -t -s ,
 }
 
 #==============================================================================#
@@ -994,16 +976,16 @@ alias minicom='minicom -c on'
 
 
 #==============================================================================#
-## Topic .bashrc files
+## Module .bashrc files
 #==============================================================================#
 
-# Outcomment unneeded topics
-. ~/.bashrc.topic/multimedia.bash
-#. ~/.bashrc.topic/aws.bash
-#. ~/.bashrc.topic/azure.bash
-#. ~/.bashrc.topic/docker.bash
-#. ~/.bashrc.topic/kubernetes.bash
-#. ~/.bashrc.topic/terminfo.bash
+# Outcomment unneeded modules
+_bashrc-mod-source ~/.bashrc.mod/multimedia.bash
+#_bashrc-mod-source ~/.bashrc.mod/aws.bash
+#_bashrc-mod-source ~/.bashrc.mod/azure.bash
+#_bashrc-mod-source ~/.bashrc.mod/docker.bash
+#_bashrc-mod-source ~/.bashrc.mod/kubernetes.bash
+#_bashrc-mod-source ~/.bashrc.mod/terminfo.bash
 
 #==============================================================================#
 ## Auto-added code

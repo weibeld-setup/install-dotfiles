@@ -1,23 +1,4 @@
 #==============================================================================#
-## Indicate sourcing of file
-#==============================================================================#
-export SOURCED_BASHRC_LIB_MISC=1
-
-#==============================================================================#
-## bashrc files
-#==============================================================================#
-
-# Print all .bashrc* files
-# Usage:
-#   _bashrc
-# Notes:
-#   - The .bashrc* files are printed with their absolute paths
-#   - The .bashrc* files are printed in alphabetical order
-_bashrc-list() {
-  ls -1 "$HOME"/{.bashrc,.bashrc.lib/*.bash,.bashrc.topic/*.bash}
-}
-
-#==============================================================================#
 ## File system paths
 #==============================================================================#
 

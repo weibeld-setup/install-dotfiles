@@ -1,8 +1,3 @@
-#==============================================================================#
-## Indicate sourcing of file
-#==============================================================================#
-export SOURCED_BASHRC_LIB_BOOLEAN=1
-
 # Check whether running on macOS
 _is-mac() {
   [[ "$OSTYPE" =~ darwin ]]
@@ -180,34 +175,4 @@ _is-in-path() {
   local -a path
   _path-parse path
   _array-has path "$1"
-}
-
-# Check whether a bashrc file has been sourced in the current shell
-# Usage:
-#   _is-sourced-bashrc <path>
-# Args:
-#   <path>: path to the bashrc file
-# Notes:
-#   - An absolute or relative path may be supplied for <path>
-#   - If <path> is a non-existing file or not a bashrc file, false is returned
-_is-sourced-bashrc() {
-  # Note: this function depends on:
-  #   1. The SOURCED_* environment variable being set by every bashrc file
-  #   2. The directory and file naming convention for all bashrc files
-  _ensure-installed realpath || return 1
-  # TODO: check exactly one argument
-  # If non-existing file or not a bashrc file, return false
-  path=$(realpath -q "$1") && _bashrc-list | grep -q "^$path$" || return 1
-  # Extract bashrc base name (e.g. .bashrc => "bashrc", foo.bash => "foo")
-  local bashrc_name=$(basename "$path" | sed 's/^\.//;s/\..*$//')
-  local var_name=SOURCED_BASHRC
-  case "$path" in
-    */.bashrc.lib/*)
-      var_name=${var_name}_LIB_${bashrc_name^^}
-      ;;
-    */.bashrc.topic/*)
-      var_name=${var_name}_TOPIC_${bashrc_name^^}
-      ;;
-  esac
-  _has-value "$var_name"
 }
