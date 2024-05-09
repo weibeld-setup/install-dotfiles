@@ -7,29 +7,36 @@
 #==============================================================================#
 
 #==============================================================================#
-## Shell options
+## Mandatory shell options
+#
+# Notes:
+#   - These shell options must be mandatorily set because the library functions
+#     in ~/.bashrc.lib rely on them
+#   - The 'set' [1] and 'shopt' [2] commands are both shell builtins:
+#     - 'set' originates from sh, is POSIX-compatible, and does various things
+#       like setting shell options, setting and displaying variables, and
+#       setting positional parameters
+#     - 'shopt' is Bash-specific and is used exclusively for setting shell
+#       options [3].
+# References:
+#   [1] https://www.gnu.org/software/bash/manual/bash.html#The-Set-Builtin
+#   [2] https://www.gnu.org/software/bash/manual/bash.html#The-Shopt-Builtin
+#   [3] https://unix.stackexchange.com/a/305256/317243
 #==============================================================================#
-
-#------------------------------------------------------------------------------#
-# The 'set' builtin [1] comes from sh, is POSIX-compatible, and can be used
-# for various things (setting shell options, setting and displaying variables,
-# setting positional parameters). The 'shopt' builtin [2] is Bash-specific and
-# is used only for setting shell options [3].
-# [1] https://www.gnu.org/software/bash/manual/bash.html#The-Set-Builtin
-# [2] https://www.gnu.org/software/bash/manual/bash.html#The-Shopt-Builtin
-# [3] https://unix.stackexchange.com/a/305256/317243
-#------------------------------------------------------------------------------#
 
 # Enable extended glob patterns (e.g. '!(...)', etc.)
 shopt -s extglob
-# If a glob has no matches, expand to "" rather than verbatim of the glob
+# If a glob has no matches, expand to empty string rather than glob text
 shopt -s nullglob
+# Last failing command in a pipe determines exit code of pipe
+set -o pipefail
+
+#==============================================================================#
+## Miscellaneous shell options
+#==============================================================================#
+
 # Make filename completion expand directory names (e.g. variables)
 shopt -s direxpand
-# Append to $HISTFILE rather than overwriting it
-shopt -s histappend
-# Exit code of pipe is rightmost non-zero command rather than last command
-set -o pipefail
 
 #==============================================================================#
 ## Standard library
@@ -44,6 +51,7 @@ unset f
 ## PATH
 #==============================================================================#
 
+# TODO: move PATH settings to corresponding modules
 # Homebrew (can't use 'brew --prefix' because 'brew' is not yet in the PATH)
 _path-prepend /opt/homebrew/bin
 
@@ -62,9 +70,6 @@ export LC_ALL=en_GB.UTF-8
 # Works with tmux (xterm-256color-italic may cause tmux to fail)
 export TERM=xterm-256color
 export EDITOR=vim
-# Increase history size (default is 500)
-export HISTSIZE=5000
-export HISTFILESIZE=5000
 
 # Readline configuration
 # https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
@@ -84,19 +89,18 @@ vi-mode-off() {
   bind 'set show-mode-in-prompt off'
 }
 
-# Search through the central history file (see PROMPT_COMMAND) and either
-# print or directly execute the selected command
-# TODO: paste the command on the command line without executing it
-hist() {
-  _ensure-installed fzf || return 1
-  # Directly execute the command
-  if [[ "$1" = -x ]]; then
-    eval $(cat "$HISTFILE" | fzf -e --tac)
-  # Print the command to stdout
-  else
-    cat "$HISTFILE" | fzf -e --tac
-  fi
-}
+#==============================================================================#
+## Dotfiles
+#==============================================================================#
+
+alias df='git --git-dir "$HOME"/.dotfiles.git --work-tree "$HOME"'
+alias dfs='df status'
+alias dfl='df log'
+alias dfa='df add'
+alias dfr='df rm'
+alias dfc='df commit'
+alias dfp='df push'
+alias dfd='df diff'
 
 #==============================================================================#
 ## Miscellaneous functions
@@ -228,135 +232,7 @@ doc() {
 complete -c doc
 
 
-#==============================================================================#
-## bashrc files
-#==============================================================================#
 
-# Select and open a bashrc file in Vim
-# Usage:
-#   bre
-bre() {
-  _ensure-installed fzf || return 1
-  local f=$(_bashrc-list | _filepath-insert-tilde | fzf -e | _filepath-expand-tilde)
-  ! _is-set "$f" && return
-  vim "$f"
-}
-
-# Source all bashrc files
-# Usage:
-#   brs
-brs() {
-  . ~/.bashrc
-}
-
-# List all bashrc modules including their sourcing status
-# Usage:
-#   brm
-# Notes:
-#   - The sourcing status of a module indicates whether the module file has
-#     been sourced or not
-brm() {
-  # TODO: find solution for colouring output when output is terminal
-  _bashrc-mod-status | _filepath-insert-tilde | sed 's/0$/FALSE/;s/1$/TRUE/' | column -t -s ,
-}
-
-#==============================================================================#
-## Dotfiles
-#==============================================================================#
-
-alias df='git --git-dir "$HOME"/.dotfiles.git --work-tree "$HOME"'
-alias dfs='df status'
-alias dfl='df log'
-alias dfa='df add'
-alias dfr='df rm'
-alias dfc='df commit'
-alias dfp='df push'
-alias dfd='df diff'
-
-# Open a .vimrc* file in Vim
-vr() {
-  _ensure-installed fzf || return 1
-  local select=$(basename ~/.vimrc* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
-  if _is-set "$select"; then
-    vim "$select"
-  else
-    echo "No selection"
-  fi
-}
-
-# List the function and alias names defined in a .bashrc.* file
-# Notes:
-#   This function puts the following requirements on .bashrc.* files:
-#     1. There MAY be headers starting with #=: at the beginning of the line
-#     2. These headers MUST be exactly three lines high (the first line must
-#        start with #=, the remaining two lines can have arbitrary content).
-#   If the above requirements are met, then these headers are printed along
-#   with the function and alias names. If the .bashrc.* file does not contain
-#   any such headers, then only the function and alias names are printed.
-lbr() {
-  # Read input file
-  local file=$1
-  if ! _is-set "$file"; then
-    _ensure-installed fzf || return 1
-    file=$(basename ~/.bashrc.* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
-    ! _is-set "$file" && { echo "No selection"; return; }
-  fi
-  # Add line numbers to input file
-  local tmp=$(mktemp)
-  cat "$file" | nl -b a -s ': ' | sed 's/^[ ]*// ; s/^[0-9]+: #/#/' >"$tmp"
-  # Split input file into sections (demarcated by #=)
-  local dir=$(mktemp -d)
-  split -p '^#=' "$tmp" "$dir/"
-  local linebreak=
-  for f in $dir/*; do
-    # Pretty-print header (with #--- instead of #=--)
-    if [[ $(head -n 1 "$f") =~ ^#=: ]]; then
-      echo -ne "$linebreak"
-      sed -n '3p' "$f"
-      sed -n '2,3p' "$f"
-      linebreak="\n"
-    fi
-    # Print functions and aliases
-    cat "$f" |
-      grep -e '^[0-9]*: [ ]*[a-zA-Z0-9_-]*()' -e '^[0-9]*: [ ]*alias[ ]*[a-zA-Z0-9_-]*=' |
-      sed 's/(^[0-9]*: )[ ]*/\1/ ; s/\(\).*/\(\)/ ; s/=.*//'
-  done
-}
-
-#==============================================================================#
-## Prompt
-#==============================================================================#
-
-PROMPT_COMMAND='__set-prompt; __dump_history'
-__set-prompt() {
-  # Exit code of previous command (must be first statement)
-  local exit_code=$?
-  # Different colours for root and non-root users
-  if [[ "$USER" = root ]]; then
-    local colour=$(_sgr red bold)
-    local user="root|"
-  else
-    local colour=$(_sgr green bold)
-  fi
-  # Include OS name and version on Linux
-  if _is-linux; then
-    local os="$(os)|"
-  fi
-  # Prompt
-  PS1="\[$colour\]$$|$os$user\w\$ \[$(_sgr)\]"
-  # Prepend exit code of previous command if it was non-zero
-  if [[ "$exit_code" -ne 0 ]]; then
-    PS1="\[$(_sgr red bold)\]$exit_code|$(_sgr)$PS1"
-  fi
-}
-
-# Append the last command to the $HISTFILE history file (for aggregating the
-# history of all active shells)
-# TODO: emulate HISTCONTROL=ignoredups by omitting writing a command to the
-# history file if it's equal to the lastly written command.
-__dump_history() {
-  history -a
-}
 
 #==============================================================================#
 ## File system operations
@@ -641,7 +517,19 @@ fi
 # Set EDITOR variable to selected version of Vim from above
 export EDITOR=${BASH_ALIASES[vim]}
 
-# TODO: move to ~/.bashrc.topic/?
+# Open a .vimrc* file in Vim
+vr() {
+  _ensure-installed fzf || return 1
+  local select=$(basename ~/.vimrc* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
+  if _is-set "$select"; then
+    vim "$select"
+  else
+    echo "No selection"
+  fi
+}
+
+
+# TODO: create module in ~/.bashrc.mod
 #==============================================================================#
 ## Git
 #==============================================================================#
@@ -918,7 +806,7 @@ if _is-mac; then
   }
 fi
 
-# TODO: move to ~/.bashrc.topic/
+# TODO: create module in ~/.bashrc.mod
 #==============================================================================#
 ## Terraform
 #==============================================================================#
@@ -939,7 +827,7 @@ if _is-cmd terraform; then
   fi
 fi
 
-# TODO: move to ~/.bashrc.topic/
+# TODO: create module in ~/.bashrc.mod
 #==============================================================================#
 ## Prometheus
 #==============================================================================#
@@ -980,7 +868,10 @@ alias minicom='minicom -c on'
 #==============================================================================#
 
 # Outcomment unneeded modules
-_bashrc-mod-source ~/.bashrc.mod/multimedia.bash
+_bashrc-mod-source ~/.bashrc.mod/bashrc.bash
+_bashrc-mod-source ~/.bashrc.mod/shell-prompt.bash
+_bashrc-mod-source ~/.bashrc.mod/shell-history.bash
+#_bashrc-mod-source ~/.bashrc.mod/multimedia.bash
 #_bashrc-mod-source ~/.bashrc.mod/aws.bash
 #_bashrc-mod-source ~/.bashrc.mod/azure.bash
 #_bashrc-mod-source ~/.bashrc.mod/docker.bash
