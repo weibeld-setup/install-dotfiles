@@ -32,20 +32,22 @@ _bashrc-mod-status() {
   done
 }
 
-# Get the ID of a module bashrc file
+# Get the ID of a module
 # Usage:
 #   _bashrc-mod-id <path>
 # Args:
-#   <path>: absolute path of a module bashrc file
+#   <path>: absolute path to a bahsrc file of the module
 # Notes:
-#   - The ID of a module bashrc file has the form 'MOD_<NAME>' where '<NAME>'
-#     is the part of the file's name before '.bash' in upper-case letters
+#   - The ID of a module has the form 'MOD_<NAME>' where '<NAME>' is:
+#       - The part of the module file name 
+#     of the file name before '.bash' transformed to upper case and with all
+#     non-alpha-numeric and non-underscore characters replaced by underscores
 #   - If <path> is not an absolute path of a module bashrc file, the function
 #     returns 1 without printing any output
 _bashrc-mod-id() {
   local path=$1
   _bashrc-list -m | grep -q "^$path$" || return 1
-  echo "MOD_$(basename "$path" | sed 's/\.bash$//' | _to-upper-case)"
+  echo "MOD_$(basename "$path" | sed 's/\.bash$//;s/\.init$//' | _to-upper-case | sed 's/[^[:alnum:]]/_/g')"
 }
 
 # Source a module bashrc file
