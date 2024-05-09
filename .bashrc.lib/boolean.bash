@@ -1,3 +1,5 @@
+# TODO: check whether moving these functions to the file with their related functions
+
 # Check whether running on macOS
 _is-mac() {
   [[ "$OSTYPE" =~ darwin ]]
@@ -173,6 +175,6 @@ _is-var-name() {
 #     _is-in-path '.*homebrew.*'
 _is-in-path() {
   local -a path
-  _path-parse path
+  _path-to-array path
   _array-has path "$1"
 }

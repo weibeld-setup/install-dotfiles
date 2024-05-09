@@ -4,20 +4,20 @@
 
 # Print the current value of PATH
 # Usage:
-#   _path
+#   _path-get
 _path-get() {
   echo "$PATH"
 }
 
 # Read PATH into an indexed array
 # Usage:
-#   _path-parse <name>
+#   _path-to-array <name>
 # Args:
 #   <name>: name of the array to create
 # Notes:
 #   - If <name> doesn't exist, it is created, if it already exists, it is
 #     overwritten
-_path-parse() {
+_path-to-array() {
   # TODO: check that $1 is a valid variable name
   _array-parse "$1" : <<<"$PATH"
 }
@@ -30,7 +30,7 @@ _path-parse() {
 #     is kept and all other ocurrences are deleted
 _path-uniq() {
   local -a path
-  _path-parse path
+  _path-to-array path
   _array-uniq path path
   PATH=$(_array-ls path :)
 }
@@ -40,7 +40,7 @@ _path-uniq() {
 #   _path-rectify
 _path-rectify() {
   local -a path delete
-  _path-parse path
+  _path-to-array path
   local elt
   for elt in "${path[@]}"; do
     if [[ ! -d "$elt" ]]; then
@@ -67,7 +67,7 @@ _path-rectify() {
 #     _path-prepend /foo /bar /baz
 _path-prepend() {
   local -a path entries
-  _path-parse path
+  _path-to-array path
   entries=("$@")
   _array-rev entries entries
   local e
@@ -94,7 +94,7 @@ _path-prepend() {
 #     _path-append /foo /bar /baz
 _path-append() {
   local -a path entries
-  _path-parse path
+  _path-to-array path
   entries=("$@")
   local e
   for e in "${entries[@]}"; do
@@ -118,7 +118,7 @@ _path-append() {
 #     _path-rm '.*/System.*'
 _path-rm() {
   local -a path
-  _path-parse path
+  _path-to-array path
   _array-rm path path "$@"
   PATH=$(_array-ls path :)
 }
