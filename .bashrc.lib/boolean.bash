@@ -1,5 +1,9 @@
 # TODO: check whether moving these functions to the file with their related functions
 
+# TODO:
+#   - Create _is-bsd and _is-gnu as a more precise check about which version
+#     of a command to use than _is-mac and _is-linux
+
 # Check whether running on macOS
 _is-mac() {
   [[ "$OSTYPE" =~ darwin ]]
@@ -18,12 +22,24 @@ _is-wsl() {
   _is-linux && [[ -n "$WSL_DISTRO_NAME" ]]
 }
 
-# TODO:
-#   - Create _is-bsd and _is-gnu as a more precise check about which version
-#     of a command to use than _is-mac and _is-linux
-#   - Create _is-debian (and _is-homebrew) to check for which package management
-#     solution is used
 
+# Check whether Homebrew is used for package management
+_is-pkg-mgmt-homebrew() {
+  _is-installed brew
+}
+
+# Check whether APT is used for package management
+_is-pkg-mgmt-apt() {
+  _is-installed apt && _is-installed apt-get && _is-installed apt-cache
+}
+
+# TODO: check whether this is needed
+# Check whether a given Homebrew formula or cask is installed
+# Note: also checks whether Homebrew is installed, and aborts otherwise
+_is-homebrew-poured() {
+  _ensure-installed brew || return 1
+  brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
+}
 
 # TODO:
 #   - _is-set: take variable name
@@ -137,19 +153,17 @@ _is-exec-file() {
 }
 complete -c _is-exec-file
 
+# Alias of _is-exec-file
+_is-installed() {
+  _is-exec-file "$@"
+}
+
 # Check whether a given command exists (i.e. is either an executable file in 
 # the path, an alias, a function, or a shell builtin)
 _is-cmd() {
   _is-exec-file "$1" || _is-alias "$1" || _is-function "$1" || _is-builtin "$1"
 }
 complete -c _is-cmd
-
-# Check whether a given Homebrew formula or cask is installed
-# Note: also checks whether Homebrew is installed, and aborts otherwise
-_is-homebrew-poured() {
-  _ensure-installed brew || return 1
-  brew ls --versions "$1" >/dev/null || brew ls --cask --versions "$1" >/dev/null
-}
 
 # TODO: change to _is-identifier()
 # Check whether the argument is a valid variable name.

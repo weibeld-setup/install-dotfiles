@@ -32,13 +32,6 @@ shopt -s nullglob
 set -o pipefail
 
 #==============================================================================#
-## Miscellaneous shell options
-#==============================================================================#
-
-# Make filename completion expand directory names (e.g. variables)
-shopt -s direxpand
-
-#==============================================================================#
 ## Standard library
 #==============================================================================#
 
@@ -48,20 +41,11 @@ done
 unset f
 
 #==============================================================================#
-## PATH
-#==============================================================================#
-
-# TODO: move PATH settings to corresponding modules
-# Homebrew (can't use 'brew --prefix' because 'brew' is not yet in the PATH)
-_path-prepend /opt/homebrew/bin
-
-# Delete duplicate and non-existing directories from PATH
-_path-uniq
-_path-rectify
-
-#==============================================================================#
 ## Shell setup
 #==============================================================================#
+
+# Make filename completion expand directory names (e.g. variables)
+shopt -s direxpand
 
 # Set locale
 # Note: see all available locales with 'locale -a'
@@ -230,9 +214,6 @@ doc() {
   _cond-sgr
 }
 complete -c doc
-
-
-
 
 #==============================================================================#
 ## File system operations
@@ -481,12 +462,6 @@ c256() {
 ## Package management
 #==============================================================================#
 
-if _is-cmd brew; then
-  # Set Homebrew variables except PATH (which is already set in .bashrc.path)
-  eval $(brew shellenv | grep -v 'export PATH=')
-  export HOMEBREW_NO_AUTO_UPDATE=1
-fi
-
 if _is-linux; then
   # Check if the dependencies of a Debian package are installed
   checkdep() {
@@ -501,32 +476,6 @@ if _is-linux; then
     done
   }
 fi
-
-# TODO: move to ~/.bashrc.topic/?
-#==============================================================================#
-## Vim/Neovim
-#==============================================================================#
-
-# Vim order of precedence: Neovim > Homebrew Vim > native Vim
-if _is-cmd nvim; then
-  alias vim=nvim
-elif _is-cmd brew && _is-homebrew-poured vim; then
-  alias vim=$(brew --prefix)/bin/vim
-fi
-
-# Set EDITOR variable to selected version of Vim from above
-export EDITOR=${BASH_ALIASES[vim]}
-
-# Open a .vimrc* file in Vim
-vr() {
-  _ensure-installed fzf || return 1
-  local select=$(basename ~/.vimrc* | sed 's/^/~\//' | fzf -e --tac | sed "s|~|$HOME|")
-  if _is-set "$select"; then
-    vim "$select"
-  else
-    echo "No selection"
-  fi
-}
 
 
 # TODO: create module in ~/.bashrc.mod
@@ -864,10 +813,18 @@ alias minicom='minicom -c on'
 
 
 #==============================================================================#
-## Module .bashrc files
+## Module init parts
+#==============================================================================#
+
+_bashrc-mod-source ~/.bashrc.mod/homebrew.init.bash
+
+#==============================================================================#
+## Module main parts
 #==============================================================================#
 
 # Outcomment unneeded modules
+_bashrc-mod-source ~/.bashrc.mod/homebrew.bash
+_bashrc-mod-source ~/.bashrc.mod/vim.bash
 _bashrc-mod-source ~/.bashrc.mod/bashrc.bash
 _bashrc-mod-source ~/.bashrc.mod/shell-prompt.bash
 _bashrc-mod-source ~/.bashrc.mod/shell-history.bash
