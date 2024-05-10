@@ -427,16 +427,6 @@ c256() {
 }
 
 #==============================================================================#
-## complete_alias
-#==============================================================================#
-
-# TODO: move to complete-alias module
-
-# complete-alias (https://github.com/cykerway/complete-alias)
-# TODO: check if file exists (maybe print error if not)
-. ~/.complete_alias
-
-#==============================================================================#
 # TODO: move to macOS-specific module
 #==============================================================================#
 if _is-mac; then
@@ -764,6 +754,7 @@ _bashrc-mod-source ~/.bashrc.mod/homebrew.init.bash
 # Outcomment unneeded modules
 _bashrc-mod-source ~/.bashrc.mod/bashrc.bash
 _bashrc-mod-source ~/.bashrc.mod/bash-completion.bash
+_bashrc-mod-source ~/.bashrc.mod/complete-alias.bash
 _bashrc-mod-source ~/.bashrc.mod/shell-prompt.bash
 _bashrc-mod-source ~/.bashrc.mod/shell-history.bash
 _bashrc-mod-source ~/.bashrc.mod/homebrew.bash
