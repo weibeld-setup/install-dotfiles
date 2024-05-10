@@ -426,26 +426,6 @@ c256() {
   printf "\e[0m\n"
 }
 
-#==============================================================================#
-## APT module
-#==============================================================================#
-
-# TODO: move to APT module
-
-if _is-linux; then
-  # Check if the dependencies of a Debian package are installed
-  checkdep() {
-    local dep=($(apt-cache depends "$1" | grep Depends: | cut -d : -f 2))
-    for d in "${dep[@]}"; do
-      echo -n "$d: "
-     if dpkg -s "$d" 2>/dev/null | grep -q "Status: .* installed"; then
-        echo installed
-      else
-        echo "NOT INSTALLED"
-      fi
-    done
-  }
-fi
 
 #==============================================================================#
 ## Text processing
@@ -722,6 +702,7 @@ _bashrc-mod-source ~/.bashrc.mod/vim.bash
 _bashrc-mod-source ~/.bashrc.mod/git.bash
 _bashrc-mod-source ~/.bashrc.mod/grip.bash
 _bashrc-mod-source ~/.bashrc.mod/macos-util.bash
+#_bashrc-mod-source ~/.bashrc.mod/apt.bash
 #_bashrc-mod-source ~/.bashrc.mod/docker.bash
 #_bashrc-mod-source ~/.bashrc.mod/prometheus.bash
 #_bashrc-mod-source ~/.bashrc.mod/terraform.bash
