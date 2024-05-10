@@ -751,7 +751,6 @@ jpterm() {
 # Minicom
 alias minicom='minicom -c on'
 
-
 #==============================================================================#
 ## Module init parts
 #==============================================================================#
@@ -759,46 +758,21 @@ alias minicom='minicom -c on'
 _bashrc-mod-source ~/.bashrc.mod/homebrew.init.bash
 
 #==============================================================================#
-## bash-completion module
-#==============================================================================#
-
-# TODO: move to bash-completion module
-
-# bash-completion (https://github.com/scop/bash-completion)
-# Use Homebrew bash-completion
-if _is-mac && _is-cmd brew ; then
-  echo Sourcing
-  source $(brew --prefix)/etc/profile.d/bash_completion.sh
-  # TODO: it is NOT necessary to source all completion specs in bash_completion.d
-  #   explicitly, as this is done by the bash_completion script (see bash_completion.sh
-  #   for the location)
-  # Completion specifications for commands installed by Homebrew
-  #for f in $(brew --prefix)/etc/bash_completion.d/*; do
-  #  source "$f"
-  #done
-# Only execute if bash-completion isn't activated yet
-elif _is-linux && ! type _init_completion &>/dev/null; then
-  # Code from /etc/bash.bashrc which by default is outcommented
-  if [[ -f /usr/share/bash-completion/bash_completion ]]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [[ -f /etc/bash_completion ]]; then
-    . /etc/bash_completion
-  fi
-fi
-
-# TODO: additional functions
-#   - list which commands have completion specs from bash
-
-#==============================================================================#
 ## Module main parts
 #==============================================================================#
 
 # Outcomment unneeded modules
-_bashrc-mod-source ~/.bashrc.mod/homebrew.bash
-_bashrc-mod-source ~/.bashrc.mod/vim.bash
 _bashrc-mod-source ~/.bashrc.mod/bashrc.bash
+_bashrc-mod-source ~/.bashrc.mod/bash-completion.bash
 _bashrc-mod-source ~/.bashrc.mod/shell-prompt.bash
 _bashrc-mod-source ~/.bashrc.mod/shell-history.bash
+_bashrc-mod-source ~/.bashrc.mod/homebrew.bash
+_bashrc-mod-source ~/.bashrc.mod/vim.bash
+_bashrc-mod-source ~/.bashrc.mod/git.bash
+_bashrc-mod-source ~/.bashrc.mod/grip.bash
+#_bashrc-mod-source ~/.bashrc.mod/docker.bash
+#_bashrc-mod-source ~/.bashrc.mod/prometheus.bash
+#_bashrc-mod-source ~/.bashrc.mod/terraform.bash
 #_bashrc-mod-source ~/.bashrc.mod/multimedia.bash
 #_bashrc-mod-source ~/.bashrc.mod/aws.bash
 #_bashrc-mod-source ~/.bashrc.mod/azure.bash

@@ -1,8 +1,13 @@
 # Grip
 # Description:
-#   GitHub README Instant Preview (see [1])
+#   Sets up Grip [1] to use a GitHub personal access token in order to avoid
+#   the rate limit for anonymous users.
 # References:
 #   [1] https://github.com/joeyespo/grip
+# Requirements:
+#   - Grip
+#     - Command: grip
+#     - URL: https://github.com/joeyespo/grip
 #==============================================================================#
 
 #------------------------------------------------------------------------------#
