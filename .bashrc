@@ -41,6 +41,19 @@ done
 unset f
 
 #==============================================================================#
+## Dotfiles
+#==============================================================================#
+
+alias df='git --git-dir "$HOME"/.dotfiles.git --work-tree "$HOME"'
+alias dfs='df status'
+alias dfl='df log'
+alias dfa='df add'
+alias dfr='df rm'
+alias dfc='df commit'
+alias dfp='df push'
+alias dfd='df diff'
+
+#==============================================================================#
 ## Shell setup
 #==============================================================================#
 
@@ -48,6 +61,9 @@ unset f
 shopt -s direxpand
 
 # Set locale
+# TODO: set LC_* variables:
+#   - Display values with `locale`
+#   - Display all available locales with `locale -a | sort`
 # Note: see all available locales with 'locale -a'
 export LC_ALL=en_GB.UTF-8
 
@@ -55,8 +71,45 @@ export LC_ALL=en_GB.UTF-8
 export TERM=xterm-256color
 export EDITOR=vim
 
+if _is-mac; then
+  export d=~/Desktop
+  # LSCOLORS (BSD-specific)
+  # Positions:
+  #   1=dir, 2=symlink, 3=socket, 4=pipe, 5=executable, 6=block special,
+  #   7=char special, 8=executable with setuid, 9=executable with setgid,
+  #   10=other-writable dir w. sticky bit, 11=other-writable dir wo. sticky bit
+  # Colours (lower-case means normal, upper-case means bold):
+  #   a=black, b=red, c=green, d=yellow, e=blue, f=magenta, g=cyan, h=white,
+  #   x=default
+  # Format:
+  #   <foreground><background>...
+  # Example:
+  #   Gx: bold cyan foreground and default background
+  # Documentation:
+  #   man ls (search for 'LSCOLORS')
+  export LSCOLORS=GxFxHxHxCxHxHxCxCxGxGx
+  export CLICOLOR=1
+elif _is-linux; then
+  alias ls='ls --color=auto'
+  # LS_COLORS (GNU-specific)
+  # Fields:
+  #   di=dir, ln=symlink, so=socket, pi=pipe, ex=executable, bd=block special,
+  #   cd=char special, su=executble with setuid, sg=executable with setgid,
+  #   tw=other-writable dir w. sticky bit, ow=other-writable dir wo. sticky bit
+  # Colours:
+  #   ANSI colour codes
+  # Documentation:
+  #   'man ls', 'man dircolors', 'dircolors'
+  export LS_COLORS="di=1;36:ln=1;35:so=0:pi=0:ex=1;32:bd=0:cd=0:su=1;32:sg=1;32:tw=1;36:ow=1;36"
+fi
+
+#==============================================================================#
 # Readline configuration
+#==============================================================================#
 # https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
+
+# TODO: check if this is necessary
+
 bind 'set skip-completed-text on'
 
 # Enable/disable vi line-editing mode
@@ -74,21 +127,25 @@ vi-mode-off() {
 }
 
 #==============================================================================#
-## Dotfiles
-#==============================================================================#
-
-alias df='git --git-dir "$HOME"/.dotfiles.git --work-tree "$HOME"'
-alias dfs='df status'
-alias dfl='df log'
-alias dfa='df add'
-alias dfr='df rm'
-alias dfc='df commit'
-alias dfp='df push'
-alias dfd='df diff'
-
-#==============================================================================#
 ## Miscellaneous functions
 #==============================================================================#
+
+# TODO: move to 'sys' package of library
+
+# Print operating system name and version
+os() {
+  if _is-mac; then
+    echo "$(sw_vers -productName)-$(sw_vers -productVersion)"
+  elif _is-linux; then
+    if [[ -f /etc/os-release ]]; then
+      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
+    else
+      echo unknown
+    fi
+  fi
+}
+
+# TODO: move to 'sys' package of library, output in CSV
 
 # List all the types of a command.
 # Usage:
@@ -149,12 +206,7 @@ __whatis-print() {
   echo "$1,${2:-null}"
 }
 
-# Shorthand wrapper for _type.
-# TODO: rename to 'inspect()'
-t() {
-  _type "$@"
-}
-complete -c t
+# TODO: move to 'bashrc' pacakge library (must be in library because depends on format in bashrc files)
 
 # Print documentation for a function or alias.
 # Usage:
@@ -216,8 +268,11 @@ doc() {
 complete -c doc
 
 #==============================================================================#
-## File system operations
+## Util
 #==============================================================================#
+
+# May also contain shortcuts, i.e. wrappers around library functions with 
+# user-friendly names
 
 alias rmf='rm -rf'
 alias la="ls -a"
@@ -228,37 +283,30 @@ alias dh='du -h'
 alias which='which -a'
 alias diff='diff --color'
 
-if _is-mac; then
-  export d=~/Desktop
-  # LSCOLORS (BSD-specific)
-  # Positions:
-  #   1=dir, 2=symlink, 3=socket, 4=pipe, 5=executable, 6=block special,
-  #   7=char special, 8=executable with setuid, 9=executable with setgid,
-  #   10=other-writable dir w. sticky bit, 11=other-writable dir wo. sticky bit
-  # Colours (lower-case means normal, upper-case means bold):
-  #   a=black, b=red, c=green, d=yellow, e=blue, f=magenta, g=cyan, h=white,
-  #   x=default
-  # Format:
-  #   <foreground><background>...
-  # Example:
-  #   Gx: bold cyan foreground and default background
-  # Documentation:
-  #   man ls (search for 'LSCOLORS')
-  export LSCOLORS=GxFxHxHxCxHxHxCxCxGxGx
-  export CLICOLOR=1
-elif _is-linux; then
-  alias ls='ls --color=auto'
-  # LS_COLORS (GNU-specific)
-  # Fields:
-  #   di=dir, ln=symlink, so=socket, pi=pipe, ex=executable, bd=block special,
-  #   cd=char special, su=executble with setuid, sg=executable with setgid,
-  #   tw=other-writable dir w. sticky bit, ow=other-writable dir wo. sticky bit
-  # Colours:
-  #   ANSI colour codes
-  # Documentation:
-  #   'man ls', 'man dircolors', 'dircolors'
-  export LS_COLORS="di=1;36:ln=1;35:so=0:pi=0:ex=1;32:bd=0:cd=0:su=1;32:sg=1;32:tw=1;36:ow=1;36"
+alias sed='sed -E'
+alias gsed='gsed -E'
+alias wl='wc -l'
+if _is-linux; then
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
 fi
+
+alias curl='curl -s'
+alias ssh='TERM=xterm-256color ssh'
+alias pgrep='pgrep -fl'
+alias watch='watch -n 1'
+
+# Make Bash resolve the word after 'sudo' as an alias [1,2], which makes it
+# possible to execute aliases with sudo. Note that the replacement is done by
+# the shell before invoking sudo and it works only with aliases, not with
+# functions (sudo itself works only with executables, it doesn't resolve aliases
+# or shell functions, nor does it source .bashrc or .bash_profile). For full
+# access to the environment, start an interactive shell with 'sudo -s' which
+# in turn sources the .bashrc file found in $HOME.
+# [1] https://linuxhandbook.com/run-alias-as-sudo/
+# [2] https://www.gnu.org/software/bash/manual/bash.html#Aliases
+alias sudo='sudo '
 
 # Create new directory and navigate into it
 mkcd() {
@@ -296,25 +344,6 @@ __dotx() {
   sort --ignore-case
 }
 
-if _is-mac; then
-  # Recursively delete all .DS_Store files in the specified directory
-  rmds() {
-    sudo find "${1:-.}" -type f \( -name .DS_Store -or -name ._.DS_Store \) -print -delete 2>/dev/null
-    return 0
-  }
-
-  # Move one or more files or directories to the trash
-  trash() {
-    for i in "$@"; do
-      # mv fails if target directory already exists
-      if ! mv "$i" ~/.Trash &>/dev/null; then
-        rm -rf ~/.Trash/"$i"
-        mv "$i" ~/.Trash
-      fi
-    done
-  }
-fi
-
 # Recursively find GB or MB sized directories under the specified directory.
 find-gb-dirs() { __find-x-dirs g "${1:-.}"; }
 find-mb-dirs() { __find-x-dirs m "${1:-.}"; }
@@ -325,39 +354,6 @@ __find-x-dirs() {
   esac
   sudo du -h "$2" 2>/dev/null | grep "$pattern"
   return 0
-}
-
-#==============================================================================#
-## Miscellaneous tools and settings
-#==============================================================================#
-
-alias curl='curl -s'
-alias ssh='TERM=xterm-256color ssh'
-alias pgrep='pgrep -fl'
-alias watch='watch -n 1'
-
-# Make Bash resolve the word after 'sudo' as an alias [1,2], which makes it
-# possible to execute aliases with sudo. Note that the replacement is done by
-# the shell before invoking sudo and it works only with aliases, not with
-# functions (sudo itself works only with executables, it doesn't resolve aliases
-# or shell functions, nor does it source .bashrc or .bash_profile). For full
-# access to the environment, start an interactive shell with 'sudo -s' which
-# in turn sources the .bashrc file found in $HOME.
-# [1] https://linuxhandbook.com/run-alias-as-sudo/
-# [2] https://www.gnu.org/software/bash/manual/bash.html#Aliases
-alias sudo='sudo '
-
-# Print operating system name and version
-os() {
-  if _is-mac; then
-    echo "$(sw_vers -productName)-$(sw_vers -productVersion)"
-  elif _is-linux; then
-    if [[ -f /etc/os-release ]]; then
-      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
-    else
-      echo unknown
-    fi
-  fi
 }
 
 # Copy file or stdin to system clipboard
@@ -376,34 +372,6 @@ clip() {
     cat "$1" | eval "$cmd"
   fi
 }
-
-#==============================================================================#
-## Command completion
-#==============================================================================#
-
-# bash-completion (https://github.com/scop/bash-completion)
-# Use Homebrew bash-completion
-if _is-mac && _is-cmd brew ; then
-  source $(brew --prefix)/etc/profile.d/bash_completion.sh
-  for f in $(brew --prefix)/etc/bash_completion.d/*; do
-    source "$f"
-  done
-# Only execute if bash-completion isn't activated yet
-elif _is-linux && ! type _init_completion &>/dev/null; then
-  # Code from /etc/bash.bashrc which by default is outcommented
-  if [[ -f /usr/share/bash-completion/bash_completion ]]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [[ -f /etc/bash_completion ]]; then
-    . /etc/bash_completion
-  fi
-fi
-
-# complete-alias (https://github.com/cykerway/complete-alias)
-source ~/.complete_alias
-
-#==============================================================================#
-## Terminal colours
-#==============================================================================#
 
 # Print the 8 base colours of this terminal (black, red, green, yellow, blue,
 # magenta, cyan, white) in normal, bright, and bold variations.
@@ -459,8 +427,60 @@ c256() {
 }
 
 #==============================================================================#
-## Package management
+## complete_alias
 #==============================================================================#
+
+# TODO: move to complete-alias module
+
+# complete-alias (https://github.com/cykerway/complete-alias)
+# TODO: check if file exists (maybe print error if not)
+. ~/.complete_alias
+
+#==============================================================================#
+# TODO: move to macOS-specific module
+#==============================================================================#
+if _is-mac; then
+  # Recursively delete all .DS_Store files in the specified directory
+  rmds() {
+    sudo find "${1:-.}" -type f \( -name .DS_Store -or -name ._.DS_Store \) -print -delete 2>/dev/null
+    return 0
+  }
+
+  # Move one or more files or directories to the trash
+  trash() {
+    for i in "$@"; do
+      # mv fails if target directory already exists
+      if ! mv "$i" ~/.Trash &>/dev/null; then
+        rm -rf ~/.Trash/"$i"
+        mv "$i" ~/.Trash
+      fi
+    done
+  }
+
+  # Hide hidden files in Finder
+  finder-hide-hidden-files() {
+    defaults write com.apple.finder AppleShowAllFiles FALSE 
+    killall Finder
+  }
+
+  # Show hidden files in Finder
+  finder-show-hidden-files() {
+    defaults write com.apple.finder AppleShowAllFiles TRUE
+    killall Finder
+  }
+
+  # Get the bundle ID (e.g. com.apple.Preview) of an application.
+  # Note: app names are case insensitive
+  app-id() {
+    osascript -e "id of app \"$1\""
+  }
+fi
+
+#==============================================================================#
+## APT module
+#==============================================================================#
+
+# TODO: move to APT module
 
 if _is-linux; then
   # Check if the dependencies of a Debian package are installed
@@ -477,40 +497,11 @@ if _is-linux; then
   }
 fi
 
-
-# TODO: create module in ~/.bashrc.mod
-#==============================================================================#
-## Git
-#==============================================================================#
-
-alias gl='git log --decorate --graph' 
-alias gr='git remote -v'
-alias gs='git status -u'
-alias ga='git add -A'
-alias gc='git commit'
-alias gca='git commit --amend'
-alias gp='git push'
-alias gpf='git push -f'
-alias gb="git branch"
-alias gd="git diff"
-alias gpu="git pull"
-
-# Use Grip with a GitHub personal access token (PAT) to avoid the rate limit
-# https://github.com/joeyespo/grip
-alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
-
 #==============================================================================#
 ## Text processing
 #==============================================================================#
 
-alias sed='sed -E'
-alias gsed='gsed -E'
-alias wl='wc -l'
-if _is-linux; then
-  alias grep='grep --color=auto'
-  alias fgrep='fgrep --color=auto'
-  alias egrep='egrep --color=auto'
-fi
+# TODO: move to 'text' package of library
 
 # Create a random string in one of different formats.
 # Usage:
@@ -549,6 +540,7 @@ rand() {
   fi
 }
 
+# TODO: move to library
 # Get the Unicode code point of a single character
 # Source: https://superuser.com/a/1019853
 unicode() {
@@ -560,6 +552,7 @@ unicode() {
   echo -n "$char" | iconv -f UTF-8 -t UTF-32BE | xxd -p | sed -r 's/^0+/0x/' | xargs printf 'U+%04X\n'
 }
 
+# TODO: see if can be combined with unicode()
 # Dump the hexadecimal code of the provided string (output depends on encoding
 # used by the terminal).
 enc() {
@@ -571,17 +564,13 @@ enc-type() {
   echo $LC_CTYPE
 }
 
-# TODO: set LC_* variables:
-#   - Display values with `locale`
-#   - Display all available locales with `locale -a | sort`
 
 #==============================================================================#
 ## Number processing
 #==============================================================================#
 
-# TODO:
-#   - Move __x2x to ~/.bashrc.lib/?
-#   - Rename functions to dec2bin, dec2hex, etc.
+# TODO: move to math package of library (rename functions to dec2bin, dec2hex, etc.)
+#
 # Convert numbers between numeral systems. Input read from stdin or arg list.
 # Convert a list of numbers between numeral systems
 # Usage:
@@ -668,6 +657,8 @@ n() {
 ## Date and time processing
 #==============================================================================#
 
+# TODO: create 'datetime' package of library
+
 # Convert a number of seconds to a "<X>m <Y>s" representation.
 sec2min() {
   echo "$(("$1"/60))m $(("$1"%60))s"
@@ -714,93 +705,50 @@ fi
 ## Networking
 #==============================================================================#
 
-# Get public IP address of local machine
-myip() {
-  curl -s checkip.amazonaws.com
-}
+# TODO: create 'net' or 'network' package of library
 
+
+# TODO: rename according to naming format
 # Show local ports that are currently in use
 ports() {
   lsof -i -P -n | grep LISTEN
 }
 
+# TODO: rename according to naming format
+# Get public IP address of local machine
+myip() {
+  curl -s ifconfig.me
+}
+
+_ip-private-get() {
+  ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | head -n1
+}
+
+# TODO: rename according to naming format
+# Override MAC address of physical network interface
 change_mac() {
   local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g;s/.$//')
   sudo ifconfig en0 ether "$mac"
   echo "Changed MAC address of en0 device to $mac"
 }
 
-# TODO: move to Misc
+# TODO: add functions:
+#   - Check whether an IP address is public or private
+#   - Get the MAC address of the physical network interface
+
 #==============================================================================#
-## macOS
-#==============================================================================#
-
-if _is-mac; then
-  # Hide hidden files in Finder
-  finder-hide-hidden-files() {
-    defaults write com.apple.finder AppleShowAllFiles FALSE 
-    killall Finder
-  }
-
-  # Show hidden files in Finder
-  finder-show-hidden-files() {
-    defaults write com.apple.finder AppleShowAllFiles TRUE
-    killall Finder
-  }
-
-  # Get the bundle ID (e.g. com.apple.Preview) of an application.
-  # Note: app names are case insensitive
-  app-id() {
-    osascript -e "id of app \"$1\""
-  }
-fi
-
-# TODO: create module in ~/.bashrc.mod
-#==============================================================================#
-## Terraform
+## Grip
 #==============================================================================#
 
-if _is-cmd terraform; then
-  # Aliases
-  alias tf=terraform
-  alias tfa='terraform apply'
-  alias tfd='terraform destroy'
-  alias tfaa='terraform apply --auto-approve'
-  alias tfdd='terraform destroy --auto-approve'
-
-  # Enable command completion
-  if _is-mac && _is-cmd brew; then
-    complete -C $(brew --prefix)/bin/terraform terraform
-  elif _is-linux; then
-    complete -C /usr/bin/terraform terraform
-  fi
-fi
-
-# TODO: create module in ~/.bashrc.mod
-#==============================================================================#
-## Prometheus
-#==============================================================================#
-
-# Display only the distinct metric names from a page of Prometheus metrics
-prom-distinct() {
-  sed '/^#/d;s/[{ ].*$//' | uniq
-}
-
-# Reduce a Prometheus metrics response to metric names and help texts
-prometheus-clean() {
-  # Remove labels and values (keep only metric names)
-  sed '/^[^#]/s/[ {].*$//' |
-  # Delete duplicate metric names
-  uniq |
-  # Remove TYPE comments
-  sed '/^# TYPE/d' |
-  # Simplify HELP comments (strip HELP keyword and metric name)
-  sed '/^# HELP/s/HELP [^ ]* //'
-}
+# Use Grip with a GitHub personal access token (PAT) to avoid the rate limit
+# https://github.com/joeyespo/grip
+alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
 
 #==============================================================================#
 ## Misc
 #==============================================================================#
+
+# TODO: move to 'tmp' or 'scratch' module
 
 # Open a JMESPath Terminal
 # https://github.com/jmespath/jmespath.terminal)
@@ -817,6 +765,37 @@ alias minicom='minicom -c on'
 #==============================================================================#
 
 _bashrc-mod-source ~/.bashrc.mod/homebrew.init.bash
+
+#==============================================================================#
+## bash-completion module
+#==============================================================================#
+
+# TODO: move to bash-completion module
+
+# bash-completion (https://github.com/scop/bash-completion)
+# Use Homebrew bash-completion
+if _is-mac && _is-cmd brew ; then
+  echo Sourcing
+  source $(brew --prefix)/etc/profile.d/bash_completion.sh
+  # TODO: it is NOT necessary to source all completion specs in bash_completion.d
+  #   explicitly, as this is done by the bash_completion script (see bash_completion.sh
+  #   for the location)
+  # Completion specifications for commands installed by Homebrew
+  #for f in $(brew --prefix)/etc/bash_completion.d/*; do
+  #  source "$f"
+  #done
+# Only execute if bash-completion isn't activated yet
+elif _is-linux && ! type _init_completion &>/dev/null; then
+  # Code from /etc/bash.bashrc which by default is outcommented
+  if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [[ -f /etc/bash_completion ]]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# TODO: additional functions
+#   - list which commands have completion specs from bash
 
 #==============================================================================#
 ## Module main parts
