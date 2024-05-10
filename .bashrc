@@ -737,14 +737,6 @@ change_mac() {
 #   - Get the MAC address of the physical network interface
 
 #==============================================================================#
-## Grip
-#==============================================================================#
-
-# Use Grip with a GitHub personal access token (PAT) to avoid the rate limit
-# https://github.com/joeyespo/grip
-alias grip='grip --user weibeld --pass $(cat ~/.config/grip/personal-access-token)'
-
-#==============================================================================#
 ## Misc
 #==============================================================================#
 
