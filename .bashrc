@@ -444,18 +444,18 @@ _bashrc-mod-source ~/.bashrc.mod/homebrew.init.bash
 #==============================================================================#
 
 # Outcomment unneeded modules
-_bashrc-mod-source ~/.bashrc.mod/bashrc.bash
+_bashrc-mod-source ~/.bashrc.mod/shellconf-base.bash
+_bashrc-mod-source ~/.bashrc.mod/shellconf-readline.bash
+_bashrc-mod-source ~/.bashrc.mod/shellconf-history.bash
+_bashrc-mod-source ~/.bashrc.mod/shellconf-prompt.bash
 _bashrc-mod-source ~/.bashrc.mod/bash-completion.bash
 _bashrc-mod-source ~/.bashrc.mod/complete-alias.bash
+_bashrc-mod-source ~/.bashrc.mod/bashrc.bash
 _bashrc-mod-source ~/.bashrc.mod/util.bash
-_bashrc-mod-source ~/.bashrc.mod/shellconf-base.bash
-_bashrc-mod-source ~/.bashrc.mod/prompt.bash
-_bashrc-mod-source ~/.bashrc.mod/readline.bash
-_bashrc-mod-source ~/.bashrc.mod/history.bash
-_bashrc-mod-source ~/.bashrc.mod/homebrew.bash
 _bashrc-mod-source ~/.bashrc.mod/vim.bash
 _bashrc-mod-source ~/.bashrc.mod/git.bash
 _bashrc-mod-source ~/.bashrc.mod/grip.bash
+_bashrc-mod-source ~/.bashrc.mod/homebrew.bash
 _bashrc-mod-source ~/.bashrc.mod/macos-util.bash
 #_bashrc-mod-source ~/.bashrc.mod/apt.bash
 #_bashrc-mod-source ~/.bashrc.mod/docker.bash
