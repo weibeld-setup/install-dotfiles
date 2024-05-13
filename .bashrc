@@ -44,6 +44,9 @@ unset f
 ## Dotfiles
 #==============================================================================#
 
+# TODO: what to do with this? How will the relation betwen the bashrc and
+# the dotfiles repository be?
+
 alias df='git --git-dir "$HOME"/.dotfiles.git --work-tree "$HOME"'
 alias dfs='df status'
 alias dfl='df log'
@@ -56,82 +59,6 @@ alias dfd='df diff'
 #==============================================================================#
 ## Miscellaneous functions
 #==============================================================================#
-
-# TODO: move to 'sys' package of library
-
-# Print operating system name and version
-os() {
-  if _is-mac; then
-    echo "$(sw_vers -productName)-$(sw_vers -productVersion)"
-  elif _is-linux; then
-    if [[ -f /etc/os-release ]]; then
-      (. /etc/os-release; echo "$ID-$VERSION_ID"; )
-    else
-      echo unknown
-    fi
-  fi
-}
-
-# TODO: move to 'sys' package of library, output in CSV
-
-# List all the types of a command.
-# Usage:
-#   whatis [-s] <cmd>
-# Lists all the types (function, alias, file, or builtin) for <cmd> in order
-# of precedence. For files, functions, and aliases, the source file is also
-# listed. For functions and aliases, the line number of the definition is
-# additionally appended to the filename. With -s, only the highest precedence
-# type (i.e. the one taking effect) is listed.
-# Notes:
-#   - This function is similar to 'type -a', however, it does NOT list function
-#     and alias bodies (use 'doc' for this), but in turn it lists file names
-#     and line numbers for functions and aliases.
-#   - Alias definitions are parsed from the .bashrc.* files (see '_get-bashrc').
-#     In order to be parsed correctly, alias definitions must only have white-
-#     space between the 'alias' keyword and the beginning of the line.
-whatis() {
-  if [[ "$#" -eq 1 ]]; then
-    local cmd=$1
-  elif [[ "$#" -eq 2 && "$1" = -s ]]; then
-    local short=1 cmd=$2
-  else
-    _print-usage-msg "[-s] <cmd>" >/dev/stderr
-    return 1
-  fi
-  local types=$(type -ta "$cmd")
-  if _is-set "$short"; then
-    types=$(echo "$types" | head -n 1)
-  fi
-  local file_i
-  echo "$types" | while read t; do
-    case "$t" in
-      function)
-        # Returns only latest definition if there are multiple ones
-        { shopt -s extdebug; local res=$(declare -F "$cmd"); shopt -u extdebug; }
-        local file=$(echo "$res" | cut -d ' ' -f 3-)
-        local line=$(echo "$res" | cut -d ' ' -f 2)
-        __whatis-print function "$([[ "$file" =~ ^/ ]] && echo "$file:$line")"
-        ;;
-      alias)
-        # TODO: compare all matches against output of 'type' in order to determine
-        # the latest alias definition (does not rely on the order of the files in _get-bashrc)
-        __whatis-print alias "$(grep -nE "^[ ]*alias[ ]+$cmd=" $(_list-bashrc) /dev/null | tail -n 1 | cut -d : -f 1-2)"
-        ;;
-      file)
-        ((file_i++))
-        __whatis-print file "$(which -a "$cmd" | sed -n "${file_i}p")"
-        ;;
-      builtin)
-        __whatis-print builtin
-        ;;
-    esac
-  done
-}
-complete -c whatis
-
-__whatis-print() {
-  echo "$1,${2:-null}"
-}
 
 # TODO: move to 'bashrc' pacakge library (must be in library because depends on format in bashrc files)
 
@@ -149,7 +76,7 @@ __whatis-print() {
 doc() {
   local name=$1
   local all=$2
-  local result=$(_type -s "$name")
+  local result=$(_sys-cmd -s "$name")
   local type=$(echo "$result" | cut -d , -f 1)
   local location=$(echo "$result" | cut -d , -f 2)
   if [[ ! "$type" =~ function|alias || -z "$location" || "$location" = null ]]; then

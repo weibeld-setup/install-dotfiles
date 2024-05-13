@@ -91,6 +91,8 @@ clip() {
   fi
 }
 
+# TODO: move to library?
+
 # Print the 8 base colours of this terminal (black, red, green, yellow, blue,
 # magenta, cyan, white) in normal, bright, and bold variations.
 # Usage:
@@ -120,6 +122,9 @@ c8() {
   _array-has c 97 && printf "\e[97mBright white (97):   \e[107m   \e[49m  Normal  \e[1mBold\e[0m\n"
   return 0
 }
+
+
+# TODO: move to library?
 
 # Print all 256 colours if this is a 256-colour terminal.
 # Usage:
