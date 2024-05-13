@@ -297,6 +297,9 @@ alias ssh='TERM=xterm-256color ssh'
 alias pgrep='pgrep -fl'
 alias watch='watch -n 1'
 
+# Minicom
+alias minicom='minicom -c on'
+
 # Make Bash resolve the word after 'sudo' as an alias [1,2], which makes it
 # possible to execute aliases with sudo. Note that the replacement is done by
 # the shell before invoking sudo and it works only with aliases, not with
@@ -667,21 +670,6 @@ change_mac() {
 #   - Get the MAC address of the physical network interface
 
 #==============================================================================#
-## Misc
-#==============================================================================#
-
-# TODO: move to 'tmp' or 'scratch' module
-
-# Open a JMESPath Terminal
-# https://github.com/jmespath/jmespath.terminal)
-jpterm() {
-  python /Users/dw/Library/Python/2.7/lib/python/site-packages/jpterm.py
-}
-
-# Minicom
-alias minicom='minicom -c on'
-
-#==============================================================================#
 ## Module init parts
 #==============================================================================#
 
@@ -695,8 +683,8 @@ _bashrc-mod-source ~/.bashrc.mod/homebrew.init.bash
 _bashrc-mod-source ~/.bashrc.mod/bashrc.bash
 _bashrc-mod-source ~/.bashrc.mod/bash-completion.bash
 _bashrc-mod-source ~/.bashrc.mod/complete-alias.bash
-_bashrc-mod-source ~/.bashrc.mod/shell-prompt.bash
-_bashrc-mod-source ~/.bashrc.mod/shell-history.bash
+_bashrc-mod-source ~/.bashrc.mod/prompt.bash
+_bashrc-mod-source ~/.bashrc.mod/history.bash
 _bashrc-mod-source ~/.bashrc.mod/homebrew.bash
 _bashrc-mod-source ~/.bashrc.mod/vim.bash
 _bashrc-mod-source ~/.bashrc.mod/git.bash
