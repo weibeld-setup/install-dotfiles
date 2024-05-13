@@ -104,29 +104,6 @@ elif _is-linux; then
 fi
 
 #==============================================================================#
-# Readline configuration
-#==============================================================================#
-# https://www.gnu.org/software/bash/manual/html_node/Command-Line-Editing.html
-
-# TODO: check if this is necessary
-
-bind 'set skip-completed-text on'
-
-# Enable/disable vi line-editing mode
-vi-mode-on() {
-  bind 'set editing-mode vi'  # Equivalent to 'set -o vi'
-  bind 'set show-mode-in-prompt on'
-  bind 'set vi-ins-mode-string \1\033[1;32m@|\033[m\2'
-  bind 'set vi-cmd-mode-string \1\033[1;42;37m@\033[;1;32m|\033[m\2'
-  bind '"\C-k": vi-movement-mode'
-}
-
-vi-mode-off() {
-  bind 'set editing-mode emacs'  # Equivalent to 'set +o vi'
-  bind 'set show-mode-in-prompt off'
-}
-
-#==============================================================================#
 ## Miscellaneous functions
 #==============================================================================#
 
@@ -684,6 +661,7 @@ _bashrc-mod-source ~/.bashrc.mod/bashrc.bash
 _bashrc-mod-source ~/.bashrc.mod/bash-completion.bash
 _bashrc-mod-source ~/.bashrc.mod/complete-alias.bash
 _bashrc-mod-source ~/.bashrc.mod/prompt.bash
+_bashrc-mod-source ~/.bashrc.mod/readline.bash
 _bashrc-mod-source ~/.bashrc.mod/history.bash
 _bashrc-mod-source ~/.bashrc.mod/homebrew.bash
 _bashrc-mod-source ~/.bashrc.mod/vim.bash
