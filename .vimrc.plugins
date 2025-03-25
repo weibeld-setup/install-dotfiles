@@ -86,4 +86,28 @@ Plug 'udalov/kotlin-vim'
 "=============================================================================="
 Plug 'hashivim/vim-terraform'
 
+"=============================================================================="
+"++GitHub Copilot and Copilot Chat plugins for Neovim 
+"=============================================================================="
+Plug 'github/copilot.vim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'CopilotC-Nvim/CopilotChat.nvim'
+" Key mapping for toggling the chat window
+nnoremap <leader>o :CopilotChatToggle<CR>
+
 call plug#end()
+
+" Further configuration of GitHub Copilot and Copilot Chat plugins
+" TODO: check if configuration can be made more consistent (i.e. without Lua code)
+lua << EOF
+-- TODO: implement cycling through suggestions (see https://github.com/orgs/community/discussions/6862)
+vim.g.copilot_filetypes = {["*"] = false}
+vim.keymap.set('i', '<C-S>', 'copilot#Suggest()', {
+  expr = true,
+  replace_keycodes = false,
+})
+-- Copilot Chat
+require("CopilotChat").setup {
+  -- For configuration, see https://github.com/CopilotC-Nvim/CopilotChat.nvim?tab=readme-ov-file#configuration
+}
+EOF

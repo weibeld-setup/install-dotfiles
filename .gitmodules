@@ -16,3 +16,12 @@
 [submodule ".vim/plugged/tabular"]
 	path = .vim/plugged/tabular
 	url = https://github.com/godlygeek/tabular
+[submodule ".vim/plugged/copilot.vim"]
+	path = .vim/plugged/copilot.vim
+	url = https://github.com/github/copilot.vim
+[submodule ".vim/plugged/CopilotChat.nvim"]
+	path = .vim/plugged/CopilotChat.nvim
+	url = https://github.com/CopilotC-Nvim/CopilotChat.vim
+[submodule ".vim/plugged/plenary.nvim"]
+	path = .vim/plugged/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim
