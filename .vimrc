@@ -263,6 +263,18 @@ tnoremap <C-w>l <C-\><C-N><C-w>l
 
 " Colour scheme
 colorscheme koehler
+if exists('g:colors_name') && g:colors_name ==# 'koehler'
+  " Disable foreground-background inversion in visual selection
+  hi Visual gui=None
+  " Customise search result highlighting
+  hi Search guibg=purple
+  hi CurSearch ctermfg=0 ctermbg=13 guifg=#ffffff guibg=#ff00ff
+  hi clear IncSearch
+  hi link IncSearch CurSearch
+  " Undo special highlighting of TODOs
+  hi clear Todo
+  hi link Todo Comment
+endif
 
 " Status line
 set statusline=%!MyStatusLine()
