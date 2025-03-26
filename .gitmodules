@@ -4,21 +4,12 @@
 [submodule ".vim/plugged/vim-table-mode"]
 	path = .vim/plugged/vim-table-mode
 	url = https://github.com/dhruvasagar/vim-table-mode
-[submodule ".vim/plugged/vim-terraform"]
-	path = .vim/plugged/vim-terraform
-	url = https://github.com/hashivim/vim-terraform
 [submodule ".vim/plugged/vim-markdown-toc"]
 	path = .vim/plugged/vim-markdown-toc
 	url = https://github.com/mzlogin/vim-markdown-toc
-[submodule ".vim/plugged/kotlin-vim"]
-	path = .vim/plugged/kotlin-vim
-	url = https://github.com/udalov/kotlin-vim
 [submodule ".vim/plugged/tabular"]
 	path = .vim/plugged/tabular
 	url = https://github.com/godlygeek/tabular
-[submodule ".vim/plugged/copilot.vim"]
-	path = .vim/plugged/copilot.vim
-	url = https://github.com/github/copilot.vim
 [submodule ".vim/plugged/CopilotChat.nvim"]
 	path = .vim/plugged/CopilotChat.nvim
 	url = https://github.com/CopilotC-Nvim/CopilotChat.vim

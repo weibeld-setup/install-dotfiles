@@ -1,113 +1,132 @@
 " .vimrc.plugins
-"
-" Plugin management with vim-plug (https://github.com/junegunn/vim-plug).
-"
-" Install a new plugin:
-"
+" Install:
 "   1. Declare plugin in this file
-"   2. Reload .vimrc file:
-"      ```
-"      :source ~/.vimrc
-"      ```
-"   3. Install the plugin (clones repository to ~/.vim/plugged/<plugin-dir>):
-"      ```
-"      :PlugInstall
-"      ```
-"   4. Add submodule to dotfiles repository:
-"      ```
-"      df -C "$HOME" submodule add <repo-url> .vim/plugged/<plugin-dir>
-"      ```
-"   5. Commit all changes
-"      ```
-"      df add ...
-"      df commit
-"      ```
-"
-" Delete an existing plugin:
-"
-"   1. Delete plugin declaration in this file
-"   2. Delete the submodule:
-"      ```
-"      df rm <submodule-path>
-"      ```
-"   3. Commit all changes
-"      ```
-"      df add ...
-"      df commit
-"      ```
-"------------------------------------------------------------------------------"
+"   2. <leader>v (reload .vimrc file)
+"   3. :PlugInstall (clones plugin repo to ~/.vim/plugged)
+"   4. Add submodule to dotfiles repo:
+"        df -C "$HOME" submodule add <plugin-repo-url> .vim/plugged/<dir>
+"   5. Commit
+" Uninstall:
+"   1. Remove plugin declaration in this file
+"   2. Delete submodule from dotfiles repo:
+"        df rm <submodule-path>
+"      Note: list all submodule paths with 'df submodule'
+"   3. Commit
+" References:
+"   - https://github.com/junegunn/vim-plug
+"=============================================================================="
 
-" Set plugin directory (Neovim default is ~/.local/share/nvim/plugged)
+" Set plugin directory (Neovim's default is ~/.local/share/nvim/plugged)
 call plug#begin('~/.vim/plugged')
 
 "=============================================================================="
-"++https://github.com/kana/vim-submode
+" Temporary plugins
 "=============================================================================="
+
+"------------------------------------------------------------------------------"
+" GitHub Copilot Chat (Neovim)
+" Chat functionality for GitHub Copilot in Neovim.
 " Notes:
-"   - Due to a current design flaw [1], the concatenation of submode name
-"     and LHS mapping must not exceed a certain limit in the submode#enter_with
-"     and submode#map functions, otherwise the plugin fails. Read more in [2].
-"   - It's sometimes  useful to include the enter mapping (submode#enter_with)
-"     also in the submode itself (submode#map). This avoids confusion when
-"     accidentially pressing the enter mapping when already in the submode. 
-"     Thus, some submode mapping definitions have two submode#map commands.
+" - Configuration at end of file (must be outside 'plug#end()')
 " References:
-"   [1] https://github.com/kana/vim-submode/issues/33
-"   [2] https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
-Plug 'kana/vim-submode'
+" - https://github.com/CopilotC-Nvim/CopilotChat.nvim
+" - https://copilotc-nvim.github.io/CopilotChat.nvim/#/
+"------------------------------------------------------------------------------"
+Plug 'CopilotC-Nvim/CopilotChat.nvim'
+" Key mapping for toggling the chat window
+nnoremap <leader>o :CopilotChatToggle<CR>
+
+"------------------------------------------------------------------------------"
+" GitHub Copilot (Neovim)
+" Official Neovim plugin of GitHub Copilot.
+" all changes References: 
+" - https://github.com/github/copilot.vim
+"------------------------------------------------------------------------------"
+"Plug 'github/copilot.vim'
+"let g:copilot_filetypes = {'*': v:false}
+"inoremap <C-S> copilot#Suggest()
+" TODO: add key mapping for cycling through suggestions (see https://github.com/orgs/community/discussions/6862)
+
+"------------------------------------------------------------------------------"
+" kotlin-vim
+" Syntax highlighting and other support for Kotlin.
+" References:
+" - https://github.com/udalov/kotlin-vim
+"------------------------------------------------------------------------------"
+"Plug 'udalov/kotlin-vim'
+
+"------------------------------------------------------------------------------"
+" vim-terraform
+" Syntax highliting and integration for Terraform.
+" References:
+" - https://github.com/hashivim/vim-terraform
+"------------------------------------------------------------------------------"
+"Plug 'hashivim/vim-terraform'
 
 "=============================================================================="
-"++https://github.com/dhruvasagar/vim-table-mode
+" Base plugins
 "=============================================================================="
+
+"------------------------------------------------------------------------------"
+" vim-submode
+" Custom Vim submodes.
+" Notes:
+" - Due to a current design flaw [2], the concatenation of submode name
+"   and LHS mapping must not exceed a certain limit in the submode#enter_with
+"   and submode#map functions, otherwise the plugin fails. Read more in [3].
+" - It's sometimes  useful to include the enter mapping (submode#enter_with)
+"   also in the submode itself (submode#map). This avoids confusion when
+"   accidentially pressing the enter mapping when already in the submode. 
+"   Thus, some submode mapping definitions have two submode#map commands.
+" References:
+" 1. https://github.com/kana/vim-submode
+" 2. https://github.com/kana/vim-submode/issues/33
+" 3. https://github.com/kana/vim-submode/issues/33#issuecomment-1563675700
+"------------------------------------------------------------------------------"
+Plug 'kana/vim-submode'
+
+"------------------------------------------------------------------------------"
+" plenary.nvim (Neovim)
+" Lua function library for Neovim.
+" References:
+" - https://github.com/nvim-lua/plenary.nvim
+"------------------------------------------------------------------------------"
+Plug 'nvim-lua/plenary.nvim'
+
+"------------------------------------------------------------------------------"
+" Tabular
+" Vertically align text.
+" References:
+" - https://github.com/godlygeek/tabular
+"------------------------------------------------------------------------------"
+Plug 'godlygeek/tabular'
+
+"------------------------------------------------------------------------------"
+" vim-table-mode
+" Easily create Markdown tables.
+" References:
+" - https://github.com/dhruvasagar/vim-table-mode
+"------------------------------------------------------------------------------"
 Plug 'dhruvasagar/vim-table-mode'
 let g:table_mode_map_prefix = '<leader>m'
 let g:table_mode_corner='|'
 
-"=============================================================================="
-"++https://github.com/godlygeek/tabular
-"=============================================================================="
-Plug 'godlygeek/tabular'
-
-"=============================================================================="
-"++https://github.com/mzlogin/vim-markdown-toc
-"=============================================================================="
+"------------------------------------------------------------------------------"
+" vim-markdown-toc
+" Create table of contents in Markdown files.
+" References:
+"- https://github.com/mzlogin/vim-markdown-toc
+"------------------------------------------------------------------------------"
 Plug 'mzlogin/vim-markdown-toc'
 " Caution: don't use multi-char strings (e.g. '1.'), otherwise, nested lists
 " will be broken (see https://github.com/mzlogin/vim-markdown-toc/issues/23)
 let g:vmt_list_item_char = '-'
 
-"=============================================================================="
-"++https://github.com/udalov/kotlin-vim
-"=============================================================================="
-Plug 'udalov/kotlin-vim'
-
-"=============================================================================="
-"++https://github.com/hashivim/vim-terraform
-"=============================================================================="
-Plug 'hashivim/vim-terraform'
-
-"=============================================================================="
-"++GitHub Copilot and Copilot Chat plugins for Neovim 
-"=============================================================================="
-Plug 'github/copilot.vim'
-Plug 'nvim-lua/plenary.nvim'
-Plug 'CopilotC-Nvim/CopilotChat.nvim'
-" Key mapping for toggling the chat window
-nnoremap <leader>o :CopilotChatToggle<CR>
-
 call plug#end()
 
-" Further configuration of GitHub Copilot and Copilot Chat plugins
-" TODO: check if configuration can be made more consistent (i.e. without Lua code)
-lua << EOF
--- TODO: implement cycling through suggestions (see https://github.com/orgs/community/discussions/6862)
-vim.g.copilot_filetypes = {["*"] = false}
-vim.keymap.set('i', '<C-S>', 'copilot#Suggest()', {
-  expr = true,
-  replace_keycodes = false,
-})
--- Copilot Chat
-require("CopilotChat").setup {
-  -- For configuration, see https://github.com/CopilotC-Nvim/CopilotChat.nvim?tab=readme-ov-file#configuration
-}
-EOF
+"=============================================================================="
+" Configuration of GitHub Copilot Chat plugin (see above)
+"=============================================================================="
+if has('nvim')
+  lua require("CopilotChat").setup {}
+endif
