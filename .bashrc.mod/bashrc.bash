@@ -30,6 +30,7 @@ brm() {
   _bashrc-mod-status | _filepath-insert-tilde | sed 's/0$/FALSE/;s/1$/TRUE/' | column -t -s ,
 }
 
+# TODO: move to library
 # List the function and alias names defined in a .bashrc.* file
 # Notes:
 #   This function puts the following requirements on .bashrc.* files:

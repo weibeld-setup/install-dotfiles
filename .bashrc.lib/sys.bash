@@ -14,7 +14,7 @@ _sys-os() {
 
 # List the sources of a command
 # Usage:
-#   _sys-cmd-src <cmd>
+#   _sys-cmd-loc <cmd>
 # Args:
 #   <cmd>: a command
 # Notes:
@@ -39,7 +39,7 @@ _sys-os() {
 #   - Alias definitions are parsed from the .bashrc.* files (see '_get-bashrc').
 #     In order to be parsed correctly, alias definitions must only have white-
 #     space between the 'alias' keyword and the beginning of the line.
-_sys-cmd-src() {
+_sys-cmd-loc() {
   # TODO: ensure exactly 1 argument
   local cmd=$1
   local types=$(type -ta "$cmd")
@@ -78,3 +78,71 @@ _sys-cmd-src() {
     ((i++))
   done
 }
+complete -c _sys-cmd-loc
+
+# TODO:
+#   - Make it only for functions
+#   - Print only documentation
+#     - Can use 'type' for body and _sys-cmd-loc() for source
+
+# Print documentation for a function or alias.
+# Usage:
+#   _sys-func-doc <func> [-a]
+# If <name> is a function or alias defined in a .bashrc.* file, print the
+# documentation and body of this function or alias definition. By default,
+# function bodies are truncated after 10 lines, however, this can be changed
+# with the -a option, which causes the entire function body to be printed.
+# Notes:
+#   - In order for the documentation to be recognised, the corresponding
+#     comment lines must be adjacent to the function or alias definition
+#     without any empty lines between them.
+_sys-func-doc() {
+  local func=$1
+  local res=$(_sys-cmd-loc "$func" | head -n 1)
+  local type=$(cut -d , -f 2 <<<"$res")
+  local file=$(cut -d , -f 3 <<<"$res")
+  local line=$(cut -d , -f 4 <<<"$res")
+  if [[ "$type" != function ]] || _is-empty "$file" || _is-empty  "$line"; then
+    return
+  fi
+  echo "Doc:"
+  ((line--))
+  while true; do
+    local content=$(sed -n "${line}p" "$file")
+    [[ "$content" =~ ^\ *# ]] || break
+    echo  "  ${content#*# }"
+    ((line--))
+  done | tac
+#  # Print comment block from line_nr-1 backwards
+#  tac "$file" | awk -v start_line_nr="$(($(wc -l <"$file")-line+2))" '
+#    BEGIN {
+#      while ((getline line) > 0) {
+#        if (NR >= start_line_nr) {
+#          if (line ~ /^[ ]*#/) {
+#            gsub(/^[ ]*/, "", line)
+#            print line
+#          }
+#          else {
+#            break
+#          }
+#        }
+#      }
+#    }' | tac
+#  if [[ "$type" = function ]]; then
+#    local max_lines=10
+#    local body=$(type "$func" | tail -n +2)
+#    if [[ -n "$all" ]]; then
+#      echo "$body"
+#    else
+#      echo "$body" | head -n "$max_lines"
+#      if [[ $(echo "$body" | wc -l) -gt  "$max_lines" ]]; then
+#        _cond-sgr
+#        echo  "[...]"
+#      fi
+#    fi
+#  elif [[ "$type" = alias ]]; then
+#    command -v "$func"
+#  fi
+}
+# TODO: complete only function names
+complete -c _sys-func-doc
