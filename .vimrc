@@ -3,6 +3,9 @@
 " Main .vimrc file.
 " Notes:
 " - This and all sourced files are compatible with both Vim and Neovim
+" TODO:
+" - Move everything back to a single file, except .vimrc.lib. For ensuring
+"   compatibility (Vim, Neovim, etc.), use conditions.
 "------------------------------------------------------------------------------"
 
 source ~/.vimrc.core  " TODO: rename to .vimrc.compat
@@ -10,7 +13,7 @@ source ~/.vimrc.plugins
 source ~/.vimrc.lib
 
 ""============================================================================="
-"++Settings
+" Settings
 " => More in ~/.vimrc.core
 "=============================================================================="
 
@@ -61,7 +64,7 @@ else
 endif 
 
 ""============================================================================="
-"++Mappings
+" Mappings
 " => More in .vimrc.core
 "=============================================================================="
 
@@ -100,14 +103,23 @@ inoremap <C-e> <C-X><C-F>
 vnoremap Y "*y
 
 ""============================================================================="
-"++File types
+" File type settings
+" Moved here from .vim/after/ftplugin
 "=============================================================================="
 
+autocmd FileType sh,vim,markdown,json,html,css,javascript,gitcommit set tabstop=2 shiftwidth=2
 autocmd BufNewFile,BufRead .bashrc* set filetype=sh
 autocmd BufNewFile,BufRead .vimrc* set filetype=vim
+" In YAML files, prevent line indentation when prepending a comment with
+" 'normal 0i#' (see https://unix.stackexchange.com/a/609636/317243)
+autocmd BufEnter *.yaml,*.yml call RemoveIndentKeys()
+function RemoveIndentKeys()
+    set indentkeys-=0#
+    set indentkeys-=o
+endfunction
 
 ""============================================================================="
-"++Buffers
+" Buffers
 " => More in ~/.vimrc.core
 "=============================================================================="
 " Notes:
@@ -141,7 +153,7 @@ nnoremap <leader>B :call DeleteBuffers(input('DELETE BUF: '))<CR>
 nnoremap <leader>e :b#<CR>
 
 ""============================================================================="
-"++Windows
+" Windows
 " => More in ~/.vimrc.core
 "=============================================================================="
 
@@ -185,7 +197,7 @@ call submode#enter_with('resize-win', 'n', '', '<C-w>J', '5<C-w>-')
 call submode#map('resize-win', 'n', '', 'J', '5<C-w>-')
 
 ""============================================================================="
-"++Tabs
+" Tabs
 "=============================================================================="
 
 " Create a new tab at the end of the tabline
@@ -227,7 +239,7 @@ call submode#map('move-tab', 'n', '', 'P', ':-tabmove<CR>')
 call submode#map('move-tab', 'n', '', '<C-w>P', ':-tabmove<CR>')
 
 ""============================================================================="
-"++Terminal mode
+" Terminal mode
 "=============================================================================="
 
 " Open a terminal in a horizontal split window
@@ -258,7 +270,7 @@ tnoremap <C-w>k <C-\><C-N><C-w>k
 tnoremap <C-w>l <C-\><C-N><C-w>l
 
 ""============================================================================="
-"++UI elements
+" UI elements
 "=============================================================================="
 
 " Colour scheme
@@ -372,7 +384,7 @@ function! MyTabLine()
 endfunction
 
 ""============================================================================="
-"++User functions
+" User functions
 "=============================================================================="
 
 " Convert Markdown top-level list items to second-level sections
