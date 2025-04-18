@@ -107,7 +107,7 @@ vnoremap Y "*y
 " Moved here from .vim/after/ftplugin
 "=============================================================================="
 
-autocmd FileType sh,vim,markdown,json,html,css,javascript,gitcommit set tabstop=2 shiftwidth=2
+autocmd FileType sh,vim,markdown,json,html,css,javascript,javascriptreact,gitcommit set tabstop=2 shiftwidth=2
 autocmd BufNewFile,BufRead .bashrc* set filetype=sh
 autocmd BufNewFile,BufRead .vimrc* set filetype=vim
 " In YAML files, prevent line indentation when prepending a comment with
