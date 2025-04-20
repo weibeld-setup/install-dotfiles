@@ -24,6 +24,13 @@ call plug#begin('~/.vim/plugged')
 "=============================================================================="
 
 "------------------------------------------------------------------------------"
+" vim-svelte-plugin
+" Syntax highlighting an indentation for Svelte files.
+" https://github.com/leafOfTree/vim-svelte-plugin
+"------------------------------------------------------------------------------"
+Plug 'leafOfTree/vim-svelte-plugin'
+
+"------------------------------------------------------------------------------"
 " GitHub Copilot Chat (Neovim)
 " Chat functionality for GitHub Copilot in Neovim.
 " Notes:

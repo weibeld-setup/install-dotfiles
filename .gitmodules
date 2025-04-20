@@ -16,3 +16,6 @@
 [submodule ".vim/plugged/plenary.nvim"]
 	path = .vim/plugged/plenary.nvim
 	url = https://github.com/nvim-lua/plenary.nvim
+[submodule ".vim/plugged/vim-svelte-plugin"]
+	path = .vim/plugged/vim-svelte-plugin
+	url = https://github.com/leafOfTree/vim-svelte-plugin
