@@ -1,7 +1,8 @@
-# Grip
+# GitHub
 # Description:
-#   Sets up Grip [1] to use a GitHub personal access token in order to avoid
-#   the rate limit for anonymous users.
+#   GitHub related settings and functions. Among others, sets up Grip [1] to
+#   use a GitHub personal access token in order to avoid the anonymous users
+#   rate limit.
 # References:
 #   [1] https://github.com/joeyespo/grip
 # Requirements:
@@ -39,3 +40,10 @@ fi
 alias grip='grip --user "$(cat "'$file_username'")" --pass "$(cat "'$file_token'")"'
 
 unset dir file_username file_token
+
+#------------------------------------------------------------------------------#
+# Check validity and properties of a GitHub access token
+#------------------------------------------------------------------------------#
+function gh-token-check() {
+  curl -i -H "Authorization: token $1" https://api.github.com/user
+}

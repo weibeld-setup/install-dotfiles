@@ -317,7 +317,7 @@ _bashrc-mod-source ~/.bashrc.mod/bashrc.bash
 _bashrc-mod-source ~/.bashrc.mod/util.bash
 _bashrc-mod-source ~/.bashrc.mod/vim.bash
 _bashrc-mod-source ~/.bashrc.mod/git.bash
-_bashrc-mod-source ~/.bashrc.mod/grip.bash
+_bashrc-mod-source ~/.bashrc.mod/github.bash
 _bashrc-mod-source ~/.bashrc.mod/homebrew.bash
 _bashrc-mod-source ~/.bashrc.mod/macos-util.bash
 #_bashrc-mod-source ~/.bashrc.mod/apt.bash
@@ -331,7 +331,14 @@ _bashrc-mod-source ~/.bashrc.mod/macos-util.bash
 #_bashrc-mod-source ~/.bashrc.mod/kubernetes.bash
 #_bashrc-mod-source ~/.bashrc.mod/terminfo.bash
 
+
+alias npb="npm run build"
+alias npd="npm run dev"
+
 #==============================================================================#
 ## Auto-added code
 #==============================================================================#
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
