@@ -76,13 +76,13 @@ nnoremap <leader>f :echo @%<CR>
 nnoremap <leader>F :echo expand('%:p')<CR>
 nnoremap <leader>i :echo 'B=' . bufnr() . ', W=' . winnr() . ', T=' . tabpagenr()<CR>
 nnoremap <leader>v :source ~/.vimrc<CR>
-nnoremap <leader>V :edit ~/.vimrc<CR>
+"nnoremap <leader>V :edit ~/.vimrc<CR>
 nnoremap <leader>r :redir 
 nnoremap <leader>R :redir END<CR>
-" Special characters
+" Special characters 
 nnoremap <leader>> i→<ESC>
 nnoremap <leader>< i←<ESC>
-"nnoremap <leader>o i⌥<ESC>
+"nnoremap <leader>o i⌥<ESC>  " Outcommented for GitHub Copilot Chat (to uninstall)
 nnoremap <leader>c i⌘<ESC>
 " Prevent mistyping  :q as q: (command-line window -> :h cmdwin)
 nnoremap q: <Nop>
@@ -99,15 +99,17 @@ nnoremap X gQ
 " Omni-completion trigger (https://vim.fandom.com/wiki/Omni_completion)
 inoremap <C-n> <C-X><C-O>
 inoremap <C-e> <C-X><C-F>
-" Yank to system clipboard
-vnoremap Y "*y
+" Yank to and paste from system clipboard
+" Note: if not working on Linux or other systems, try '"*y' and '"+y'
+vnoremap Y "+y
+nnoremap P "+p
 
 ""============================================================================="
 " File type settings
 " Moved here from .vim/after/ftplugin
 "=============================================================================="
 
-autocmd FileType sh,vim,markdown,json,html,css,javascript,javascriptreact,svelte,gitcommit set tabstop=2 shiftwidth=2
+autocmd FileType sh,vim,markdown,json,html,css,javascript,typescript,javascriptreact,svelte,gitcommit set tabstop=2 shiftwidth=2
 autocmd BufNewFile,BufRead .bashrc* set filetype=sh
 autocmd BufNewFile,BufRead .vimrc* set filetype=vim
 " In YAML files, prevent line indentation when prepending a comment with

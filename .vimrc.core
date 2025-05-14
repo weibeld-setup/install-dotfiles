@@ -101,10 +101,20 @@ nnoremap <C-d> :b#<CR>
 " Windows
 "=============================================================================="
 " Split window right/below
-nnoremap <C-w>, <C-w>v
+nnoremap <C-w>/ <C-w>v
 nnoremap <C-w>- <C-w>s
 " Toggle previous window
 nnoremap <C-w><w> <C-w>p
 " Move cursor to new window after splitting
 set splitright
 set splitbelow
+
+"=============================================================================="
+" Tabs
+"=============================================================================="
+
+" Open current buffer in new tab 
+" Notes:
+"   - Useful for copying by mouse when buffer is in split window
+"   - Close opened tab with :q
+nnoremap <C-w>m :tab split<CR>
