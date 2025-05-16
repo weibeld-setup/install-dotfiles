@@ -360,7 +360,8 @@ endfunction
 "   - If the buffer is not found, an empty string is returned.
 function! MakeBufferMainIndicator(buf, sep = '')
   let buf = GetBuffer(a:buf)
-  return !empty(buf) ? buf.nr..a:sep..(buf.normal ? (buf.modified ? '🔴' : '🟢') : (buf.terminal ? '🟣':  '⚪️')) : ''
+  "return !empty(buf) ? buf.nr..a:sep..(buf.normal ? (buf.modified ? '🔴' : '🟢') : (buf.terminal ? '🟣':  '⚪️')) : ''
+  return !empty(buf) ? (buf.normal ? (buf.modified ? '🔴' : '🟢') : (buf.terminal ? '🟣':  '⚪️')) : ''
 endfunction
 
 " Make indicator showing file type of specified buffer.

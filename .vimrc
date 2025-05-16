@@ -309,24 +309,25 @@ endif
 
 " Status line
 set statusline=%!MyStatusLine()
-highlight StatusLine ctermbg=green ctermfg=black cterm=bold
-highlight StatusLineNC ctermbg=65 ctermfg=black cterm=bold
+highlight StatusLine guibg=yellow guifg=black gui=bold
+highlight StatusLineNC guibg=#222222 guifg=#888888 gui=bold
 " Vim has separate highlight groups for terminal mode
 if !has('nvim')
-  highlight StatusLineTerm ctermbg=green ctermfg=black cterm=bold
-  highlight StatusLineTermNC ctermbg=65 ctermfg=black cterm=bold
+  highlight StatusLineTerm guibg=yellow guifg=black gui=bold
+  highlight StatusLineTermNC guibg=white guifg=black gui=bold
 endif
 
 " Tab line
 set showtabline=2
 set tabline=%!MyTabLine()
-highlight TabLine ctermbg=240 ctermfg=white cterm=bold
-highlight TabLineSel ctermbg=blue ctermfg=white cterm=bold
-highlight TabLineFill ctermbg=black cterm=bold
+highlight TabLine guifg=#888888 guibg=#222222
+highlight TabLineSel guifg=black guibg=yellow gui=bold
+highlight TabLineFill guifg=#222222 guibg=#222222
+highlight TabLineWinCurrent guifg=black guibg=yellow gui=bold
 " Custom highlight groups
-highlight TabLineBuf ctermbg=black ctermfg=white cterm=bold
-highlight TabLineBufCurrent ctermbg=lightyellow ctermfg=black cterm=bold
-highlight TabLineWinCurrent ctermbg=lightyellow ctermfg=black cterm=bold
+highlight TabLineBuf guibg=black guifg=white gui=bold
+highlight TabLineBufCurrent guibg=lightyellow guifg=black gui=bold
+highlight TabLineWinCurrent guibg=lightyellow guifg=black gui=bold
 
 " Cursor line
 set cursorline
@@ -373,26 +374,49 @@ endfunction
 " Resources:
 "   [1] https://github.com/mkitt/tabline.vim
 "   [2] https://github.com/neovim/neovim/issues/24122
+" Quick fix (display all buffers with file name)
 function! MyTabLine()
   let tabline = ''
-  " Buffer list at beginning of tab line (only listed buffers)
-  let buf_nr_listed = map(ListListedBuffers(), {_, buf -> buf.nr})
-  let tabline ..= '%#TabLineBuf#[BUF] Σ:'..len(buf_nr_listed)..' '
-  for buf_nr in buf_nr_listed
-    let tabline ..= (buf_nr == bufnr() ? '%#TabLineBufCurrent#' : '')
-    let tabline ..= MakeBufferMainIndicator(buf_nr)..' '
-    let tabline ..= (buf_nr == bufnr() ? '%#TabLineBuf#' : '')
+  let tabline .= '%#TabLineFill#'  " start with fill group
+
+  " List all listed buffers (open and visible with a name)
+  for buf_nr in range(1, bufnr('$'))
+    if buflisted(buf_nr) && bufname(buf_nr) !=# ''
+      let is_current = (buf_nr == bufnr())
+      let tabline .= is_current ? '%#TabLineSel#' : '%#TabLine#'
+      let tabline .= ' '..fnamemodify(bufname(buf_nr), ':t')
+      let tabline .= ' '..buf_nr
+      let tabline .= MakeBufferMainIndicator(buf_nr) . ' '
+      let tabline .= is_current ? '%#TabLineFill#' : ''
+    endif
   endfor
-  let tabline ..= '%#TabLineFill# '
+
+  " Padding to fill the rest of the tabline
+  let tabline .= '%#TabLineFill#%='
+  return tabline
+endfunction
+" Original
+function! MyTabLine2()
+  let tabline = ''
+  " Buffer list at beginning of tab line (only listed buffers)
+  "let buf_nr_listed = map(ListListedBuffers(), {_, buf -> buf.nr})
+  "let tabline ..= '%#TabLineBuf#[BUF] Σ:'..len(buf_nr_listed)..' '
+  "for buf_nr in buf_nr_listed
+  "  let tabline ..= (buf_nr == bufnr() ? '%#TabLineBufCurrent#' : '')
+  "  let tabline ..= MakeBufferMainIndicator(buf_nr)..' '
+  "  let tabline ..= (buf_nr == bufnr() ? '%#TabLineBuf#' : '')
+  "endfor
+  "let tabline ..= '%#TabLineFill# '
   " Tab list (each one showing displayed buffers, including unlisted ones)
   for tab_nr in range(1, tabpagenr('$'))
     let is_current_tab = (tab_nr == tabpagenr())
     let bufs_tab = tabpagebuflist(tab_nr)
     let tab_highlight = is_current_tab ? '%#TabLineSel#' : '%#TabLine#'
-    let tabline ..= tab_highlight..'['..tab_nr..'] Σ:'..len(bufs_tab)..' '
+    "let tabline ..= tab_highlight..'['..tab_nr..'] Σ:'..len(bufs_tab)..' '
     for i in range(len(bufs_tab))
       let is_current_win = (i+1 == winnr())
       let tabline ..= (is_current_win && is_current_tab) ? '%#TabLineWinCurrent#' : ''
+      let tabline ..= fnamemodify(bufname(bufs_tab[i]), ':t')..' '
       let tabline ..= MakeBufferMainIndicator(bufs_tab[i])..' '
       let tabline ..= (is_current_win && is_current_tab) ? tab_highlight : ''
     endfor
@@ -413,3 +437,6 @@ function! MarkdownListToSections()
   g/^## /normal! O
   g/^## /normal! o
 endfunction
+
+" Tab line settings above don't work for some reason
+

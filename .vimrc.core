@@ -42,8 +42,8 @@ nnoremap <leader>Z :qa!<CR>
 nnoremap <leader>n :set number!<CR>
 nnoremap <leader>, :nohlsearch<CR>
 nnoremap <leader>. :let @/=''<CR>
-nnoremap <leader>d :bdelete<CR>
-nnoremap <leader>D :bdelete!<CR>
+nnoremap <leader>d :bdelete 
+nnoremap <leader>D :bdelete<CR>
 nnoremap <leader>l :ls<CR>
 nnoremap <leader>L :ls!<CR>
 "nnoremap <leader>p :pwd<CR>
