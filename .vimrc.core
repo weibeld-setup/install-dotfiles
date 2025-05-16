@@ -46,7 +46,7 @@ nnoremap <leader>d :bdelete<CR>
 nnoremap <leader>D :bdelete!<CR>
 nnoremap <leader>l :ls<CR>
 nnoremap <leader>L :ls!<CR>
-nnoremap <leader>p :pwd<CR>
+"nnoremap <leader>p :pwd<CR>
 " Find all occurrences of word under cursor
 nnoremap <leader>s *N
 " Replace all occurrences of word under cursor (<C-w> = word, <C-a> = WORD)

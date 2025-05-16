@@ -82,8 +82,8 @@ nnoremap <leader>F :echo expand('%:p')<CR>
 nnoremap <leader>i :echo 'B=' . bufnr() . ', W=' . winnr() . ', T=' . tabpagenr()<CR>
 nnoremap <leader>v :source ~/.vimrc<CR>
 "nnoremap <leader>V :edit ~/.vimrc<CR>
-nnoremap <leader>r :redir 
-nnoremap <leader>R :redir END<CR>
+"nnoremap <leader>r :redir 
+"nnoremap <leader>R :redir END<CR>
 " Special characters 
 nnoremap <leader>> i→<ESC>
 nnoremap <leader>< i←<ESC>
@@ -157,7 +157,7 @@ nnoremap <leader>B :call DeleteBuffers(input('DELETE BUF: '))<CR>
 
 " Toggle previously open buffer
 "nnoremap <C-w>b :b#<CR>
-"nnoremap <leader>e :b#<CR>
+nnoremap <leader>p :b#<CR>
 
 ""============================================================================="
 " Windows
@@ -279,6 +279,18 @@ tnoremap <C-w>l <C-\><C-N><C-w>l
 ""============================================================================="
 " UI elements
 "=============================================================================="
+
+" nvim-tree
+if has('nvim')
+  highlight NvimTreeFolderName guifg=#0000ff gui=NONE
+  highlight NvimTreeOpenedFolderName guifg=#0000ff gui=NONE
+  highlight NvimTreeFolderIcon guifg=#0000ff gui=NONE
+
+  highlight NvimTreeExecFile guifg=#ffffff gui=NONE
+  highlight NvimTreeOpenedFile guifg=#ffffff gui=NONE
+  highlight NvimTreeSpecialFile guifg=#ffffff gui=NONE
+  highlight NvimTreeImageFile guifg=#ffffff gui=NONE
+endif
 
 " Colour scheme
 colorscheme koehler
