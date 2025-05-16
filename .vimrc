@@ -8,6 +8,11 @@
 "   compatibility (Vim, Neovim, etc.), use conditions.
 "------------------------------------------------------------------------------"
 
+if has('nvim')
+  set runtimepath+=~/.vim/plugged/*
+endif
+
+
 source ~/.vimrc.core  " TODO: rename to .vimrc.compat
 source ~/.vimrc.plugins
 source ~/.vimrc.lib
@@ -152,7 +157,7 @@ nnoremap <leader>B :call DeleteBuffers(input('DELETE BUF: '))<CR>
 
 " Toggle previously open buffer
 "nnoremap <C-w>b :b#<CR>
-nnoremap <leader>e :b#<CR>
+"nnoremap <leader>e :b#<CR>
 
 ""============================================================================="
 " Windows

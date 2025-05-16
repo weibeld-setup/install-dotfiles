@@ -129,6 +129,20 @@ Plug 'mzlogin/vim-markdown-toc'
 " will be broken (see https://github.com/mzlogin/vim-markdown-toc/issues/23)
 let g:vmt_list_item_char = '-'
 
+"------------------------------------------------------------------------------"
+" nvim-tree
+"------------------------------------------------------------------------------"
+if has('nvim')
+  Plug 'nvim-tree/nvim-tree.lua'
+  " Disable netrw at startup
+  let g:loaded_netrw = 1
+  let g:loaded_netrwPlugin = 1
+  lua << EOF
+  require("nvim-tree").setup()
+EOF
+  nnoremap <leader>e :NvimTreeToggle<CR>
+endif
+
 call plug#end()
 
 "=============================================================================="

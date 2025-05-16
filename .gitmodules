@@ -19,3 +19,9 @@
 [submodule ".vim/plugged/vim-svelte-plugin"]
 	path = .vim/plugged/vim-svelte-plugin
 	url = https://github.com/leafOfTree/vim-svelte-plugin
+[submodule ".vim/plugged/nvim-tree.lua"]
+	path = .vim/plugged/nvim-tree.lua
+	url = https://github.com/nvim-tree/nvim-tree.lua
+[submodule ".vim/plugged/nvim-web-devicons"]
+	path = .vim/plugged/nvim-web-devicons
+	url = https://github.com/nvim-tree/nvim-web-devicons
