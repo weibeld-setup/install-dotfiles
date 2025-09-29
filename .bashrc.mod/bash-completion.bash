@@ -20,6 +20,9 @@
 
 if _is-pkg-mgmt-homebrew; then
   . $(brew --prefix)/etc/profile.d/bash_completion.sh
+  for f in $(brew --prefix)/etc/bash_completion.d/*; do 
+    [[ -f "$f" ]] && . "$f"
+  done
 elif _is-linux; then
   # Code from /etc/bash.bashrc which by default is outcommented
   if [[ -f /usr/share/bash-completion/bash_completion ]]; then
